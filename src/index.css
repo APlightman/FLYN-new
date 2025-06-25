@@ -1,0 +1,374 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* CSS переменные для safe area */
+  :root {
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-right: env(safe-area-inset-right);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    --safe-area-inset-left: env(safe-area-inset-left);
+    --vh: 1vh;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* Отключаем bounce эффект на iOS */
+    overscroll-behavior: none;
+    /* Отключаем выделение текста на мобильных */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    /* Отключаем подсветку тапов на мобильных */
+    -webkit-tap-highlight-color: transparent;
+    /* Фиксируем проблемы с viewport на мобильных */
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
+  }
+  
+  /* Разрешаем выделение для текстовых элементов */
+  input, textarea, [contenteditable], p, span, div[role="textbox"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+  
+  /* Улучшенная прокрутка */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-100 dark:bg-slate-800 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-600 rounded-full hover:bg-slate-400 dark:hover:bg-slate-500;
+  }
+  
+  /* Плавные переходы для всех интерактивных элементов */
+  button, input, select, textarea, a {
+    @apply transition-all duration-200;
+  }
+  
+  /* Улучшенная типографика */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+  
+  /* Анимации */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* Градиентные тексты */
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  /* Стеклянный эффект */
+  .glass {
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/30;
+  }
+  
+  /* Тени для карточек */
+  .card-shadow {
+    box-shadow: 
+      0 1px 3px 0 rgb(0 0 0 / 0.1),
+      0 1px 2px -1px rgb(0 0 0 / 0.1),
+      0 0 0 1px rgb(0 0 0 / 0.05);
+  }
+  
+  .card-shadow-hover {
+    box-shadow: 
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1),
+      0 0 0 1px rgb(0 0 0 / 0.05);
+  }
+  
+  /* Фокус состояния */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-4 focus:ring-blue-500/30 focus:ring-offset-2;
+  }
+  
+  /* Мобильные утилиты */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  .no-scroll {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+  
+  /* Safe area утилиты */
+  .pt-safe {
+    padding-top: var(--safe-area-inset-top);
+  }
+  
+  .pb-safe {
+    padding-bottom: var(--safe-area-inset-bottom);
+  }
+  
+  .pl-safe {
+    padding-left: var(--safe-area-inset-left);
+  }
+  
+  .pr-safe {
+    padding-right: var(--safe-area-inset-right);
+  }
+  
+  .h-safe-area-inset-bottom {
+    height: var(--safe-area-inset-bottom);
+  }
+  
+  /* Мобильная навигация */
+  .mobile-nav-height {
+    height: calc(60px + var(--safe-area-inset-bottom));
+  }
+  
+  .mobile-content-height {
+    height: calc(100vh - 60px - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
+    height: calc(calc(var(--vh, 1vh) * 100) - 60px - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
+  }
+  
+  /* Улучшения для touch устройств */
+  @media (hover: none) and (pointer: coarse) {
+    /* Увеличиваем размеры кнопок на touch устройствах */
+    button {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Убираем hover эффекты на touch устройствах */
+    .hover\:scale-105:hover {
+      transform: none;
+    }
+    
+    .hover\:shadow-lg:hover {
+      box-shadow: none;
+    }
+    
+    /* Улучшаем touch targets */
+    a, button, input, select, textarea {
+      min-height: 44px;
+    }
+  }
+  
+  /* Адаптивная типографика */
+  @media (max-width: 640px) {
+    h1 { @apply text-xl; }
+    h2 { @apply text-lg; }
+    h3 { @apply text-base; }
+    h4 { @apply text-sm; }
+    
+    /* Уменьшаем отступы на мобильных */
+    .space-y-6 > * + * {
+      margin-top: 1rem;
+    }
+    
+    .space-y-4 > * + * {
+      margin-top: 0.75rem;
+    }
+  }
+  
+  /* Оптимизация для высоких DPI экранов */
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .crisp-edges {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+  }
+  
+  /* Темная тема для системных элементов */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+    }
+  }
+  
+  /* Уменьшение анимаций для пользователей с ограниченными возможностями */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* Высокий контраст */
+  @media (prefers-contrast: high) {
+    .card-shadow {
+      box-shadow: 0 0 0 2px currentColor;
+    }
+  }
+  
+  /* Адаптивные сетки */
+  @media (max-width: 640px) {
+    .grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    .grid-cols-3 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    .grid-cols-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    .grid-cols-5 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  /* Улучшения для форм на мобильных */
+  @media (max-width: 640px) {
+    input, select, textarea {
+      font-size: 16px; /* Предотвращает зум на iOS */
+    }
+  }
+  
+  /* Утилиты для текста */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  
+  /* Фиксы для iOS */
+  @supports (-webkit-touch-callout: none) {
+    .ios-safe-area-top {
+      padding-top: max(20px, env(safe-area-inset-top));
+    }
+    
+    .ios-safe-area-bottom {
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+    
+    /* Фикс для viewport height на iOS */
+    .min-h-screen {
+      min-height: 100vh;
+      min-height: calc(var(--vh, 1vh) * 100);
+    }
+  }
+  
+  /* Улучшения для модальных окон на мобильных */
+  @media (max-width: 640px) {
+    .modal-content {
+      margin: 1rem;
+      max-height: calc(100vh - 2rem);
+      max-height: calc(calc(var(--vh, 1vh) * 100) - 2rem);
+    }
+  }
+}
+
+/* PWA специфичные стили */
+@media (display-mode: standalone) {
+  body {
+    /* Убираем отступы для PWA */
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Скрываем элементы, которые не нужны в PWA */
+  .hide-in-pwa {
+    display: none;
+  }
+  
+  /* Добавляем отступы для safe area в PWA */
+  .pwa-safe-top {
+    padding-top: var(--safe-area-inset-top);
+  }
+  
+  .pwa-safe-bottom {
+    padding-bottom: var(--safe-area-inset-bottom);
+  }
+}
+
+/* Дополнительные утилиты для адаптивности */
+@media (max-width: 768px) {
+  .mobile-hidden {
+    display: none;
+  }
+  
+  .mobile-full-width {
+    width: 100%;
+  }
+  
+  .mobile-text-center {
+    text-align: center;
+  }
+  
+  .mobile-flex-col {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 769px) {
+  .desktop-hidden {
+    display: none;
+  }
+}
