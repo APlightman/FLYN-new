@@ -7,9 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:init": "curl -X POST /.netlify/functions/init-database",
+    "db:seed": "curl -X POST /.netlify/functions/seed-data",
+    "db:health": "curl /.netlify/functions/health-check",
+    "db:auto-init": "curl -X POST /.netlify/functions/auto-init"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.9.5",
     "@supabase/supabase-js": "^2.50.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",

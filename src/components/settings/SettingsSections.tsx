@@ -5,6 +5,7 @@ import { NotificationSettings } from './NotificationSettings';
 import { ExportSettings } from './ExportSettings';
 import { PrivacySettings } from './PrivacySettings';
 import { DataManagement } from './DataManagement';
+import { DatabaseSettings } from './DatabaseSettings';
 import { AppInfo } from './AppInfo';
 import { SidebarSettings } from './SidebarSettings';
 import { MobileMenuSettings } from './MobileMenuSettings';
@@ -17,7 +18,8 @@ import {
   Database, 
   Info,
   Eye,
-  Smartphone
+  Smartphone,
+  Server
 } from 'lucide-react';
 
 interface SettingsSectionsProps {
@@ -60,6 +62,14 @@ export function SettingsSections({
           }}
           onToggleDarkMode={onToggleDarkMode}
         />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="База данных"
+        icon={<Server className="text-green-600 dark:text-green-400" size={20} />}
+        defaultExpanded={false}
+      >
+        <DatabaseSettings />
       </CollapsibleSection>
 
       <CollapsibleSection
