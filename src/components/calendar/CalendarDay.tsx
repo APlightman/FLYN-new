@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Transaction, Category, formatCurrency } from '../../types';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Plus, Calendar } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { Modal } from '../ui/Modal';
+import { TransactionForm } from '../transactions/TransactionForm';
 
 interface CalendarDayProps {
   currentDate: Date;
@@ -10,6 +12,9 @@ interface CalendarDayProps {
 }
 
 export function CalendarDay({ currentDate, transactions, categories }: CalendarDayProps) {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+
   const getCategoryColor = (categoryName: string) => {
     const category = categories.find(c => c.name === categoryName);
     return category?.color || '#6b7280';
@@ -50,6 +55,16 @@ export function CalendarDay({ currentDate, transactions, categories }: CalendarD
             year: 'numeric'
           })}
         </h3>
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <Button
+            onClick={() => setShowAddForm(true)}
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Plus size={16} />
+            Добавить транзакцию на этот день
+          </Button>
+        </div>
       </div>
 
       {/* Статистика дня */}
@@ -85,15 +100,19 @@ export function CalendarDay({ currentDate, transactions, categories }: CalendarD
         <div className="text-center py-12">
           <div className="text-slate-400 mb-4">
             <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
-              📅
+              <Calendar size={32} className="text-slate-400" />
             </div>
           </div>
           <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
             Нет транзакций
           </h3>
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="text-slate-500 dark:text-slate-400 mb-4">
             В этот день не было совершено транзакций
           </p>
+          <Button onClick={() => setShowAddForm(true)}>
+            <Plus size={16} className="mr-2" />
+            Добавить первую транзакцию
+          </Button>
         </div>
       ) : (
         <div className="space-y-6">
@@ -126,7 +145,7 @@ export function CalendarDay({ currentDate, transactions, categories }: CalendarD
                   {categoryTransactions.map((transaction) => (
                     <div
                       key={transaction.id}
-                      className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                      className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group"
                     >
                       <div className="flex-1">
                         <div className="font-medium text-slate-900 dark:text-slate-100">
@@ -155,11 +174,25 @@ export function CalendarDay({ currentDate, transactions, categories }: CalendarD
                           {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                         </div>
                         
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm">
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingTransaction(transaction);
+                            }}
+                          >
                             <Edit size={16} />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // TODO: Добавить функцию удаления
+                            }}
+                          >
                             <Trash2 size={16} />
                           </Button>
                         </div>
@@ -172,6 +205,39 @@ export function CalendarDay({ currentDate, transactions, categories }: CalendarD
           })}
         </div>
       )}
+
+      {/* Модальные окна */}
+      <Modal
+        isOpen={showAddForm}
+        onClose={() => setShowAddForm(false)}
+        title="Добавить транзакцию"
+      >
+        <TransactionForm
+          initialData={{
+            id: '',
+            type: 'expense',
+            amount: 0,
+            category: '',
+            description: '',
+            date: currentDate.toISOString().split('T')[0],
+            tags: []
+          }}
+          onSuccess={() => setShowAddForm(false)}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+        title="Редактировать транзакцию"
+      >
+        {editingTransaction && (
+          <TransactionForm
+            initialData={editingTransaction}
+            onSuccess={() => setEditingTransaction(null)}
+          />
+        )}
+      </Modal>
     </div>
   );
 }

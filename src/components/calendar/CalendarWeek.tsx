@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Transaction, Category, formatCurrency } from '../../types';
+import { Plus, Eye, Calendar } from 'lucide-react';
+import { Modal } from '../ui/Modal';
+import { TransactionForm } from '../transactions/TransactionForm';
 
 interface CalendarWeekProps {
   currentDate: Date;
@@ -16,6 +19,9 @@ export function CalendarWeek({
   onDateClick, 
   categories 
 }: CalendarWeekProps) {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
   const getWeekDays = () => {
     const startOfWeek = new Date(currentDate);
     const dayOfWeek = startOfWeek.getDay();
@@ -33,7 +39,10 @@ export function CalendarWeek({
   };
 
   const getDayTransactions = (date: Date) => {
-    const dateKey = date.toISOString().split('T')[0];
+    // Исправляем проблему с датами - используем правильный формат
+    const dateKey = date.getFullYear() + '-' + 
+                   String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                   String(date.getDate()).padStart(2, '0');
     return transactionsByDate[dateKey] || [];
   };
 
@@ -45,6 +54,11 @@ export function CalendarWeek({
   const isToday = (date: Date) => {
     const today = new Date();
     return date.toDateString() === today.toDateString();
+  };
+
+  const handleAddTransaction = (date: Date) => {
+    setSelectedDate(date);
+    setShowAddForm(true);
   };
 
   const weekDays = getWeekDays();
@@ -68,12 +82,13 @@ export function CalendarWeek({
             <div
               key={index}
               className={`
-                min-h-[300px] p-4 rounded-2xl border transition-all duration-200
+                min-h-[300px] p-4 rounded-2xl border transition-all duration-200 group cursor-pointer
                 ${isTodayDate
                   ? 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-700'
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow-md'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow-md hover:scale-[1.02]'
                 }
               `}
+              onClick={() => onDateClick(date)}
             >
               {/* Заголовок дня */}
               <div className="mb-4">
@@ -117,17 +132,23 @@ export function CalendarWeek({
                 {dayTransactions.map((transaction) => (
                   <div
                     key={transaction.id}
-                    className="p-2 rounded-lg bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors cursor-pointer"
-                    onClick={() => onDateClick(date)}
+                    className="p-2 rounded-lg bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors cursor-pointer group/transaction"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDateClick(date);
+                    }}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <div
                         className="w-2 h-2 rounded-full"
                         style={{ backgroundColor: getCategoryColor(transaction.category) }}
                       />
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
+                      <span className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate flex-1">
                         {transaction.description}
                       </span>
+                      <div className="opacity-0 group-hover/transaction:opacity-100 transition-opacity">
+                        <Eye size={12} className="text-slate-400" />
+                      </div>
                     </div>
                     <div className={`text-sm font-semibold ${
                       transaction.type === 'income' 
@@ -142,15 +163,47 @@ export function CalendarWeek({
 
               {/* Кнопка добавления */}
               <button
-                onClick={() => onDateClick(date)}
-                className="w-full mt-4 p-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddTransaction(date);
+                }}
+                className="w-full mt-4 p-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm opacity-0 group-hover:opacity-100"
               >
-                + Добавить транзакцию
+                <Plus size={16} className="inline mr-1" />
+                Добавить транзакцию
               </button>
             </div>
           );
         })}
       </div>
+
+      {/* Модальное окно добавления транзакции */}
+      <Modal
+        isOpen={showAddForm}
+        onClose={() => {
+          setShowAddForm(false);
+          setSelectedDate(null);
+        }}
+        title="Добавить транзакцию"
+      >
+        {selectedDate && (
+          <TransactionForm
+            initialData={{
+              id: '',
+              type: 'expense',
+              amount: 0,
+              category: '',
+              description: '',
+              date: selectedDate.toISOString().split('T')[0],
+              tags: []
+            }}
+            onSuccess={() => {
+              setShowAddForm(false);
+              setSelectedDate(null);
+            }}
+          />
+        )}
+      </Modal>
     </div>
   );
 }

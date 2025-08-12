@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { MONTHS } from '../../utils/dateUtils';
+import { MONTHS, formatDateKey } from '../../utils/dateUtils';
 
 type ViewMode = 'month' | 'week' | 'day';
 
@@ -67,8 +67,10 @@ export function useCalendarLogic() {
   const transactionsByDate = useMemo(() => {
     const grouped: Record<string, typeof periodTransactions> = {};
     
-    periodTransactions.forEach(transaction => {
-      const dateKey = transaction.date;
+    // Исправляем группировку транзакций по датам
+    state.transactions.forEach(transaction => {
+      // Используем правильный формат даты
+      const dateKey = transaction.date; // Уже в формате YYYY-MM-DD
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
@@ -76,10 +78,10 @@ export function useCalendarLogic() {
     });
     
     return grouped;
-  }, [periodTransactions]);
+  }, [state.transactions]);
 
   const currentDayTransactions = useMemo(() => {
-    const dateKey = currentDate.toISOString().split('T')[0];
+    const dateKey = formatDateKey(currentDate);
     return state.transactions.filter(transaction => {
       if (transaction.date !== dateKey) return false;
       if (filters.type && transaction.type !== filters.type) return false;

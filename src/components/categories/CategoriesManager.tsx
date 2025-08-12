@@ -135,11 +135,21 @@ export function CategoriesManager() {
   const expenseCategories = getRootCategories().filter(cat => cat.type === 'expense');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-          Управление категориями
-        </h2>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-gradient-to-br from-cyan-600 to-cyan-700 rounded-2xl shadow-lg shadow-cyan-500/25">
+            <Tag className="text-white" size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+              Управление категориями
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Организация доходов и расходов
+            </p>
+          </div>
+        </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus size={16} className="mr-2" />
           Добавить категорию

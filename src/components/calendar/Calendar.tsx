@@ -43,7 +43,7 @@ export function Calendar() {
   const transactionCount = viewMode === 'day' ? currentDayTransactions.length : periodTransactions.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
       {/* Заголовок и навигация */}
       <CalendarHeader
         transactionCount={transactionCount}

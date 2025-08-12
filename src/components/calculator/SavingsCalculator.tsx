@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, TrendingUp, AlertTriangle, Info } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Info, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
+import { SavingsChart } from './charts/SavingsChart';
+import { CompoundInterestComparison } from './charts/CompoundInterestComparison';
 
 export function SavingsCalculator() {
   const [formData, setFormData] = useState({
@@ -12,10 +14,12 @@ export function SavingsCalculator() {
     annualRate: '8',
     period: '10',
     compoundFrequency: '12',
-    inflationRate: '6.5', // Средняя инфляция в России
+    inflationRate: '6.5',
     adjustForInflation: true,
-    targetAmount: '', // Для обратного расчета
-    calculationMode: 'forward' as 'forward' | 'reverse'
+    targetAmount: '',
+    calculationMode: 'forward' as 'forward' | 'reverse',
+    showComparison: false,
+    comparisonRate: '5' // Для сравнения простого процента
   });
 
   const [result, setResult] = useState({
@@ -25,6 +29,8 @@ export function SavingsCalculator() {
     realValue: 0,
     inflationLoss: 0,
     adjustedMonthlyContribution: 0,
+    simpleInterestAmount: 0,
+    compoundAdvantage: 0,
     monthlyBreakdown: [] as Array<{
       month: number;
       contribution: number;
@@ -32,6 +38,7 @@ export function SavingsCalculator() {
       interest: number;
       balance: number;
       realValue: number;
+      simpleInterestBalance: number;
       inflationRate: number;
     }>,
   });
@@ -48,6 +55,7 @@ export function SavingsCalculator() {
     const frequency = parseFloat(formData.compoundFrequency) || 12;
     const inflationRate = parseFloat(formData.inflationRate) / 100 || 0;
     const adjustForInflation = formData.adjustForInflation;
+    const comparisonRate = parseFloat(formData.comparisonRate) / 100 || 0;
 
     if (formData.calculationMode === 'reverse') {
       calculateRequiredContribution();
@@ -57,36 +65,40 @@ export function SavingsCalculator() {
     const months = years * 12;
     const monthlyRate = rate / frequency;
     const monthlyInflation = inflationRate / 12;
+    const simpleMonthlyRate = comparisonRate / 12;
     
     let balance = initial;
     let totalContributions = initial;
+    let simpleBalance = initial;
     const breakdown = [];
     
     for (let month = 1; month <= months; month++) {
-      // Расчет скорректированного взноса с учетом инфляции
       const inflationMultiplier = adjustForInflation 
         ? Math.pow(1 + monthlyInflation, month - 1)
         : 1;
       
       const adjustedContribution = monthly * inflationMultiplier;
       
-      // Начисление процентов
-      const interestEarned = balance * monthlyRate;
+      // Сложный процент
+      const compoundInterest = balance * monthlyRate;
+      balance += compoundInterest + adjustedContribution;
       
-      // Обновление баланса
-      balance += interestEarned + adjustedContribution;
+      // Простой процент для сравнения
+      const simpleInterest = simpleBalance * simpleMonthlyRate;
+      simpleBalance += simpleInterest + adjustedContribution;
+      
       totalContributions += adjustedContribution;
       
-      // Реальная стоимость с учетом инфляции
       const realValue = balance / Math.pow(1 + monthlyInflation, month);
       
       breakdown.push({
         month,
         contribution: monthly,
         adjustedContribution,
-        interest: interestEarned,
+        interest: compoundInterest,
         balance,
         realValue,
+        simpleInterestBalance: simpleBalance,
         inflationRate: monthlyInflation * 12 * 100
       });
     }
@@ -94,6 +106,8 @@ export function SavingsCalculator() {
     const totalInterest = balance - totalContributions;
     const finalRealValue = balance / Math.pow(1 + inflationRate, years);
     const inflationLoss = balance - finalRealValue;
+    const simpleInterestTotal = simpleBalance - totalContributions;
+    const compoundAdvantage = totalInterest - simpleInterestTotal;
 
     setResult({
       totalAmount: balance,
@@ -102,6 +116,8 @@ export function SavingsCalculator() {
       realValue: finalRealValue,
       inflationLoss,
       adjustedMonthlyContribution: monthly * Math.pow(1 + monthlyInflation, months - 1),
+      simpleInterestAmount: simpleBalance,
+      compoundAdvantage,
       monthlyBreakdown: breakdown,
     });
   };
@@ -123,6 +139,8 @@ export function SavingsCalculator() {
         realValue: 0,
         inflationLoss: 0,
         adjustedMonthlyContribution: 0,
+        simpleInterestAmount: 0,
+        compoundAdvantage: 0,
         monthlyBreakdown: [],
       });
       return;
@@ -132,58 +150,16 @@ export function SavingsCalculator() {
     const monthlyRate = rate / frequency;
     const monthlyInflation = inflationRate / 12;
 
-    // Целевая сумма с учетом инфляции
     const inflationAdjustedTarget = adjustForInflation 
       ? targetAmount * Math.pow(1 + inflationRate, years)
       : targetAmount;
 
-    // Будущая стоимость начального капитала
     const futureValueInitial = initial * Math.pow(1 + monthlyRate, months);
-
-    // Требуемая сумма от взносов
     const requiredFromContributions = inflationAdjustedTarget - futureValueInitial;
 
-    if (requiredFromContributions <= 0) {
-      // Начального капитала достаточно
-      setResult({
-        totalAmount: futureValueInitial,
-        totalContributions: initial,
-        totalInterest: futureValueInitial - initial,
-        realValue: targetAmount,
-        inflationLoss: futureValueInitial - targetAmount,
-        adjustedMonthlyContribution: 0,
-        monthlyBreakdown: [],
-      });
-      return;
-    }
-
-    // Расчет требуемого ежемесячного взноса
     let requiredMonthly = 0;
     
-    if (adjustForInflation) {
-      // Сложная формула для взносов с учетом инфляции
-      // Используем итеративный метод для точности
-      let low = 0;
-      let high = requiredFromContributions / months;
-      let iterations = 0;
-      const maxIterations = 100;
-      const tolerance = 1;
-
-      while (high - low > tolerance && iterations < maxIterations) {
-        const mid = (low + high) / 2;
-        const testResult = simulateContributions(mid, months, monthlyRate, monthlyInflation);
-        
-        if (testResult < requiredFromContributions) {
-          low = mid;
-        } else {
-          high = mid;
-        }
-        iterations++;
-      }
-      
-      requiredMonthly = (low + high) / 2;
-    } else {
-      // Стандартная формула аннуитета
+    if (requiredFromContributions > 0) {
       if (monthlyRate > 0) {
         requiredMonthly = requiredFromContributions * monthlyRate / 
           (Math.pow(1 + monthlyRate, months) - 1);
@@ -192,7 +168,6 @@ export function SavingsCalculator() {
       }
     }
 
-    // Симуляция для получения детального breakdown
     const breakdown = [];
     let balance = initial;
     let totalContributions = initial;
@@ -217,6 +192,7 @@ export function SavingsCalculator() {
         interest: interestEarned,
         balance,
         realValue,
+        simpleInterestBalance: 0,
         inflationRate: monthlyInflation * 12 * 100
       });
     }
@@ -231,21 +207,10 @@ export function SavingsCalculator() {
       realValue: finalRealValue,
       inflationLoss: balance - finalRealValue,
       adjustedMonthlyContribution: requiredMonthly,
+      simpleInterestAmount: 0,
+      compoundAdvantage: 0,
       monthlyBreakdown: breakdown,
     });
-  };
-
-  const simulateContributions = (monthlyAmount: number, months: number, monthlyRate: number, monthlyInflation: number) => {
-    let balance = 0;
-    
-    for (let month = 1; month <= months; month++) {
-      const inflationMultiplier = Math.pow(1 + monthlyInflation, month - 1);
-      const adjustedContribution = monthlyAmount * inflationMultiplier;
-      const interestEarned = balance * monthlyRate;
-      balance += interestEarned + adjustedContribution;
-    }
-    
-    return balance;
   };
 
   const formatCurrency = (amount: number) => {
@@ -277,21 +242,12 @@ export function SavingsCalculator() {
   };
 
   const inflationImpact = getInflationImpact();
+  const compoundAdvantagePercentage = result.totalContributions > 0 
+    ? (result.compoundAdvantage / result.totalContributions) * 100 
+    : 0;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Calculator className="text-blue-600 dark:text-blue-400" size={24} />
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            Калькулятор накоплений с учетом инфляции
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Умный расчет с корректировкой на инфляцию
-          </p>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
@@ -386,6 +342,41 @@ export function SavingsCalculator() {
                 Корректировать взносы с учетом инфляции
               </label>
             </div>
+
+            {/* Переключатель сравнения простого и сложного процента */}
+            <div className="p-3 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg">
+              <button
+                onClick={() => setFormData({ ...formData, showComparison: !formData.showComparison })}
+                className="flex items-center gap-3 w-full"
+              >
+                {formData.showComparison ? (
+                  <ToggleRight className="text-green-600 dark:text-green-400" size={24} />
+                ) : (
+                  <ToggleLeft className="text-slate-400" size={24} />
+                )}
+                <div className="text-left">
+                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    Сравнение с простым процентом
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                    Показать разницу между сложным и простым процентом
+                  </div>
+                </div>
+              </button>
+              
+              {formData.showComparison && (
+                <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                  <Input
+                    label="Ставка для сравнения (%)"
+                    type="number"
+                    step="0.1"
+                    value={formData.comparisonRate}
+                    onChange={(e) => setFormData({ ...formData, comparisonRate: e.target.value })}
+                    fullWidth
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </Card>
 
@@ -424,6 +415,24 @@ export function SavingsCalculator() {
                 С учетом инфляции {formData.inflationRate}%
               </div>
             </div>
+
+            {/* Преимущество сложного процента */}
+            {formData.showComparison && result.compoundAdvantage > 0 && (
+              <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="text-emerald-600 dark:text-emerald-400" size={20} />
+                  <span className="font-medium text-emerald-800 dark:text-emerald-200">
+                    Преимущество сложного процента
+                  </span>
+                </div>
+                <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                  +{formatCurrency(result.compoundAdvantage)}
+                </div>
+                <div className="text-sm text-emerald-700 dark:text-emerald-300">
+                  Дополнительный доход (+{compoundAdvantagePercentage.toFixed(1)}%)
+                </div>
+              </div>
+            )}
 
             {result.inflationLoss > 0 && (
               <div className={`p-4 rounded-lg ${
@@ -528,60 +537,26 @@ export function SavingsCalculator() {
             </div>
           </div>
         </Card>
+
+        {/* Результаты сравнения */}
+        {formData.showComparison && (
+          <CompoundInterestComparison
+            compoundTotal={result.totalAmount}
+            simpleTotal={result.simpleInterestAmount}
+            advantage={result.compoundAdvantage}
+            contributionsTotal={result.totalContributions}
+            compoundRate={parseFloat(formData.annualRate)}
+            simpleRate={parseFloat(formData.comparisonRate)}
+          />
+        )}
       </div>
 
       {result.monthlyBreakdown.length > 0 && (
-        <Card>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
-            График роста капитала
-          </h3>
-          
-          <div className="h-64 flex items-end justify-between gap-1 mb-4">
-            {result.monthlyBreakdown
-              .filter((_, index) => index % Math.ceil(result.monthlyBreakdown.length / 12) === 0)
-              .map((item, index) => {
-                const maxBalance = Math.max(...result.monthlyBreakdown.map(b => b.balance));
-                const maxRealValue = Math.max(...result.monthlyBreakdown.map(b => b.realValue));
-                const nominalHeight = (item.balance / maxBalance) * 100;
-                const realHeight = (item.realValue / maxRealValue) * 100;
-                
-                return (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full flex flex-col gap-1">
-                      <div
-                        className="w-full bg-blue-500 rounded-t transition-all duration-300 hover:bg-blue-600"
-                        style={{ height: `${nominalHeight}%`, minHeight: '4px' }}
-                        title={`Месяц ${item.month}: ${formatCurrency(item.balance)} (номинал)`}
-                      />
-                      <div
-                        className="w-full bg-green-500 rounded-b transition-all duration-300 hover:bg-green-600 opacity-70"
-                        style={{ height: `${realHeight}%`, minHeight: '4px' }}
-                        title={`Месяц ${item.month}: ${formatCurrency(item.realValue)} (реальная стоимость)`}
-                      />
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      {Math.ceil(item.month / 12)}г
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-          
-          <div className="flex justify-center gap-6 mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded" />
-              <span className="text-sm text-slate-600 dark:text-slate-400">Номинальная стоимость</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded opacity-70" />
-              <span className="text-sm text-slate-600 dark:text-slate-400">Реальная стоимость</span>
-            </div>
-          </div>
-          
-          <div className="text-center text-sm text-slate-600 dark:text-slate-400">
-            График показывает рост капитала с учетом инфляции {formData.inflationRate}% в год
-          </div>
-        </Card>
+        <SavingsChart
+          data={result.monthlyBreakdown}
+          showComparison={formData.showComparison}
+          adjustForInflation={formData.adjustForInflation}
+        />
       )}
 
       {formData.adjustForInflation && (

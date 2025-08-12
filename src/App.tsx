@@ -11,7 +11,7 @@ import { TransactionList } from './components/transactions/TransactionList';
 import { BudgetManager } from './components/budget/BudgetManager';
 import { GoalsManager } from './components/goals/GoalsManager';
 import { Analytics } from './components/analytics/Analytics';
-import { SavingsCalculator } from './components/calculator/SavingsCalculator';
+import { CalculatorHub } from './components/calculator/CalculatorHub';
 import { CategoriesManager } from './components/categories/CategoriesManager';
 import { ImportExportManager } from './components/import-export/ImportExportManager';
 import { RecurringPaymentsManager } from './components/recurring/RecurringPaymentsManager';
@@ -280,7 +280,7 @@ function AppContent() {
       case 'calendar':
         return <Calendar />;
       case 'calculator':
-        return <SavingsCalculator />;
+        return <CalculatorHub />;
       case 'categories':
         return <CategoriesManager />;
       case 'import-export':

@@ -86,10 +86,20 @@ export function Analytics() {
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-        Аналитика и отчёты
-      </h2>
+    <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
+      <div className="flex items-center gap-3">
+        <div className="p-3 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl shadow-lg shadow-emerald-500/25">
+          <PieChart className="text-white" size={24} />
+        </div>
+        <div>
+          <h2 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+            Аналитика и отчёты
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Детальный анализ ваших финансов
+          </p>
+        </div>
+      </div>
 
       {/* Основные метрики */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

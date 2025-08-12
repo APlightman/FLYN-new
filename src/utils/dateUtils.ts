@@ -54,3 +54,16 @@ export const getDaysInMonth = (date: Date): (Date | null)[] => {
   
   return days;
 };
+
+// Утилита для правильного форматирования даты в ключ
+export const formatDateKey = (date: Date): string => {
+  return date.getFullYear() + '-' + 
+         String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+         String(date.getDate()).padStart(2, '0');
+};
+
+// Утилита для парсинга даты из ключа
+export const parseDateKey = (dateKey: string): Date => {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};

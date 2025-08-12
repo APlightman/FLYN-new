@@ -55,7 +55,7 @@ export function BudgetManager() {
   const stats = getQuickStats();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
       {/* Заголовок */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex items-center gap-3">
@@ -63,7 +63,7 @@ export function BudgetManager() {
             <TrendingUp className="text-white" size={24} />
           </div>
           <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+            <h2 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
               Управление бюджетом
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">
