@@ -246,17 +246,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Гидратация состояния
+  // Гидратация состояния - исправлена логика
   useEffect(() => {
-    const hydratedState = loadFromStorage();
-    dispatch({ type: 'HYDRATE_STATE', payload: hydratedState });
-    setIsHydrated(true);
+    try {
+      const hydratedState = loadFromStorage();
+      dispatch({ type: 'HYDRATE_STATE', payload: hydratedState });
+    } catch (error) {
+      console.error('Hydration error:', error);
+      // В случае ошибки используем состояние по умолчанию
+      dispatch({ type: 'HYDRATE_STATE', payload: getDefaultState() });
+    } finally {
+      // Всегда завершаем загрузку
+      setIsHydrated(true);
+    }
   }, []);
 
   // Синхронизация при входе пользователя
   useEffect(() => {
     if (user && isOnline && isHydrated) {
-      syncData();
+      syncData().catch(error => {
+        console.error('Sync error:', error);
+        // Не блокируем приложение при ошибке синхронизации
+      });
     }
   }, [user, isOnline, isHydrated]);
 
@@ -301,7 +312,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await addTransactionToSupabase(transaction);
+      try {
+        await addTransactionToSupabase(transaction);
+      } catch (error) {
+        console.error('Failed to sync transaction:', error);
+      }
     }
   };
 
@@ -311,7 +326,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await updateTransactionInSupabase(id, updates);
+      try {
+        await updateTransactionInSupabase(id, updates);
+      } catch (error) {
+        console.error('Failed to sync transaction update:', error);
+      }
     }
   };
 
@@ -321,7 +340,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await deleteTransactionFromSupabase(id);
+      try {
+        await deleteTransactionFromSupabase(id);
+      } catch (error) {
+        console.error('Failed to sync transaction deletion:', error);
+      }
     }
   };
 
@@ -333,7 +356,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await addCategoryToSupabase(category);
+      try {
+        await addCategoryToSupabase(category);
+      } catch (error) {
+        console.error('Failed to sync category:', error);
+      }
     }
   };
 
@@ -343,7 +370,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await updateCategoryInSupabase(id, updates);
+      try {
+        await updateCategoryInSupabase(id, updates);
+      } catch (error) {
+        console.error('Failed to sync category update:', error);
+      }
     }
   };
 
@@ -353,7 +384,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await deleteCategoryFromSupabase(id);
+      try {
+        await deleteCategoryFromSupabase(id);
+      } catch (error) {
+        console.error('Failed to sync category deletion:', error);
+      }
     }
   };
 
@@ -363,7 +398,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await addBudgetToSupabase(budget);
+      try {
+        await addBudgetToSupabase(budget);
+      } catch (error) {
+        console.error('Failed to sync budget:', error);
+      }
     }
   };
 
@@ -373,7 +412,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await updateBudgetInSupabase(id, updates);
+      try {
+        await updateBudgetInSupabase(id, updates);
+      } catch (error) {
+        console.error('Failed to sync budget update:', error);
+      }
     }
   };
 
@@ -383,7 +426,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await deleteBudgetFromSupabase(id);
+      try {
+        await deleteBudgetFromSupabase(id);
+      } catch (error) {
+        console.error('Failed to sync budget deletion:', error);
+      }
     }
   };
 
@@ -395,7 +442,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await addGoalToSupabase(goal);
+      try {
+        await addGoalToSupabase(goal);
+      } catch (error) {
+        console.error('Failed to sync goal:', error);
+      }
     }
   };
 
@@ -405,7 +456,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await updateGoalInSupabase(id, updates);
+      try {
+        await updateGoalInSupabase(id, updates);
+      } catch (error) {
+        console.error('Failed to sync goal update:', error);
+      }
     }
   };
 
@@ -415,7 +470,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await deleteGoalFromSupabase(id);
+      try {
+        await deleteGoalFromSupabase(id);
+      } catch (error) {
+        console.error('Failed to sync goal deletion:', error);
+      }
     }
   };
 
@@ -427,7 +486,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await addRecurringPaymentToSupabase(payment);
+      try {
+        await addRecurringPaymentToSupabase(payment);
+      } catch (error) {
+        console.error('Failed to sync recurring payment:', error);
+      }
     }
   };
 
@@ -437,7 +500,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await updateRecurringPaymentInSupabase(id, updates);
+      try {
+        await updateRecurringPaymentInSupabase(id, updates);
+      } catch (error) {
+        console.error('Failed to sync recurring payment update:', error);
+      }
     }
   };
 
@@ -447,7 +514,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
-      await deleteRecurringPaymentFromSupabase(id);
+      try {
+        await deleteRecurringPaymentFromSupabase(id);
+      } catch (error) {
+        console.error('Failed to sync recurring payment deletion:', error);
+      }
     }
   };
 
@@ -463,6 +534,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_SELECTED_DATE', payload: date });
   };
 
+  // Показываем загрузку только если состояние не гидратировано
   if (!isHydrated) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">

@@ -238,7 +238,9 @@ function AppContent() {
   useEffect(() => {
     if (user && isOnline && isSupabaseConfigured) {
       const interval = setInterval(() => {
-        syncData();
+        syncData().catch(error => {
+          console.error('Background sync error:', error);
+        });
       }, 30000);
 
       return () => clearInterval(interval);

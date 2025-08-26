@@ -20,57 +20,93 @@ export function useAuth() {
   })
 
   useEffect(() => {
+    // Принудительно завершаем загрузку через 3 секунды максимум
+    const forceLoadingTimeout = setTimeout(() => {
+      console.warn('Force completing auth loading due to timeout')
+      setAuthState(prev => ({ ...prev, loading: false }))
+    }, 3000)
+
     // Если Supabase не настроен, сразу завершаем загрузку
     if (!isSupabaseConfigured || !supabase) {
+      clearTimeout(forceLoadingTimeout)
       setAuthState(prev => ({ ...prev, loading: false }))
       return
     }
 
-    // Получаем текущую сессию
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Session error:', error)
-        setAuthState(prev => ({ ...prev, error: error.message, loading: false }))
-      } else {
-        setAuthState(prev => ({
-          ...prev,
-          session,
-          user: session?.user ?? null,
-          loading: false
-        }))
-      }
-    })
+    // Простая инициализация без сложной логики
+    const initAuth = async () => {
+      try {
+        // Быстро получаем сессию с таймаутом
+        const sessionPromise = supabase.auth.getSession()
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth timeout')), 2000)
+        )
 
-    // Слушаем изменения аутентификации
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
-        
-        setAuthState(prev => ({
-          ...prev,
-          session,
-          user: session?.user ?? null,
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any
+
+        if (error) {
+          console.warn('Session error:', error.message)
+          setAuthState(prev => ({ 
+            ...prev, 
+            loading: false,
+            error: null,
+            isSupabaseEnabled: false
+          }))
+        } else {
+          setAuthState(prev => ({
+            ...prev,
+            session,
+            user: session?.user ?? null,
+            loading: false,
+            error: null
+          }))
+        }
+      } catch (error) {
+        console.warn('Auth init failed:', error)
+        setAuthState(prev => ({ 
+          ...prev, 
           loading: false,
-          error: null
+          error: null,
+          isSupabaseEnabled: false
         }))
-
-        // Создаем профиль пользователя при регистрации или подтверждении email
-        if ((event === 'SIGNED_UP' || event === 'TOKEN_REFRESHED') && session?.user) {
-          await createUserProfile(session.user)
-        }
-        
-        // Показываем сообщения пользователю
-        if (event === 'SIGNED_UP') {
-          alert('Регистрация успешна! Проверьте email для подтверждения аккаунта.')
-        }
-        
-        if (event === 'PASSWORD_RECOVERY') {
-          alert('Ссылка для восстановления пароля отправлена на email.')
-        }
       }
-    )
 
-    return () => subscription.unsubscribe()
+      clearTimeout(forceLoadingTimeout)
+    }
+
+    initAuth()
+
+    // Простой auth listener без сложной логики
+    let subscription: any = null
+    
+    if (supabase) {
+      try {
+        const { data } = supabase.auth.onAuthStateChange((event, session) => {
+          console.log('Auth state changed:', event)
+          setAuthState(prev => ({
+            ...prev,
+            session,
+            user: session?.user ?? null,
+            loading: false,
+            error: null
+          }))
+        })
+        
+        subscription = data.subscription
+      } catch (error) {
+        console.warn('Auth listener failed:', error)
+      }
+    }
+
+    return () => {
+      clearTimeout(forceLoadingTimeout)
+      if (subscription) {
+        subscription.unsubscribe()
+      }
+    }
   }, [])
 
   const createUserProfile = async (user: User) => {
