@@ -1,0 +1,8 @@
+.redText {
+  color: red;
+  font-size: 20px;
+}
+
+.categoryColor {
+  background-color: var(--category-color, #6b7280);
+}

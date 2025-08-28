@@ -1,80 +1,105 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#2563eb" />
     <meta name="background-color" content="#0f172a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta name="apple-mobile-web-app-title" content="FinanceTracker" />
     <meta name="mobile-web-app-capable" content="yes" />
-    
+
     <!-- Manifest -->
     <link rel="manifest" href="/manifest.json" />
-    
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-    <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
-    <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-128x128.png" />
-    <link rel="apple-touch-icon" sizes="114x114" href="/icons/icon-128x128.png" />
-    <link rel="apple-touch-icon" sizes="76x76" href="/icons/icon-72x72.png" />
-    <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.png" />
-    <link rel="apple-touch-icon" sizes="60x60" href="/icons/icon-72x72.png" />
-    <link rel="apple-touch-icon" sizes="57x57" href="/icons/icon-72x72.png" />
-    
+
+    <!-- Apple Touch Icon (оставьте только одну строку) -->
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/icon-192x192.png"
+    />
+
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-72x72.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png" />
-    
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/icons/icon-72x72.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/icons/icon-72x72.png"
+    />
+
     <!-- Microsoft Tiles -->
     <meta name="msapplication-TileColor" content="#2563eb" />
     <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
     <meta name="msapplication-config" content="/browserconfig.xml" />
-    
+
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Современное приложение для управления личными финансами с умным бюджетированием, аналитикой и планированием целей" />
-    <meta name="keywords" content="финансы, бюджет, деньги, учет, планирование, цели, аналитика, PWA" />
+    <meta
+      name="description"
+      content="Современное приложение для управления личными финансами с умным бюджетированием, аналитикой и планированием целей"
+    />
+    <meta
+      name="keywords"
+      content="финансы, бюджет, деньги, учет, планирование, цели, аналитика, PWA"
+    />
     <meta name="author" content="FinanceTracker Team" />
-    
+
     <!-- Open Graph -->
     <meta property="og:title" content="FinanceTracker - Управление финансами" />
-    <meta property="og:description" content="Современное приложение для управления личными финансами" />
+    <meta
+      property="og:description"
+      content="Современное приложение для управления личными финансами"
+    />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/icons/icon-512x512.png" />
     <meta property="og:url" content="https://financetracker.app" />
-    
+
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="FinanceTracker - Управление финансами" />
-    <meta name="twitter:description" content="Современное приложение для управления личными финансами" />
+    <meta
+      name="twitter:title"
+      content="FinanceTracker - Управление финансами"
+    />
+    <meta
+      name="twitter:description"
+      content="Современное приложение для управления личными финансами"
+    />
     <meta name="twitter:image" content="/icons/icon-512x512.png" />
-    
+
     <!-- Preload критичных ресурсов -->
     <link rel="preload" href="/src/main.tsx" as="script" />
     <link rel="preload" href="/src/index.css" as="style" />
-    
+
     <!-- DNS prefetch для внешних ресурсов -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-    
+
     <title>FinanceTracker - Управление финансами</title>
-    
+
     <!-- Inline критичные стили для быстрой загрузки -->
     <style>
       /* Критичные стили для первого рендера */
       body {
         margin: 0;
         padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
         background: #f8fafc;
         color: #1e293b;
         overflow-x: hidden;
       }
-      
+
       /* Загрузочный экран */
       #loading-screen {
         position: fixed;
@@ -89,12 +114,12 @@
         z-index: 9999;
         transition: opacity 0.5s ease-out;
       }
-      
+
       .loading-content {
         text-align: center;
         color: white;
       }
-      
+
       .loading-logo {
         width: 80px;
         height: 80px;
@@ -105,22 +130,23 @@
         justify-content: center;
         margin: 0 auto 20px;
         font-size: 32px;
+        -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
         animation: pulse 2s infinite;
       }
-      
+
       .loading-title {
         font-size: 24px;
         font-weight: bold;
         margin-bottom: 10px;
       }
-      
+
       .loading-subtitle {
         font-size: 14px;
         opacity: 0.8;
         margin-bottom: 30px;
       }
-      
+
       .loading-spinner {
         width: 40px;
         height: 40px;
@@ -130,17 +156,26 @@
         animation: spin 1s linear infinite;
         margin: 0 auto;
       }
-      
+
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
-      
+
       @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
       }
-      
+
       /* Темная тема для системных элементов */
       @media (prefers-color-scheme: dark) {
         body {
@@ -148,7 +183,7 @@
           color: #f1f5f9;
         }
       }
-      
+
       /* Скрываем загрузочный экран после загрузки */
       .loaded #loading-screen {
         opacity: 0;
@@ -166,63 +201,64 @@
         <div class="loading-spinner"></div>
       </div>
     </div>
-    
+
     <!-- Основное приложение -->
     <div id="root"></div>
-    
+
     <!-- Скрипт для регистрации Service Worker -->
     <script>
       // Регистрируем Service Worker как можно раньше
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('SW registered: ', registration);
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("SW registered: ", registration);
             })
-            .catch(registrationError => {
-              console.log('SW registration failed: ', registrationError);
+            .catch((registrationError) => {
+              console.log("SW registration failed: ", registrationError);
             });
         });
       }
-      
+
       // Скрываем загрузочный экран после загрузки
-      window.addEventListener('load', () => {
+      window.addEventListener("load", () => {
         setTimeout(() => {
-          document.body.classList.add('loaded');
+          document.body.classList.add("loaded");
           setTimeout(() => {
-            const loadingScreen = document.getElementById('loading-screen');
+            const loadingScreen = document.getElementById("loading-screen");
             if (loadingScreen) {
               loadingScreen.remove();
             }
           }, 500);
         }, 1000);
       });
-      
+
       // Предотвращаем зум на iOS
-      document.addEventListener('gesturestart', function (e) {
+      document.addEventListener("gesturestart", function (e) {
         e.preventDefault();
       });
-      
+
       // Отключаем контекстное меню на мобильных
-      document.addEventListener('contextmenu', function (e) {
+      document.addEventListener("contextmenu", function (e) {
         if (window.innerWidth < 768) {
           e.preventDefault();
         }
       });
-      
+
       // Обработка viewport для мобильных устройств
       function setViewportHeight() {
         const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
+        document.documentElement.style.setProperty("--vh", `${vh}px`);
       }
-      
+
       setViewportHeight();
-      window.addEventListener('resize', setViewportHeight);
-      window.addEventListener('orientationchange', () => {
+      window.addEventListener("resize", setViewportHeight);
+      window.addEventListener("orientationchange", () => {
         setTimeout(setViewportHeight, 100);
       });
     </script>
-    
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

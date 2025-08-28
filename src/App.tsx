@@ -1,43 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import { AppProvider, useApp } from './contexts/AppContext';
-import { useAuth } from './hooks/useAuth';
-import { AuthForm } from './components/auth/AuthForm';
-import { AuthCallback } from './components/auth/AuthCallback';
-import { Header } from './components/layout/Header';
-import { Sidebar } from './components/layout/Sidebar';
-import { MobileNavigation } from './components/mobile/MobileNavigation';
-import { MobileHeader } from './components/mobile/MobileHeader';
-import { TransactionList } from './components/transactions/TransactionList';
-import { BudgetManager } from './components/budget/BudgetManager';
-import { GoalsManager } from './components/goals/GoalsManager';
-import { Analytics } from './components/analytics/Analytics';
-import { CalculatorHub } from './components/calculator/CalculatorHub';
-import { CategoriesManager } from './components/categories/CategoriesManager';
-import { ImportExportManager } from './components/import-export/ImportExportManager';
-import { RecurringPaymentsManager } from './components/recurring/RecurringPaymentsManager';
-import { Calendar } from './components/calendar/Calendar';
-import { Settings } from './components/settings/Settings';
-import { FAQ } from './components/faq/FAQ';
-import { TrendingUp, TrendingDown, Wallet, Target, Wifi, WifiOff } from 'lucide-react';
-import { isSupabaseConfigured } from './lib/supabase';
+import { useState, useEffect } from "react";
+import { AppProvider, useApp } from "./contexts/AppContext";
+import { useAuth } from "./hooks/useAuth";
+import { AuthForm } from "./components/auth/AuthForm";
+import { AuthCallback } from "./components/auth/AuthCallback";
+import { Header } from "./components/layout/Header";
+import { Sidebar } from "./components/layout/Sidebar";
+import { MobileNavigation } from "./components/mobile/MobileNavigation";
+import { MobileHeader } from "./components/mobile/MobileHeader";
+import { TransactionList } from "./components/transactions/TransactionList";
+import { BudgetManager } from "./components/budget/BudgetManager";
+import { GoalsManager } from "./components/goals/GoalsManager";
+import { Analytics } from "./components/analytics/Analytics";
+import { CalculatorHub } from "./components/calculator/CalculatorHub";
+import { CategoriesManager } from "./components/categories/CategoriesManager";
+import { ImportExportManager } from "./components/import-export/ImportExportManager";
+import { RecurringPaymentsManager } from "./components/recurring/RecurringPaymentsManager";
+import { Calendar } from "./components/calendar/Calendar";
+import { Settings } from "./components/settings/Settings";
+import { FAQ } from "./components/faq/FAQ";
+import {
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  Target,
+  WifiOff,
+} from "lucide-react";
+import { isSupabaseConfigured } from "./lib/supabase";
+import "./App.css";
 
 function Dashboard() {
   const { state, isOnline } = useApp();
-  
+
   const totalIncome = state.transactions
-    .filter(t => t.type === 'income')
+    .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + t.amount, 0);
-    
+
   const totalExpenses = state.transactions
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.amount, 0);
 
   const balance = totalIncome - totalExpenses;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
+    return new Intl.NumberFormat("ru-RU", {
+      style: "currency",
+      currency: "RUB",
     }).format(amount);
   };
 
@@ -49,18 +56,26 @@ function Dashboard() {
     <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
       {!isOnline && (
         <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-3 flex items-center gap-2">
-          <WifiOff size={16} className="text-orange-600 dark:text-orange-400 flex-shrink-0" />
+          <WifiOff
+            size={16}
+            className="text-orange-600 dark:text-orange-400 flex-shrink-0"
+          />
           <span className="text-sm text-orange-700 dark:text-orange-300">
-            Работаем в оффлайн режиме. Данные синхронизируются при подключении к интернету.
+            Работаем в оффлайн режиме. Данные синхронизируются при подключении к
+            интернету.
           </span>
         </div>
       )}
 
       {!isSupabaseConfigured && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center gap-2">
-          <Wallet size={16} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
+          <Wallet
+            size={16}
+            className="text-blue-600 dark:text-blue-400 flex-shrink-0"
+          />
           <span className="text-sm text-blue-700 dark:text-blue-300">
-            Работаем в локальном режиме. Данные сохраняются только на этом устройстве.
+            Работаем в локальном режиме. Данные сохраняются только на этом
+            устройстве.
           </span>
         </div>
       )}
@@ -73,7 +88,7 @@ function Dashboard() {
           Обзор ваших финансов
         </p>
       </div>
-      
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <div className="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-xl lg:rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-3 lg:gap-4">
@@ -81,44 +96,54 @@ function Dashboard() {
               <TrendingUp className="text-white" size={20} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-slate-500 dark:text-slate-400 mb-1 text-xs lg:text-sm">Доходы</p>
+              <p className="font-semibold text-slate-500 dark:text-slate-400 mb-1 text-xs lg:text-sm">
+                Доходы
+              </p>
               <p className="text-lg lg:text-2xl font-bold text-green-600 dark:text-green-400 truncate">
                 {formatCurrency(totalIncome)}
               </p>
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-xl lg:rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-3 lg:gap-4">
             <div className="p-2 lg:p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl lg:rounded-2xl shadow-lg shadow-red-500/25 flex-shrink-0">
               <TrendingDown className="text-white" size={20} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-slate-500 dark:text-slate-400 mb-1 text-xs lg:text-sm">Расходы</p>
+              <p className="font-semibold text-slate-500 dark:text-slate-400 mb-1 text-xs lg:text-sm">
+                Расходы
+              </p>
               <p className="text-lg lg:text-2xl font-bold text-red-600 dark:text-red-400 truncate">
                 {formatCurrency(totalExpenses)}
               </p>
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-xl lg:rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-3 lg:gap-4">
-            <div className={`p-2 lg:p-3 rounded-xl lg:rounded-2xl shadow-lg flex-shrink-0 ${
-              balance >= 0 
-                ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/25' 
-                : 'bg-gradient-to-br from-orange-500 to-orange-600 shadow-orange-500/25'
-            }`}>
+            <div
+              className={`p-2 lg:p-3 rounded-xl lg:rounded-2xl shadow-lg flex-shrink-0 ${
+                balance >= 0
+                  ? "bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/25"
+                  : "bg-gradient-to-br from-orange-500 to-orange-600 shadow-orange-500/25"
+              }`}
+            >
               <Wallet className="text-white" size={20} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-slate-500 dark:text-slate-400 mb-1 text-xs lg:text-sm">Баланс</p>
-              <p className={`text-lg lg:text-2xl font-bold truncate ${
-                balance >= 0 
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : 'text-orange-600 dark:text-orange-400'
-              }`}>
+              <p className="font-semibold text-slate-500 dark:text-slate-400 mb-1 text-xs lg:text-sm">
+                Баланс
+              </p>
+              <p
+                className={`text-lg lg:text-2xl font-bold truncate ${
+                  balance >= 0
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-orange-600 dark:text-orange-400"
+                }`}
+              >
                 {formatCurrency(balance)}
               </p>
             </div>
@@ -131,7 +156,9 @@ function Dashboard() {
               <Target className="text-white" size={20} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-slate-500 dark:text-slate-400 mb-1 text-xs lg:text-sm">Целей</p>
+              <p className="font-semibold text-slate-500 dark:text-slate-400 mb-1 text-xs lg:text-sm">
+                Целей
+              </p>
               <p className="text-lg lg:text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {state.goals.length}
               </p>
@@ -149,7 +176,7 @@ function Dashboard() {
             {recentTransactions.length} из {state.transactions.length}
           </span>
         </div>
-        
+
         <div className="space-y-3">
           {recentTransactions.length === 0 ? (
             <div className="text-center py-8 lg:py-12">
@@ -165,8 +192,10 @@ function Dashboard() {
             </div>
           ) : (
             recentTransactions.map((transaction) => {
-              const category = state.categories.find(c => c.name === transaction.category);
-              
+              const category = state.categories.find(
+                (c) => c.name === transaction.category
+              );
+
               return (
                 <div
                   key={transaction.id}
@@ -174,8 +203,8 @@ function Dashboard() {
                 >
                   <div className="flex items-center gap-3 lg:gap-4 min-w-0 flex-1">
                     <div
-                      className="w-3 h-3 lg:w-4 lg:h-4 rounded-full shadow-sm flex-shrink-0"
-                      style={{ backgroundColor: category?.color || '#6b7280' }}
+                      className="w-3 h-3 lg:w-4 lg:h-4 rounded-full shadow-sm flex-shrink-0 categoryColor"
+                      data-category-color={category?.color || "#6b7280"}
                     />
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-slate-900 dark:text-slate-100 truncate text-sm lg:text-base">
@@ -184,17 +213,24 @@ function Dashboard() {
                       <div className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
                         <span className="truncate">{transaction.category}</span>
                         <span>•</span>
-                        <span className="flex-shrink-0">{new Date(transaction.date).toLocaleDateString('ru-RU')}</span>
+                        <span className="flex-shrink-0">
+                          {new Date(transaction.date).toLocaleDateString(
+                            "ru-RU"
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className={`font-bold text-sm lg:text-lg flex-shrink-0 ${
-                    transaction.type === 'income' 
-                      ? 'text-green-600 dark:text-green-400' 
-                      : 'text-red-600 dark:text-red-400'
-                  }`}>
-                    {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+
+                  <div
+                    className={`font-bold text-sm lg:text-lg flex-shrink-0 ${
+                      transaction.type === "income"
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {transaction.type === "income" ? "+" : "-"}
+                    {formatCurrency(transaction.amount)}
                   </div>
                 </div>
               );
@@ -207,7 +243,7 @@ function Dashboard() {
 }
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { state, syncData, isOnline } = useApp();
@@ -223,23 +259,23 @@ function AppContent() {
     };
 
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   useEffect(() => {
     if (state.darkMode) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
   }, [state.darkMode]);
 
   useEffect(() => {
     if (user && isOnline && isSupabaseConfigured) {
       const interval = setInterval(() => {
-        syncData().catch(error => {
-          console.error('Background sync error:', error);
+        syncData().catch((error) => {
+          console.error("Background sync error:", error);
         });
       }, 30000);
 
@@ -249,47 +285,47 @@ function AppContent() {
 
   const getPageTitle = () => {
     const titles: Record<string, string> = {
-      dashboard: 'Главная',
-      transactions: 'Транзакции',
-      budget: 'Бюджет',
-      goals: 'Цели',
-      recurring: 'Регулярные',
-      analytics: 'Аналитика',
-      calendar: 'Календарь',
-      calculator: 'Калькулятор',
-      categories: 'Категории',
-      'import-export': 'Импорт/Экспорт',
-      faq: 'ЧаВо',
-      settings: 'Настройки',
+      dashboard: "Главная",
+      transactions: "Транзакции",
+      budget: "Бюджет",
+      goals: "Цели",
+      recurring: "Регулярные",
+      analytics: "Аналитика",
+      calendar: "Календарь",
+      calculator: "Калькулятор",
+      categories: "Категории",
+      "import-export": "Импорт/Экспорт",
+      faq: "ЧаВо",
+      settings: "Настройки",
     };
-    return titles[activeTab] || 'FinanceTracker';
+    return titles[activeTab] || "FinanceTracker";
   };
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard':
+      case "dashboard":
         return <Dashboard />;
-      case 'transactions':
+      case "transactions":
         return <TransactionList />;
-      case 'budget':
+      case "budget":
         return <BudgetManager />;
-      case 'goals':
+      case "goals":
         return <GoalsManager />;
-      case 'recurring':
+      case "recurring":
         return <RecurringPaymentsManager />;
-      case 'analytics':
+      case "analytics":
         return <Analytics />;
-      case 'calendar':
+      case "calendar":
         return <Calendar />;
-      case 'calculator':
+      case "calculator":
         return <CalculatorHub />;
-      case 'categories':
+      case "categories":
         return <CategoriesManager />;
-      case 'import-export':
+      case "import-export":
         return <ImportExportManager />;
-      case 'faq':
+      case "faq":
         return <FAQ />;
-      case 'settings':
+      case "settings":
         return <Settings />;
       default:
         return <Dashboard />;
@@ -307,21 +343,21 @@ function AppContent() {
             onClose={() => setSidebarOpen(false)}
           />
         )}
-        
+
         <div className="flex-1 flex flex-col min-w-0">
           {isMobile ? (
             <MobileHeader
               title={getPageTitle()}
               onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-              showSearch={activeTab === 'transactions'}
+              showSearch={activeTab === "transactions"}
               showNotifications={true}
               notificationCount={0}
             />
           ) : (
             <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
           )}
-          
-          <main className={`flex-1 overflow-auto ${isMobile ? 'pb-20' : ''}`}>
+
+          <main className={`flex-1 overflow-auto ${isMobile ? "pb-20" : ""}`}>
             {renderContent()}
           </main>
         </div>
@@ -335,12 +371,9 @@ function AppContent() {
           />
         )}
       </div>
-      
+
       {isMobile && (
-        <MobileNavigation
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+        <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
       )}
     </div>
   );
@@ -349,7 +382,7 @@ function AppContent() {
 function App() {
   const { user, loading, isSupabaseEnabled } = useAuth();
 
-  if (window.location.pathname === '/auth/callback') {
+  if (window.location.pathname === "/auth/callback") {
     return <AuthCallback />;
   }
 
