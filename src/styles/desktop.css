@@ -1,0 +1,119 @@
+/* Десктопные оптимизации */
+.desktop-app {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+.desktop-wide {
+  font-size: 16px;
+}
+
+.electron-app {
+  --electron-drag-region: drag;
+}
+
+.electron-app .drag-region {
+  -webkit-app-region: drag;
+}
+
+.electron-app .no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Десктопные scrollbar */
+.desktop-app ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.desktop-app ::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-600 rounded-full;
+}
+
+.desktop-app ::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400 dark:bg-slate-500;
+}
+
+/* Десктопные тени */
+.desktop-app .card-shadow {
+  box-shadow: 
+    0 2px 4px 0 rgb(0 0 0 / 0.1),
+    0 2px 4px -1px rgb(0 0 0 / 0.1),
+    0 0 0 1px rgb(0 0 0 / 0.03);
+}
+
+.desktop-app .card-shadow-hover {
+  box-shadow: 
+    0 8px 12px -1px rgb(0 0 0 / 0.15),
+    0 4px 8px -2px rgb(0 0 0 / 0.1),
+    0 0 0 1px rgb(0 0 0 / 0.05);
+}
+
+/* Десктопные hover эффекты */
+.desktop-app button:hover {
+  transform: translateY(-1px);
+}
+
+.desktop-app .card:hover {
+  transform: translateY(-2px);
+}
+
+/* Десктопная типографика */
+.desktop-app {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.desktop-wide {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Десктопные формы */
+.desktop-app input, 
+.desktop-app select, 
+.desktop-app textarea {
+  font-size: 14px;
+}
+
+/* Десктопные модальные окна */
+.desktop-app .modal-content {
+  margin: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+/* Анимации для десктопа */
+.desktop-app .animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.desktop-app .animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Оптимизация производительности для Electron */
+.desktop-app * {
+  will-change: auto;
+}
+
+.desktop-app .transition-transform {
+  will-change: transform;
+}
+
+.desktop-app .transition-opacity {
+  will-change: opacity;
+}
+
+/* Electron-специфичные стили */
+.electron-app {
+  .drag-region {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
+}

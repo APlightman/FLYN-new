@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, Bell, Search } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { Button } from '../ui/Button';
 import { UserMenu } from '../layout/UserMenu';
 
@@ -21,7 +21,7 @@ export function MobileHeader({
   showNotifications = false,
   notificationCount = 0
 }: MobileHeaderProps) {
-  const { user } = useAuth();
+  const { user } = useFirebaseAuth();
 
   return (
     <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-700/60 lg:hidden transition-all duration-300">

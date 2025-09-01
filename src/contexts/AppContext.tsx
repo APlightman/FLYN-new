@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AppState, Transaction, Category, Budget, FinancialGoal, RecurringPayment, FilterOptions, generateId } from '../types';
-import { useAuth } from '../hooks/useAuth';
-import { useSupabaseSync } from '../hooks/useSupabaseSync';
+import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
+import { useFirebaseSync } from '../hooks/useFirebaseSync';
 
 interface AppContextType {
   state: AppState;
@@ -208,29 +208,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = React.useState(false);
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
   
-  const { user } = useAuth();
+  const { user } = useFirebaseAuth();
   const {
     syncTransactions,
     syncCategories,
     syncBudgets,
     syncGoals,
     syncRecurringPayments,
-    addTransaction: addTransactionToSupabase,
-    updateTransaction: updateTransactionInSupabase,
-    deleteTransaction: deleteTransactionFromSupabase,
-    addCategory: addCategoryToSupabase,
-    updateCategory: updateCategoryInSupabase,
-    deleteCategory: deleteCategoryFromSupabase,
-    addBudget: addBudgetToSupabase,
-    updateBudget: updateBudgetInSupabase,
-    deleteBudget: deleteBudgetFromSupabase,
-    addGoal: addGoalToSupabase,
-    updateGoal: updateGoalInSupabase,
-    deleteGoal: deleteGoalFromSupabase,
-    addRecurringPayment: addRecurringPaymentToSupabase,
-    updateRecurringPayment: updateRecurringPaymentInSupabase,
-    deleteRecurringPayment: deleteRecurringPaymentFromSupabase
-  } = useSupabaseSync();
+    addTransaction: addTransactionToFirebase,
+    updateTransaction: updateTransactionInFirebase,
+    deleteTransaction: deleteTransactionFromFirebase,
+    addCategory: addCategoryToFirebase,
+    updateCategory: updateCategoryInFirebase,
+    deleteCategory: deleteCategoryFromFirebase,
+    addBudget: addBudgetToFirebase,
+    updateBudget: updateBudgetInFirebase,
+    deleteBudget: deleteBudgetFromFirebase,
+    addGoal: addGoalToFirebase,
+    updateGoal: updateGoalInFirebase,
+    deleteGoal: deleteGoalFromFirebase,
+    addRecurringPayment: addRecurringPaymentToFirebase,
+    updateRecurringPayment: updateRecurringPaymentInFirebase,
+    deleteRecurringPayment: deleteRecurringPaymentFromFirebase
+  } = useFirebaseSync();
 
   // Отслеживание онлайн статуса
   useEffect(() => {
@@ -246,17 +246,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Гидратация состояния - исправлена логика
+  // Гидратация состояния
   useEffect(() => {
     try {
       const hydratedState = loadFromStorage();
       dispatch({ type: 'HYDRATE_STATE', payload: hydratedState });
     } catch (error) {
       console.error('Hydration error:', error);
-      // В случае ошибки используем состояние по умолчанию
       dispatch({ type: 'HYDRATE_STATE', payload: getDefaultState() });
     } finally {
-      // Всегда завершаем загрузку
       setIsHydrated(true);
     }
   }, []);
@@ -266,7 +264,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (user && isOnline && isHydrated) {
       syncData().catch(error => {
         console.error('Sync error:', error);
-        // Не блокируем приложение при ошибке синхронизации
       });
     }
   }, [user, isOnline, isHydrated]);
@@ -307,13 +304,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction = { ...transaction, id: generateId() };
     
-    // Добавляем локально
     dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await addTransactionToSupabase(transaction);
+        await addTransactionToFirebase(transaction);
       } catch (error) {
         console.error('Failed to sync transaction:', error);
       }
@@ -321,13 +316,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
-    // Обновляем локально
     dispatch({ type: 'UPDATE_TRANSACTION', payload: { id, updates } });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await updateTransactionInSupabase(id, updates);
+        await updateTransactionInFirebase(id, updates);
       } catch (error) {
         console.error('Failed to sync transaction update:', error);
       }
@@ -335,13 +328,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteTransaction = async (id: string) => {
-    // Удаляем локально
     dispatch({ type: 'DELETE_TRANSACTION', payload: id });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await deleteTransactionFromSupabase(id);
+        await deleteTransactionFromFirebase(id);
       } catch (error) {
         console.error('Failed to sync transaction deletion:', error);
       }
@@ -351,13 +342,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addCategory = async (category: Omit<Category, 'id'>) => {
     const newCategory = { ...category, id: generateId() };
     
-    // Добавляем локально
     dispatch({ type: 'ADD_CATEGORY', payload: newCategory });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await addCategoryToSupabase(category);
+        await addCategoryToFirebase(category);
       } catch (error) {
         console.error('Failed to sync category:', error);
       }
@@ -365,13 +354,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateCategory = async (id: string, updates: Partial<Category>) => {
-    // Обновляем локально
     dispatch({ type: 'UPDATE_CATEGORY', payload: { id, updates } });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await updateCategoryInSupabase(id, updates);
+        await updateCategoryInFirebase(id, updates);
       } catch (error) {
         console.error('Failed to sync category update:', error);
       }
@@ -379,13 +366,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteCategory = async (id: string) => {
-    // Удаляем локально
     dispatch({ type: 'DELETE_CATEGORY', payload: id });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await deleteCategoryFromSupabase(id);
+        await deleteCategoryFromFirebase(id);
       } catch (error) {
         console.error('Failed to sync category deletion:', error);
       }
@@ -393,13 +378,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setBudget = async (budget: Budget) => {
-    // Добавляем локально
     dispatch({ type: 'SET_BUDGET', payload: budget });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await addBudgetToSupabase(budget);
+        await addBudgetToFirebase(budget);
       } catch (error) {
         console.error('Failed to sync budget:', error);
       }
@@ -407,13 +390,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateBudget = async (id: string, updates: Partial<Budget>) => {
-    // Обновляем локально
     dispatch({ type: 'UPDATE_BUDGET', payload: { id, updates } });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await updateBudgetInSupabase(id, updates);
+        await updateBudgetInFirebase(id, updates);
       } catch (error) {
         console.error('Failed to sync budget update:', error);
       }
@@ -421,13 +402,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteBudget = async (id: string) => {
-    // Удаляем локально
     dispatch({ type: 'DELETE_BUDGET', payload: id });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await deleteBudgetFromSupabase(id);
+        await deleteBudgetFromFirebase(id);
       } catch (error) {
         console.error('Failed to sync budget deletion:', error);
       }
@@ -437,13 +416,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addGoal = async (goal: Omit<FinancialGoal, 'id'>) => {
     const newGoal = { ...goal, id: generateId() };
     
-    // Добавляем локально
     dispatch({ type: 'ADD_GOAL', payload: newGoal });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await addGoalToSupabase(goal);
+        await addGoalToFirebase(goal);
       } catch (error) {
         console.error('Failed to sync goal:', error);
       }
@@ -451,13 +428,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateGoal = async (id: string, updates: Partial<FinancialGoal>) => {
-    // Обновляем локально
     dispatch({ type: 'UPDATE_GOAL', payload: { id, updates } });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await updateGoalInSupabase(id, updates);
+        await updateGoalInFirebase(id, updates);
       } catch (error) {
         console.error('Failed to sync goal update:', error);
       }
@@ -465,13 +440,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteGoal = async (id: string) => {
-    // Удаляем локально
     dispatch({ type: 'DELETE_GOAL', payload: id });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await deleteGoalFromSupabase(id);
+        await deleteGoalFromFirebase(id);
       } catch (error) {
         console.error('Failed to sync goal deletion:', error);
       }
@@ -481,13 +454,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addRecurringPayment = async (payment: Omit<RecurringPayment, 'id'>) => {
     const newPayment = { ...payment, id: generateId() };
     
-    // Добавляем локально
     dispatch({ type: 'ADD_RECURRING_PAYMENT', payload: newPayment });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await addRecurringPaymentToSupabase(payment);
+        await addRecurringPaymentToFirebase(payment);
       } catch (error) {
         console.error('Failed to sync recurring payment:', error);
       }
@@ -495,13 +466,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateRecurringPayment = async (id: string, updates: Partial<RecurringPayment>) => {
-    // Обновляем локально
     dispatch({ type: 'UPDATE_RECURRING_PAYMENT', payload: { id, updates } });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await updateRecurringPaymentInSupabase(id, updates);
+        await updateRecurringPaymentInFirebase(id, updates);
       } catch (error) {
         console.error('Failed to sync recurring payment update:', error);
       }
@@ -509,13 +478,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteRecurringPayment = async (id: string) => {
-    // Удаляем локально
     dispatch({ type: 'DELETE_RECURRING_PAYMENT', payload: id });
     
-    // Синхронизируем с сервером если онлайн
     if (user && isOnline) {
       try {
-        await deleteRecurringPaymentFromSupabase(id);
+        await deleteRecurringPaymentFromFirebase(id);
       } catch (error) {
         console.error('Failed to sync recurring payment deletion:', error);
       }
@@ -534,7 +501,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_SELECTED_DATE', payload: date });
   };
 
-  // Показываем загрузку только если состояние не гидратировано
   if (!isHydrated) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">

@@ -1,0 +1,133 @@
+/* Мобильные утилиты */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+.no-scroll {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* Safe area утилиты */
+.pt-safe {
+  padding-top: var(--safe-area-inset-top);
+}
+
+.pb-safe {
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+.pl-safe {
+  padding-left: var(--safe-area-inset-left);
+}
+
+.pr-safe {
+  padding-right: var(--safe-area-inset-right);
+}
+
+.h-safe-area-inset-bottom {
+  height: var(--safe-area-inset-bottom);
+}
+
+/* Мобильная навигация */
+.mobile-nav-height {
+  height: calc(60px + var(--safe-area-inset-bottom));
+}
+
+.mobile-content-height {
+  height: calc(100vh - 60px - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
+  height: calc(calc(var(--vh, 1vh) * 100) - 60px - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
+}
+
+/* Улучшения для touch устройств */
+@media (hover: none) and (pointer: coarse) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .hover\:scale-105:hover {
+    transform: none;
+  }
+  
+  .hover\:shadow-lg:hover {
+    box-shadow: none;
+  }
+  
+  a, button, input, select, textarea {
+    min-height: 44px;
+  }
+}
+
+/* Адаптивная типографика */
+@media (max-width: 640px) {
+  h1 { @apply text-xl; }
+  h2 { @apply text-lg; }
+  h3 { @apply text-base; }
+  h4 { @apply text-sm; }
+  
+  .space-y-6 > * + * {
+    margin-top: 1rem;
+  }
+  
+  .space-y-4 > * + * {
+    margin-top: 0.75rem;
+  }
+}
+
+/* Улучшения для форм на мобильных */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Фиксы для iOS */
+@supports (-webkit-touch-callout: none) {
+  .ios-safe-area-top {
+    padding-top: max(20px, env(safe-area-inset-top));
+  }
+  
+  .ios-safe-area-bottom {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
+  }
+}
+
+/* Улучшения для модальных окон на мобильных */
+@media (max-width: 640px) {
+  .modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    max-height: calc(calc(var(--vh, 1vh) * 100) - 2rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-hidden {
+    display: none;
+  }
+  
+  .mobile-full-width {
+    width: 100%;
+  }
+  
+  .mobile-text-center {
+    text-align: center;
+  }
+  
+  .mobile-flex-col {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 769px) {
+  .desktop-hidden {
+    display: none;
+  }
+}

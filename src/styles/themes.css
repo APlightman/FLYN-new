@@ -1,0 +1,50 @@
+/* Темная тема для системных элементов */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Уменьшение анимаций для пользователей с ограниченными возможностями */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Высокий контраст */
+@media (prefers-contrast: high) {
+  .card-shadow {
+    box-shadow: 0 0 0 2px currentColor;
+  }
+}
+
+/* Оптимизация для высоких DPI экранов */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .crisp-edges {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* PWA специфичные стили */
+@media (display-mode: standalone) {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .hide-in-pwa {
+    display: none;
+  }
+  
+  .pwa-safe-top {
+    padding-top: var(--safe-area-inset-top);
+  }
+  
+  .pwa-safe-bottom {
+    padding-bottom: var(--safe-area-inset-bottom);
+  }
+}

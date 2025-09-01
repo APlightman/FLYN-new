@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, LogOut, Settings, ChevronDown, Mail, Calendar } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { User, LogOut, Settings, ChevronDown, Mail, Calendar, Key } from 'lucide-react';
+import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { Button } from '../ui/Button';
 
 export function UserMenu() {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useFirebaseAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +45,10 @@ export function UserMenu() {
     });
   };
 
+  const isUIDSession = () => {
+    return localStorage.getItem('firebase_uid_session') !== null;
+  };
+
   if (!user) return null;
 
   return (
@@ -59,9 +63,9 @@ export function UserMenu() {
         `}
       >
         <div className="relative">
-          {user.user_metadata?.avatar_url ? (
+          {user.photoURL ? (
             <img
-              src={user.user_metadata.avatar_url}
+              src={user.photoURL}
               alt="Аватар"
               className="w-8 h-8 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm"
             />
@@ -70,14 +74,16 @@ export function UserMenu() {
               {getInitials(user.email || '')}
             </div>
           )}
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></div>
+          <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-white dark:border-slate-900 rounded-full ${
+            isUIDSession() ? 'bg-orange-500' : 'bg-green-500'
+          }`}></div>
         </div>
         <div className="hidden sm:block text-left min-w-0">
           <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm truncate max-w-[120px]">
-            {user.user_metadata?.full_name || user.email?.split('@')[0]}
+            {user.displayName || user.email?.split('@')[0]}
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[120px]">
-            {user.email}
+            {isUIDSession() ? 'UID сессия' : user.email}
           </div>
         </div>
         <ChevronDown 
@@ -94,9 +100,9 @@ export function UserMenu() {
           <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl shadow-slate-900/10 z-50 overflow-hidden">
             <div className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-center gap-4">
-                {user.user_metadata?.avatar_url ? (
+                {user.photoURL ? (
                   <img
-                    src={user.user_metadata.avatar_url}
+                    src={user.photoURL}
                     alt="Аватар"
                     className="w-12 h-12 rounded-full object-cover border-3 border-white dark:border-slate-700 shadow-lg"
                   />
@@ -107,41 +113,52 @@ export function UserMenu() {
                 )}
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-slate-900 dark:text-slate-100 truncate">
-                    {user.user_metadata?.full_name || 'Пользователь'}
+                    {user.displayName || 'Пользователь'}
                   </h3>
                   <div className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400">
                     <Mail size={12} />
                     <span className="truncate">{user.email}</span>
                   </div>
-                  {user.created_at && (
+                  {user.metadata?.creationTime && (
                     <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mt-1">
                       <Calendar size={10} />
-                      <span>С {formatDate(user.created_at)}</span>
+                      <span>С {formatDate(user.metadata.creationTime)}</span>
                     </div>
                   )}
                 </div>
               </div>
             </div>
+            
             <div className="p-4 border-b border-slate-200 dark:border-slate-700">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
                   <div className="font-bold text-green-600 dark:text-green-400">
-                    Активен
+                    {isUIDSession() ? 'UID' : 'Активен'}
                   </div>
                   <div className="text-xs text-green-700 dark:text-green-300">
-                    Статус аккаунта
+                    {isUIDSession() ? 'Сессия' : 'Статус аккаунта'}
                   </div>
                 </div>
                 <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
                   <div className="font-bold text-blue-600 dark:text-blue-400">
-                    {user.email_confirmed_at ? 'Подтвержден' : 'Не подтвержден'}
+                    {user.emailVerified ? 'Подтвержден' : 'Не подтвержден'}
                   </div>
                   <div className="text-xs text-blue-700 dark:text-blue-300">
                     Email статус
                   </div>
                 </div>
               </div>
+              
+              {isUIDSession() && (
+                <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                  <div className="flex items-center gap-2 text-xs text-orange-700 dark:text-orange-300">
+                    <Key size={12} />
+                    <span>Вход выполнен через UID: {user.uid.slice(0, 8)}...</span>
+                  </div>
+                </div>
+              )}
             </div>
+            
             <div className="p-4 space-y-2">
               <button
                 onClick={() => {
@@ -161,6 +178,7 @@ export function UserMenu() {
                   </div>
                 </div>
               </button>
+              
               <button
                 onClick={handleSignOut}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 text-left group"
@@ -173,14 +191,15 @@ export function UserMenu() {
                     Выйти из аккаунта
                   </div>
                   <div className="text-xs text-red-600 dark:text-red-400">
-                    Войти с другой учетной записью
+                    {isUIDSession() ? 'Завершить UID сессию' : 'Войти с другой учетной записью'}
                   </div>
                 </div>
               </button>
             </div>
+            
             <div className="px-4 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700">
               <div className="text-xs text-slate-500 dark:text-slate-400 text-center">
-                FinanceTracker v1.0.0
+                FinanceTracker v1.0.0 • Firebase {isUIDSession() && '• UID Mode'}
               </div>
             </div>
           </div>

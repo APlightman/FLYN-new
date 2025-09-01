@@ -1,7 +1,7 @@
 import React from 'react';
 import { Moon, Sun, Menu, Wallet } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../hooks/useAuth';
+import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { Button } from '../ui/Button';
 import { UserMenu } from './UserMenu';
 
@@ -11,7 +11,7 @@ interface HeaderProps {
 
 export function Header({ onMenuToggle }: HeaderProps) {
   const { state, toggleDarkMode } = useApp();
-  const { user } = useAuth();
+  const { user } = useFirebaseAuth();
 
   return (
     <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-700/60 px-4 sm:px-6 py-4 sticky top-0 z-40 transition-all duration-300">
