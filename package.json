@@ -1,6 +1,6 @@
 {
   "name": "financetracker-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Современное десктопное приложение для управления личными финансами",
   "main": "electron/main.js",
   "homepage": "./",
