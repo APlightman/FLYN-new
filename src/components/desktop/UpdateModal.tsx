@@ -68,7 +68,7 @@ export function UpdateModal() {
             </Button>
             {updateInfo.downloaded && (
               <Button
-                onClick={() => window.location.reload()}
+                onClick={() => window.electronAPI?.restartApp?.()}
                 fullWidth
               >
                 <Zap size={16} className="mr-2" />

@@ -3,6 +3,8 @@ import { AppProvider } from './contexts/AppContext';
 import { useFirebaseAuth } from './hooks/useFirebaseAuth';
 import { AuthForm } from './components/auth/AuthForm';
 import { AppContent } from './components/layout/AppContent';
+import { UpdateModal } from './components/desktop/UpdateModal';
+import { isElectronApp } from './hooks/useElectronIntegration';
 
 function App() {
   const { user, loading, isFirebaseEnabled } = useFirebaseAuth();
@@ -25,6 +27,7 @@ function App() {
   return (
     <AppProvider>
       <AppContent />
+      {isElectronApp() && <UpdateModal />}
     </AppProvider>
   );
 }

@@ -44,6 +44,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('download-progress', (event, progress) => callback(progress));
   },
 
+  restartApp: () => {
+    ipcRenderer.send('restart-app');
+  },
+
   // Отписка от событий
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);

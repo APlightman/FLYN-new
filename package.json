@@ -6,6 +6,10 @@
   "homepage": "./",
   "private": true,
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/APlightman/FLYN-new.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

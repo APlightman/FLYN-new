@@ -1,8 +1,12 @@
 const { ipcMain, dialog, Notification } = require('electron');
 const fs = require('fs');
+const { autoUpdater } = require('electron-updater');
 const { getIconPath } = require('./windowManager');
 
 const setupIPC = (mainWindow) => {
+  ipcMain.on('restart-app', () => {
+    autoUpdater.quitAndInstall();
+  });
   ipcMain.handle('show-save-dialog', async (event, options) => {
     const result = await dialog.showSaveDialog(mainWindow, {
       title: 'Сохранить экспорт',
