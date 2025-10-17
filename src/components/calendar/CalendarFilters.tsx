@@ -3,13 +3,15 @@ import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
 import { Category } from '../../types';
 
+interface CalendarFilterState {
+  categories: string[];
+  type?: 'income' | 'expense';
+  showEmpty: boolean;
+}
+
 interface CalendarFiltersProps {
-  filters: {
-    categories: string[];
-    type?: 'income' | 'expense';
-    showEmpty: boolean;
-  };
-  onFiltersChange: (filters: any) => void;
+  filters: CalendarFilterState;
+  onFiltersChange: (filters: CalendarFilterState) => void;
   categories: Category[];
   onClose: () => void;
 }
@@ -20,7 +22,7 @@ export function CalendarFilters({
   categories, 
   onClose 
 }: CalendarFiltersProps) {
-  const updateFilters = (updates: any) => {
+  const updateFilters = (updates: Partial<CalendarFilterState>) => {
     onFiltersChange({ ...filters, ...updates });
   };
 
@@ -35,6 +37,7 @@ export function CalendarFilters({
   const clearFilters = () => {
     onFiltersChange({
       categories: [],
+      type: undefined,
       showEmpty: true
     });
   };

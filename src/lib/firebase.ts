@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator, enableNetwork, disableNetwork } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, enableNetwork, disableNetwork, FieldValue } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 
 // Конфигурация Firebase (точно по документации)
@@ -67,7 +67,7 @@ if (import.meta.env.DEV && auth && db) {
   try {
     connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
     connectFirestoreEmulator(db, 'localhost', 8080);
-  } catch (error) {
+  } catch {
     console.log('Firebase emulators not available or already connected');
   }
 }
@@ -151,8 +151,9 @@ export interface FirestoreUser {
   email: string;
   fullName?: string;
   avatarUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | FieldValue;
+  updatedAt: Date | FieldValue;
+  version: number;
 }
 
 export interface FirestoreTransaction {
@@ -164,8 +165,9 @@ export interface FirestoreTransaction {
   description: string;
   date: string;
   tags?: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | FieldValue;
+  updatedAt: Date | FieldValue;
+  version: number;
 }
 
 export interface FirestoreCategory {
@@ -176,8 +178,9 @@ export interface FirestoreCategory {
   color: string;
   parent?: string;
   budget?: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | FieldValue;
+  updatedAt: Date | FieldValue;
+  version: number;
 }
 
 export interface FirestoreBudget {
@@ -187,8 +190,9 @@ export interface FirestoreBudget {
   amount: number;
   period: 'monthly' | 'yearly';
   spent: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | FieldValue;
+  updatedAt: Date | FieldValue;
+  version: number;
 }
 
 export interface FirestoreGoal {
@@ -201,8 +205,9 @@ export interface FirestoreGoal {
   monthlyContribution: number;
   priority: 'low' | 'medium' | 'high';
   description?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | FieldValue;
+  updatedAt: Date | FieldValue;
+  version: number;
 }
 
 export interface FirestoreRecurringPayment {
@@ -216,13 +221,14 @@ export interface FirestoreRecurringPayment {
   nextDate: string;
   isActive: boolean;
   description?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | FieldValue;
+  updatedAt: Date | FieldValue;
+  version: number;
 }
 
 // Утилиты для работы с UID
 export const validateUID = (uid: string): boolean => {
-  return uid && uid.length >= 20 && /^[a-zA-Z0-9]+$/.test(uid);
+  return !!(uid && uid.length >= 20 && /^[a-zA-Z0-9]+$/.test(uid));
 };
 
 export const getUserByUID = async (uid: string) => {

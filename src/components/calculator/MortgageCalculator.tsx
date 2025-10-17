@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Home, Calculator, TrendingDown, DollarSign } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
@@ -39,11 +39,7 @@ export function MortgageCalculator() {
     }>
   });
 
-  useEffect(() => {
-    calculateMortgage();
-  }, [formData]);
-
-  const calculateMortgage = () => {
+  const calculateMortgage = useCallback(() => {
     const propertyPrice = parseFloat(formData.propertyPrice) || 0;
     const downPayment = parseFloat(formData.downPayment) || 0;
     const loanAmount = propertyPrice - downPayment;
@@ -69,7 +65,6 @@ export function MortgageCalculator() {
     }
 
     let balance = loanAmount;
-    let totalPayment = 0;
     let totalInterest = 0;
     const schedule = [];
     let month = 1;
@@ -117,7 +112,6 @@ export function MortgageCalculator() {
         ? totalMonthlyPayment / Math.pow(1 + monthlyInflation, month - 1)
         : totalMonthlyPayment;
 
-      totalPayment += totalMonthlyPayment;
       totalInterest += interestPayment;
 
       schedule.push({
@@ -151,7 +145,11 @@ export function MortgageCalculator() {
       earlyPaymentSavings: 0, // TODO: Рассчитать экономию от досрочки
       paymentSchedule: schedule
     });
-  };
+  }, [formData]);
+
+  useEffect(() => {
+    calculateMortgage();
+  }, [calculateMortgage]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ru-RU', {
@@ -169,11 +167,6 @@ export function MortgageCalculator() {
   const earlyPaymentTypeOptions = [
     { value: 'monthly', label: 'Ежемесячно' },
     { value: 'lump', label: 'Единовременно (через год)' }
-  ];
-
-  const strategyOptions = [
-    { value: 'term', label: 'Сократить срок' },
-    { value: 'payment', label: 'Уменьшить платеж' }
   ];
 
   const loanToValueRatio = result.loanAmount > 0 && parseFloat(formData.propertyPrice) > 0
@@ -393,7 +386,6 @@ export function MortgageCalculator() {
       {result.paymentSchedule.length > 0 && (
         <MortgageChart
           data={result.paymentSchedule}
-          adjustForInflation={formData.adjustForInflation}
           paymentType={formData.paymentType}
         />
       )}

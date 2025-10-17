@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Wand2, Calculator, Target, TrendingUp, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
+import { Budget } from '../../types';
 
 interface BudgetTemplate {
   id: string;
@@ -75,7 +75,7 @@ const BUDGET_TEMPLATES: BudgetTemplate[] = [
 ];
 
 interface BudgetWizardProps {
-  onComplete: (budgets: any[]) => void;
+  onComplete: (budgets: Omit<Budget, 'id'>[]) => void;
   onClose: () => void;
 }
 
@@ -183,7 +183,7 @@ export function BudgetWizard({ onComplete, onClose }: BudgetWizardProps) {
     });
 
     // Создаём бюджеты для каждой категории
-    const budgets = [];
+    const budgets: Omit<Budget, 'id'>[] = [];
 
     Object.entries(groupedCategories).forEach(([group, categoryIds]) => {
       const groupAmount = amounts[group as keyof typeof amounts];
@@ -191,7 +191,6 @@ export function BudgetWizard({ onComplete, onClose }: BudgetWizardProps) {
 
       categoryIds.forEach(categoryId => {
         budgets.push({
-          id: crypto.randomUUID(),
           categoryId,
           amount: amountPerCategory,
           period: 'monthly' as const,

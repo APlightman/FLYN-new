@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Transaction, Category, formatCurrency } from '../../types';
-import { Plus, Eye, Calendar } from 'lucide-react';
+import { Plus, Eye } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { TransactionForm } from '../transactions/TransactionForm';
 

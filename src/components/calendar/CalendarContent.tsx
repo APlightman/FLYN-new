@@ -51,7 +51,6 @@ export function CalendarContent({
           currentDate={currentDate}
           transactionsByDate={transactionsByDate}
           onDateClick={onDateClick}
-          categories={categories}
           showEmpty={showEmpty}
         />
       )}

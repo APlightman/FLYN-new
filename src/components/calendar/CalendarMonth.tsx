@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Transaction, Category, formatCurrency } from '../../types';
+import { Transaction, formatCurrency } from '../../types';
 import { getDaysInMonth, isToday, isSameMonth } from '../../utils/dateUtils';
 import { Plus, Eye } from 'lucide-react';
 
@@ -7,7 +7,6 @@ interface CalendarMonthProps {
   currentDate: Date;
   transactionsByDate: Record<string, Transaction[]>;
   onDateClick: (date: Date) => void;
-  categories: Category[];
   showEmpty: boolean;
 }
 
@@ -17,7 +16,6 @@ export function CalendarMonth({
   currentDate, 
   transactionsByDate, 
   onDateClick, 
-  categories,
   showEmpty 
 }: CalendarMonthProps) {
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);

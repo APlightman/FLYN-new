@@ -28,6 +28,7 @@ export function UIDDebugPanel() {
         alert('Успешный вход по UID!');
       }
     } catch (error) {
+      console.error('UID login failed:', error);
       alert('Произошла ошибка при входе');
     } finally {
       setLoading(false);

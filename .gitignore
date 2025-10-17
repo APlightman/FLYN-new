@@ -314,3 +314,6 @@ playwright/.cache/
 
 # MSW
 public/mockServiceWorker.js
+
+# Electron build output
+dist-electron/

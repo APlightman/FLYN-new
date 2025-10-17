@@ -10,11 +10,10 @@ interface MortgageChartProps {
     balance: number;
     realPayment: number;
   }>;
-  adjustForInflation: boolean;
   paymentType: 'annuity' | 'differentiated';
 }
 
-export function MortgageChart({ data, adjustForInflation, paymentType }: MortgageChartProps) {
+export function MortgageChart({ data, paymentType }: MortgageChartProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',

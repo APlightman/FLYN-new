@@ -99,6 +99,7 @@ export function DatabaseStatus() {
         alert(`Ошибка инициализации: ${result.error}`);
       }
     } catch (error) {
+      console.error('Initialization failed:', error);
       alert('Ошибка при инициализации базы данных');
     } finally {
       setLoading(false);
@@ -121,6 +122,7 @@ export function DatabaseStatus() {
         alert(`Ошибка добавления данных: ${result.error}`);
       }
     } catch (error) {
+      console.error('Seeding failed:', error);
       alert('Ошибка при добавлении данных');
     } finally {
       setLoading(false);

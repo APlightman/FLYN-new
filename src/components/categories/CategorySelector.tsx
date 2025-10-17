@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
+import { Category } from '../../types';
 
 interface CategorySelectorProps {
   value: string;
   onChange: (categoryName: string) => void;
   type?: 'income' | 'expense';
   placeholder?: string;
-  required?: boolean;
   fullWidth?: boolean;
   error?: string;
 }
@@ -17,7 +17,6 @@ export function CategorySelector({
   onChange, 
   type, 
   placeholder = 'Выберите категорию',
-  required = false,
   fullWidth = false,
   error
 }: CategorySelectorProps) {
@@ -54,7 +53,7 @@ export function CategorySelector({
     setIsOpen(false);
   };
 
-  const renderCategory = (category: any, level: number = 0) => {
+  const renderCategory = (category: Category, level: number = 0) => {
     const subcategories = getSubcategories(category.id);
     const hasSubcategories = subcategories.length > 0;
     const isExpanded = expandedCategories.has(category.id);

@@ -1,6 +1,6 @@
 {
   "name": "financetracker-desktop",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "description": "Современное десктопное приложение для управления личными финансами",
   "main": "electron/main.js",
   "homepage": "./",
@@ -89,7 +89,10 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "FinanceTracker"
+      "shortcutName": "FinanceTracker",
+      "include": "electron/assets/uninstallOldVersion.nsh",
+      "allowElevation": true,
+      "runAfterFinish": true
     },
     "publish": {
       "provider": "github",

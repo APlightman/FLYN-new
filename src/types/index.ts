@@ -8,6 +8,9 @@ export interface Transaction {
   tags?: string[];
   isRecurring?: boolean;
   recurringId?: string;
+  createdAt?: number; // timestamp создания
+  updatedAt?: number; // timestamp последнего обновления
+  version?: number;   // версия для разрешения конфликтов
 }
 
 export interface Category {
@@ -17,6 +20,9 @@ export interface Category {
   color: string;
   parent?: string;
   budget?: number;
+  createdAt?: number; // timestamp создания
+  updatedAt?: number; // timestamp последнего обновления
+  version?: number;   // версия для разрешения конфликтов
 }
 
 export interface Budget {
@@ -26,6 +32,9 @@ export interface Budget {
   period: 'monthly' | 'yearly';
   spent: number;
   remaining: number;
+  createdAt?: number; // timestamp создания
+  updatedAt?: number; // timestamp последнего обновления
+  version?: number;   // версия для разрешения конфликтов
 }
 
 export interface FinancialGoal {
@@ -41,6 +50,9 @@ export interface FinancialGoal {
   adjustForInflation?: boolean;
   expectedReturn?: number;
   inflationAdjustedTarget?: number;
+  createdAt?: number; // timestamp создания
+  updatedAt?: number; // timestamp последнего обновления
+  version?: number;   // версия для разрешения конфликтов
 }
 
 export interface RecurringPayment {
@@ -53,6 +65,9 @@ export interface RecurringPayment {
   nextDate: string;
   isActive: boolean;
   description?: string;
+  createdAt?: number; // timestamp создания
+  updatedAt?: number; // timestamp последнего обновления
+  version?: number;   // версия для разрешения конфликтов
 }
 
 export interface FilterOptions {

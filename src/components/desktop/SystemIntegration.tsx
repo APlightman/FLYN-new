@@ -55,7 +55,7 @@ export function SystemIntegration({ children }: SystemIntegrationProps) {
         };
 
         try {
-          const content = JSON.stringify(backupData, null, 2);
+          JSON.stringify(backupData, null, 2);
           const filename = `financetracker_backup_${now.toISOString().split('T')[0]}.json`;
           
           console.log('Auto backup created:', filename);

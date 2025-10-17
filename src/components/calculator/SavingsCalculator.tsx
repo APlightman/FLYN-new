@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, AlertTriangle, Info, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { SavingsChart } from './charts/SavingsChart';
@@ -43,86 +42,7 @@ export function SavingsCalculator() {
     }>,
   });
 
-  useEffect(() => {
-    calculateSavings();
-  }, [formData]);
-
-  const calculateSavings = () => {
-    const initial = parseFloat(formData.initialAmount) || 0;
-    const monthly = parseFloat(formData.monthlyContribution) || 0;
-    const rate = parseFloat(formData.annualRate) / 100 || 0;
-    const years = parseFloat(formData.period) || 0;
-    const frequency = parseFloat(formData.compoundFrequency) || 12;
-    const inflationRate = parseFloat(formData.inflationRate) / 100 || 0;
-    const adjustForInflation = formData.adjustForInflation;
-    const comparisonRate = parseFloat(formData.comparisonRate) / 100 || 0;
-
-    if (formData.calculationMode === 'reverse') {
-      calculateRequiredContribution();
-      return;
-    }
-
-    const months = years * 12;
-    const monthlyRate = rate / frequency;
-    const monthlyInflation = inflationRate / 12;
-    const simpleMonthlyRate = comparisonRate / 12;
-    
-    let balance = initial;
-    let totalContributions = initial;
-    let simpleBalance = initial;
-    const breakdown = [];
-    
-    for (let month = 1; month <= months; month++) {
-      const inflationMultiplier = adjustForInflation 
-        ? Math.pow(1 + monthlyInflation, month - 1)
-        : 1;
-      
-      const adjustedContribution = monthly * inflationMultiplier;
-      
-      // Сложный процент
-      const compoundInterest = balance * monthlyRate;
-      balance += compoundInterest + adjustedContribution;
-      
-      // Простой процент для сравнения
-      const simpleInterest = simpleBalance * simpleMonthlyRate;
-      simpleBalance += simpleInterest + adjustedContribution;
-      
-      totalContributions += adjustedContribution;
-      
-      const realValue = balance / Math.pow(1 + monthlyInflation, month);
-      
-      breakdown.push({
-        month,
-        contribution: monthly,
-        adjustedContribution,
-        interest: compoundInterest,
-        balance,
-        realValue,
-        simpleInterestBalance: simpleBalance,
-        inflationRate: monthlyInflation * 12 * 100
-      });
-    }
-
-    const totalInterest = balance - totalContributions;
-    const finalRealValue = balance / Math.pow(1 + inflationRate, years);
-    const inflationLoss = balance - finalRealValue;
-    const simpleInterestTotal = simpleBalance - totalContributions;
-    const compoundAdvantage = totalInterest - simpleInterestTotal;
-
-    setResult({
-      totalAmount: balance,
-      totalContributions,
-      totalInterest,
-      realValue: finalRealValue,
-      inflationLoss,
-      adjustedMonthlyContribution: monthly * Math.pow(1 + monthlyInflation, months - 1),
-      simpleInterestAmount: simpleBalance,
-      compoundAdvantage,
-      monthlyBreakdown: breakdown,
-    });
-  };
-
-  const calculateRequiredContribution = () => {
+  const calculateRequiredContribution = useCallback(() => {
     const targetAmount = parseFloat(formData.targetAmount) || 0;
     const initial = parseFloat(formData.initialAmount) || 0;
     const rate = parseFloat(formData.annualRate) / 100 || 0;
@@ -211,7 +131,86 @@ export function SavingsCalculator() {
       compoundAdvantage: 0,
       monthlyBreakdown: breakdown,
     });
-  };
+  }, [formData]);
+
+  const calculateSavings = useCallback(() => {
+    const initial = parseFloat(formData.initialAmount) || 0;
+    const monthly = parseFloat(formData.monthlyContribution) || 0;
+    const rate = parseFloat(formData.annualRate) / 100 || 0;
+    const years = parseFloat(formData.period) || 0;
+    const frequency = parseFloat(formData.compoundFrequency) || 12;
+    const inflationRate = parseFloat(formData.inflationRate) / 100 || 0;
+    const adjustForInflation = formData.adjustForInflation;
+    const comparisonRate = parseFloat(formData.comparisonRate) / 100 || 0;
+
+    if (formData.calculationMode === 'reverse') {
+      calculateRequiredContribution();
+      return;
+    }
+
+    const months = years * 12;
+    const monthlyRate = rate / frequency;
+    const monthlyInflation = inflationRate / 12;
+    const simpleMonthlyRate = comparisonRate / 12;
+    
+    let balance = initial;
+    let totalContributions = initial;
+    let simpleBalance = initial;
+    const breakdown = [];
+    
+    for (let month = 1; month <= months; month++) {
+      const inflationMultiplier = adjustForInflation 
+        ? Math.pow(1 + monthlyInflation, month - 1)
+        : 1;
+      
+      const adjustedContribution = monthly * inflationMultiplier;
+      
+      // Сложный процент
+      const compoundInterest = balance * monthlyRate;
+      balance += compoundInterest + adjustedContribution;
+      
+      // Простой процент для сравнения
+      const simpleInterest = simpleBalance * simpleMonthlyRate;
+      simpleBalance += simpleInterest + adjustedContribution;
+      
+      totalContributions += adjustedContribution;
+      
+      const realValue = balance / Math.pow(1 + monthlyInflation, month);
+      
+      breakdown.push({
+        month,
+        contribution: monthly,
+        adjustedContribution,
+        interest: compoundInterest,
+        balance,
+        realValue,
+        simpleInterestBalance: simpleBalance,
+        inflationRate: monthlyInflation * 12 * 100
+      });
+    }
+
+    const totalInterest = balance - totalContributions;
+    const finalRealValue = balance / Math.pow(1 + inflationRate, years);
+    const inflationLoss = balance - finalRealValue;
+    const simpleInterestTotal = simpleBalance - totalContributions;
+    const compoundAdvantage = totalInterest - simpleInterestTotal;
+
+    setResult({
+      totalAmount: balance,
+      totalContributions,
+      totalInterest,
+      realValue: finalRealValue,
+      inflationLoss,
+      adjustedMonthlyContribution: monthly * Math.pow(1 + monthlyInflation, months - 1),
+      simpleInterestAmount: simpleBalance,
+      compoundAdvantage,
+      monthlyBreakdown: breakdown,
+    });
+  }, [formData, calculateRequiredContribution]);
+
+  useEffect(() => {
+    calculateSavings();
+  }, [calculateSavings]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ru-RU', {

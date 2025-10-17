@@ -31,7 +31,7 @@ export function useCalendarLogic() {
           start: new Date(date.getFullYear(), date.getMonth(), 1),
           end: new Date(date.getFullYear(), date.getMonth() + 1, 0)
         };
-      case 'week':
+      case 'week': {
         const dayOfWeek = date.getDay();
         const diff = date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
         const start = new Date(date.setDate(diff));
@@ -39,6 +39,7 @@ export function useCalendarLogic() {
           start,
           end: new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000)
         };
+      }
       case 'day':
         return {
           start: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
@@ -124,9 +125,10 @@ export function useCalendarLogic() {
     switch (viewMode) {
       case 'month':
         return `${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-      case 'week':
+      case 'week': {
         const { start, end } = getDateRange();
         return `${start.getDate()}-${end.getDate()} ${MONTHS[start.getMonth()]} ${start.getFullYear()}`;
+      }
       case 'day':
         return `${currentDate.getDate()} ${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
       default:

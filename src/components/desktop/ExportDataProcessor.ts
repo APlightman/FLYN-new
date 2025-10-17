@@ -1,10 +1,12 @@
 import { AppState } from '../../types';
-import { 
+import {
   prepareTransactionsForExport,
   prepareCategoriesForExport,
   prepareGoalsForExport,
   prepareBudgetsForExport
 } from '../../utils/exportUtils';
+
+type ExportableData = Record<string, unknown>[] | Record<string, unknown>;
 
 export class ExportDataProcessor {
   constructor(private state: AppState) {}
@@ -53,7 +55,7 @@ export class ExportDataProcessor {
     }
   }
 
-  formatContent(data: any, format: string) {
+  formatContent(data: ExportableData, format: string) {
     switch (format) {
       case 'csv':
         return this.formatAsCSV(data);
@@ -66,14 +68,14 @@ export class ExportDataProcessor {
     }
   }
 
-  private formatAsCSV(data: any) {
+  private formatAsCSV(data: ExportableData) {
     if (Array.isArray(data) && data.length > 0) {
-      const headers = Object.keys(data[0]);
+      const headers = Object.keys(data[0] as Record<string, unknown>);
       const csvContent = [
         headers.join(','),
         ...data.map(row => 
           headers.map(header => {
-            const value = row[header];
+            const value = (row as Record<string, any>)[header];
             if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
               return `"${value.replace(/"/g, '""')}"`;
             }
@@ -86,14 +88,14 @@ export class ExportDataProcessor {
     return '';
   }
 
-  private formatAsTSV(data: any) {
+  private formatAsTSV(data: ExportableData) {
     if (Array.isArray(data) && data.length > 0) {
-      const headers = Object.keys(data[0]);
+      const headers = Object.keys(data[0] as Record<string, unknown>);
       const tsvContent = [
         headers.join('\t'),
         ...data.map(row => 
           headers.map(header => {
-            const value = row[header];
+            const value = (row as Record<string, any>)[header];
             return typeof value === 'string' ? value.replace(/\t/g, ' ') : value;
           }).join('\t')
         )

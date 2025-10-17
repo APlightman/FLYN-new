@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CreditCard, AlertTriangle, Calculator, TrendingUp } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
@@ -37,11 +37,7 @@ export function ConsumerLoanCalculator() {
     }>
   });
 
-  useEffect(() => {
-    calculateConsumerLoan();
-  }, [formData]);
-
-  const calculateConsumerLoan = () => {
+  const calculateConsumerLoan = useCallback(() => {
     const loanAmount = parseFloat(formData.loanAmount) || 0;
     const annualRate = parseFloat(formData.interestRate) / 100;
     const monthlyRate = annualRate / 12;
@@ -114,7 +110,6 @@ export function ConsumerLoanCalculator() {
     }
 
     // Расчет эффективной ставки
-    const totalFees = schedule.reduce((sum, payment) => sum + payment.fees, 0);
     const effectiveRate = ((totalPayment / loanAmount - 1) / parseFloat(formData.loanTerm)) * 100;
 
     // Расчет экономии от инфляции
@@ -132,7 +127,11 @@ export function ConsumerLoanCalculator() {
       earlyPaymentSavings: 0,
       paymentSchedule: schedule
     });
-  };
+  }, [formData]);
+
+  useEffect(() => {
+    calculateConsumerLoan();
+  }, [calculateConsumerLoan]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ru-RU', {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { TrendingUp, TrendingDown, Wallet, Target, Wifi, WifiOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Target, WifiOff } from 'lucide-react';
 import { isFirebaseConfigured } from '../../lib/firebase';
 import { isElectronApp } from '../../hooks/useElectronIntegration';
 

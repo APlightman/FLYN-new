@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Plus, Settings, Wand2 } from 'lucide-react';
+import { TrendingUp, Plus, Settings, Wand2 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -7,11 +7,11 @@ import { Modal } from '../ui/Modal';
 import { BudgetWizard } from './BudgetWizard';
 import { BudgetEnvelope } from './BudgetEnvelope';
 import { BudgetOverview } from './BudgetOverview';
+import { Budget } from '../../types';
 
 export function BudgetManager() {
-  const { state, setBudget } = useApp();
+  const { state, addBudget } = useApp();
   const [showWizard, setShowWizard] = useState(false);
-  const [editingBudget, setEditingBudget] = useState<any>(null);
 
   // Вычисляем потраченные суммы для каждого бюджета
   const budgetsWithSpent = useMemo(() => {
@@ -29,30 +29,12 @@ export function BudgetManager() {
     });
   }, [state.budgets, state.transactions, state.categories]);
 
-  const handleWizardComplete = (budgets: any[]) => {
+  const handleWizardComplete = (budgets: Omit<Budget, 'id'>[]) => {
     budgets.forEach(budget => {
-      setBudget(budget);
+      addBudget(budget);
     });
     setShowWizard(false);
   };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
-    }).format(amount);
-  };
-
-  const getQuickStats = () => {
-    const totalBudget = budgetsWithSpent.reduce((sum, b) => sum + b.amount, 0);
-    const totalSpent = budgetsWithSpent.reduce((sum, b) => sum + b.spent, 0);
-    const totalRemaining = budgetsWithSpent.reduce((sum, b) => sum + b.remaining, 0);
-    const overBudgetCount = budgetsWithSpent.filter(b => b.spent > b.amount).length;
-
-    return { totalBudget, totalSpent, totalRemaining, overBudgetCount };
-  };
-
-  const stats = getQuickStats();
 
   return (
     <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
@@ -163,7 +145,6 @@ export function BudgetManager() {
                     key={budget.id}
                     budget={budget}
                     category={category}
-                    onEdit={() => setEditingBudget(budget)}
                   />
                 );
               })}

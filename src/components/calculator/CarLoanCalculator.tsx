@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Car, DollarSign, TrendingDown, Calculator } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
 import { LoanChart } from './charts/LoanChart';
 
 export function CarLoanCalculator() {
@@ -40,11 +39,7 @@ export function CarLoanCalculator() {
     }>
   });
 
-  useEffect(() => {
-    calculateCarLoan();
-  }, [formData]);
-
-  const calculateCarLoan = () => {
+  const calculateCarLoan = useCallback(() => {
     const carPrice = parseFloat(formData.carPrice) || 0;
     const downPayment = parseFloat(formData.downPayment) || 0;
     const tradeIn = parseFloat(formData.tradeInValue) || 0;
@@ -138,7 +133,11 @@ export function CarLoanCalculator() {
       totalCostOfOwnership,
       paymentSchedule: schedule
     });
-  };
+  }, [formData]);
+
+  useEffect(() => {
+    calculateCarLoan();
+  }, [calculateCarLoan]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ru-RU', {
