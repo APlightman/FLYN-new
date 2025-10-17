@@ -64,13 +64,15 @@ app.on('before-quit', () => {
 });
 
 // Handle the update-tray-badge IPC call
-if (mainWindow) {
-  mainWindow.webContents.on('ipc-message', (event, channel, count) => {
-    if (channel === 'update-tray-badge') {
-      updateTrayBadge(count);
-    }
-  });
-}
+app.on('ready', () => {
+  if (mainWindow) {
+    mainWindow.webContents.on('ipc-message', (event, channel, count) => {
+      if (channel === 'update-tray-badge') {
+        updateTrayBadge(count);
+      }
+    });
+  }
+});
 
 if (!isDev) {
   app.setAsDefaultProtocolClient('financetracker');

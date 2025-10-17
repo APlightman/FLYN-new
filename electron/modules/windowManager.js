@@ -38,7 +38,7 @@ const createMainWindow = (isDev) => {
   const mainWindow = new BrowserWindow(windowOptions);
 
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.loadURL('http://localhost:5179');
   } else {
     mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'));
   }
