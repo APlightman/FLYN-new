@@ -3,7 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self';
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      img-src 'self' data:;
+      font-src 'self' https://fonts.gstatic.com;
+      connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.googleapis.com;
+    " />
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#2563eb" />
@@ -19,13 +27,9 @@
     <!-- Apple Touch Icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-    <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
     <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-128x128.png" />
-    <link rel="apple-touch-icon" sizes="114x114" href="/icons/icon-128x128.png" />
     <link rel="apple-touch-icon" sizes="76x76" href="/icons/icon-72x72.png" />
-    <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.png" />
     <link rel="apple-touch-icon" sizes="60x60" href="/icons/icon-72x72.png" />
-    <link rel="apple-touch-icon" sizes="57x57" href="/icons/icon-72x72.png" />
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-72x72.png" />
@@ -57,6 +61,7 @@
     <!-- Preload критичных ресурсов -->
     <link rel="preload" href="/src/main.tsx" as="script" />
     <link rel="preload" href="/src/index.css" as="style" />
+    <link rel="preload" href="/src/scripts/app-init.js" as="script" />
     
     <!-- DNS prefetch для внешних ресурсов -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
@@ -79,58 +84,8 @@
     <!-- Основное приложение -->
     <div id="root"></div>
     
-    <!-- Скрипт для регистрации Service Worker -->
-    <script>
-      // Регистрируем Service Worker как можно раньше
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-              console.log('SW registration failed: ', registrationError);
-            });
-        });
-      }
-      
-      // Скрываем загрузочный экран после загрузки
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          document.body.classList.add('loaded');
-          setTimeout(() => {
-            const loadingScreen = document.getElementById('loading-screen');
-            if (loadingScreen) {
-              loadingScreen.remove();
-            }
-          }, 500);
-        }, 1000);
-      });
-      
-      // Предотвращаем зум на iOS
-      document.addEventListener('gesturestart', function (e) {
-        e.preventDefault();
-      });
-      
-      // Отключаем контекстное меню на мобильных
-      document.addEventListener('contextmenu', function (e) {
-        if (window.innerWidth < 768) {
-          e.preventDefault();
-        }
-      });
-      
-      // Обработка viewport для мобильных устройств
-      function setViewportHeight() {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-      }
-      
-      setViewportHeight();
-      window.addEventListener('resize', setViewportHeight);
-      window.addEventListener('orientationchange', () => {
-        setTimeout(setViewportHeight, 100);
-      });
-    </script>
+    <!-- Инициализационный скрипт -->
+    <script type="module" src="/src/scripts/app-init.js"></script>
     
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+const { contextBridge, ipcRenderer } = require('electron');
 
 // Безопасный API для рендер-процесса
 contextBridge.exposeInMainWorld('electronAPI', {

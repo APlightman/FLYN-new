@@ -22,7 +22,7 @@ export function Input({
   const baseClasses = 'px-3 py-2 sm:px-4 sm:py-3 text-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed min-h-[40px] sm:min-h-[44px]';
   
   const variantClasses = {
-    default: 'rounded-xl sm:rounded-2xl border border-slate-200 focus:ring-blue-500/30 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 bg-white shadow-sm hover:shadow-md',
+    default: 'rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 bg-white shadow-sm',
     filled: 'rounded-xl sm:rounded-2xl bg-slate-100 border border-transparent focus:ring-blue-500/30 focus:border-blue-500 focus:bg-white dark:bg-slate-800 dark:text-slate-100 dark:focus:bg-slate-700',
     outlined: 'rounded-xl sm:rounded-2xl border-2 border-slate-200 focus:ring-blue-500/30 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 bg-white',
   };
