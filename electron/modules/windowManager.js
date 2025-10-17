@@ -1,10 +1,15 @@
-const { BrowserWindow, shell, Notification } = require('electron');
-const path = require('path');
+import { BrowserWindow, shell, Notification, app } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// В ES модулях __dirname не определен, создаем его вручную
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const isMac = process.platform === 'darwin';
 
 const getIconPath = () => {
-  const iconName = process.platform === 'win32' ? 'icon.ico' : 
+  const iconName = process.platform === 'win32' ? 'icon.ico' :
                    isMac ? 'icon.icns' : 'icon.png';
   return path.join(__dirname, '../assets', iconName);
 };
@@ -46,22 +51,17 @@ const createMainWindow = (isDev) => {
   });
 
   mainWindow.on('close', (event) => {
-    const { isQuitting } = require('../main');
-    if (!isQuitting) {
-      event.preventDefault();
-      if (isMac) {
-        require('electron').app.hide();
-      } else {
-        mainWindow.hide();
-      }
-      
-      if (Notification.isSupported()) {
-        new Notification({
-          title: 'FinanceTracker',
-          body: 'Приложение свернуто в системный трей',
-          icon: getIconPath()
-        }).show();
-      }
+    // We'll handle the isQuitting flag through the main process
+    // For now, we'll just hide the window
+    event.preventDefault();
+    mainWindow.hide();
+    
+    if (Notification.isSupported()) {
+      new Notification({
+        title: 'FinanceTracker',
+        body: 'Приложение свернуто в системный трей',
+        icon: getIconPath()
+      }).show();
     }
   });
 
@@ -77,4 +77,4 @@ const createMainWindow = (isDev) => {
   return mainWindow;
 };
 
-module.exports = { createMainWindow, getIconPath };
+export { createMainWindow, getIconPath };

@@ -1,5 +1,5 @@
-const { globalShortcut } = require('electron');
-const { showMainWindow } = require('./trayManager');
+import { globalShortcut } from 'electron';
+import { showMainWindow } from './trayManager.js';
 
 const registerGlobalShortcuts = (mainWindow) => {
   globalShortcut.register('CmdOrCtrl+Shift+F', () => {
@@ -20,4 +20,4 @@ const unregisterShortcuts = () => {
   globalShortcut.unregisterAll();
 };
 
-module.exports = { registerGlobalShortcuts, unregisterShortcuts };
+export { registerGlobalShortcuts, unregisterShortcuts };

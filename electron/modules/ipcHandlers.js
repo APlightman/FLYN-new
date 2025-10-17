@@ -1,9 +1,11 @@
-const { ipcMain, dialog, Notification } = require('electron');
-const fs = require('fs');
-const { autoUpdater } = require('electron-updater');
-const { getIconPath } = require('./windowManager');
+import { ipcMain, dialog, Notification, app } from 'electron';
+import fs from 'fs';
+import pkg from 'electron-updater';
+import { getIconPath } from './windowManager.js';
 
-const setupIPC = (mainWindow) => {
+const { autoUpdater } = pkg;
+
+const setupIPC = (mainWindow, updateTrayBadge) => {
   ipcMain.on('restart-app', () => {
     autoUpdater.quitAndInstall();
   });
@@ -76,13 +78,8 @@ const setupIPC = (mainWindow) => {
   });
 
   ipcMain.handle('update-tray-badge', (event, count) => {
-    const { tray } = require('../main');
-    if (tray) {
-      if (count > 0) {
-        tray.setToolTip(`FinanceTracker - ${count} предупреждений`);
-      } else {
-        tray.setToolTip('FinanceTracker - Управление финансами');
-      }
+    if (updateTrayBadge) {
+      updateTrayBadge(count);
     }
   });
 
@@ -90,7 +87,7 @@ const setupIPC = (mainWindow) => {
     return {
       platform: process.platform,
       arch: process.arch,
-      version: require('electron').app.getVersion(),
+      version: app.getVersion(),
       electronVersion: process.versions.electron,
       nodeVersion: process.versions.node,
       chromeVersion: process.versions.chrome
@@ -98,4 +95,4 @@ const setupIPC = (mainWindow) => {
   });
 };
 
-module.exports = { setupIPC };
+export { setupIPC };

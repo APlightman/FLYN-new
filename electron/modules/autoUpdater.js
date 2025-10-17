@@ -1,4 +1,5 @@
-const { autoUpdater } = require('electron-updater');
+import pkg from 'electron-updater';
+const { autoUpdater } = pkg;
 
 const setupAutoUpdater = (mainWindow) => {
   if (process.env.NODE_ENV === 'development') return;
@@ -42,4 +43,4 @@ const setupAutoUpdater = (mainWindow) => {
   autoUpdater.checkForUpdatesAndNotify();
 };
 
-module.exports = { setupAutoUpdater };
+export { setupAutoUpdater };

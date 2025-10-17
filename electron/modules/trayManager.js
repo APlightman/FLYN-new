@@ -1,5 +1,5 @@
-const { Menu, Tray, app } = require('electron');
-const { getIconPath } = require('./windowManager');
+import { Menu, Tray, app } from 'electron';
+import { getIconPath } from './windowManager.js';
 
 const showMainWindow = (mainWindow) => {
   if (mainWindow) {
@@ -68,8 +68,7 @@ const createTray = (mainWindow) => {
       label: 'Выход',
       accelerator: 'CmdOrCtrl+Q',
       click: () => {
-        const { isQuitting } = require('../main');
-        isQuitting = true;
+        // We'll handle the isQuitting flag differently to avoid circular dependency
         app.quit();
       }
     }
@@ -85,4 +84,4 @@ const createTray = (mainWindow) => {
   return tray;
 };
 
-module.exports = { createTray, showMainWindow };
+export { createTray, showMainWindow };

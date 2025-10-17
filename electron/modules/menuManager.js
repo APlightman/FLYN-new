@@ -1,5 +1,5 @@
-const { Menu, shell, dialog } = require('electron');
-const { showMainWindow } = require('./trayManager');
+import { Menu, shell, dialog, app } from 'electron';
+import { showMainWindow } from './trayManager.js';
 
 const isMac = process.platform === 'darwin';
 
@@ -58,7 +58,7 @@ const showAboutDialog = (mainWindow) => {
 const createApplicationMenu = (mainWindow) => {
   const template = [
     ...(isMac ? [{
-      label: require('electron').app.getName(),
+      label: app.getName(),
       submenu: [
         { role: 'about', label: 'О программе FinanceTracker' },
         { type: 'separator' },
@@ -186,4 +186,4 @@ const createApplicationMenu = (mainWindow) => {
   Menu.setApplicationMenu(menu);
 };
 
-module.exports = { createApplicationMenu, showHotkeysDialog, showAboutDialog };
+export { createApplicationMenu, showHotkeysDialog, showAboutDialog };
