@@ -2,11 +2,22 @@
 
 Современное кроссплатформенное приложение для управления личными финансами с Firebase backend и Electron desktop версией.
 
+## 🔄 Миграция на TimeWebCloud
+
+В целях экономии ресурсов Firebase, приложение было адаптировано для работы с TimeWebCloud в качестве основного бэкенда.
+Аутентификация по-прежнему осуществляется через Firebase.
+
+### Изменения в архитектуре:
+- **Firebase Auth** - по-прежнему используется для аутентификации пользователей
+- **TimeWebCloud API** - теперь используется для хранения и синхронизации данных
+- **PostgreSQL** - база данных на стороне сервера TimeWebCloud
+
 ## 🚀 Технологический стек
 
 - **Frontend**: React 18 + TypeScript + Vite
 - **UI**: Tailwind CSS + shadcn/ui
-- **Backend**: Firebase (Firestore + Auth + Hosting)
+- **Backend**: TimeWebCloud API + Firebase Auth + Firebase Hosting
+- **Database**: PostgreSQL (TimeWebCloud)
 - **Desktop**: Electron с системной интеграцией
 - **PWA**: Service Worker для офлайн работы
 - **State Management**: React Context + useReducer
@@ -43,10 +54,15 @@ Ctrl+I - Импорт данных
 
 ## 🔥 Firebase Services
 
-- **Firebase Auth** - аутентификация пользователей
-- **Firestore** - NoSQL база данных в реальном времени
+- **Firebase Auth** - аутентификация пользователей (по-прежнему используется)
 - **Firebase Hosting** - хостинг веб-версии
 - **Firebase Analytics** - аналитика использования
+
+## ☁️ TimeWebCloud Services
+
+- **REST API** - основной интерфейс для работы с данными
+- **PostgreSQL** - реляционная база данных
+- **Node.js Server** - серверное приложение для обработки запросов
 
 ## 📦 Установка и разработка
 
@@ -58,7 +74,35 @@ cd financetracker
 npm install
 ```
 
-### 2. Веб-разработка
+### 2. Настройка Firebase
+
+1. Создайте проект в [Firebase Console](https://console.firebase.google.com/)
+2. Включите Authentication (Email/Password)
+3. Скопируйте конфигурацию в `.env`:
+
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456
+VITE_FIREBASE_MEASUREMENT_ID=G-ABCDEF1234
+```
+
+### 3. Настройка TimeWebCloud
+
+1. Создайте аккаунт в [TimeWebCloud](https://timeweb.cloud/)
+2. Создайте базу данных PostgreSQL
+3. Разверните серверное приложение из директории `server/`
+4. Скопируйте параметры подключения в `.env` сервера:
+
+```env
+DATABASE_URL=postgresql://user:password@host:port/database
+TIMEWEB_API_URL=your_api_url
+```
+
+### 4. Веб-разработка
 
 ```bash
 # Запуск веб-версии
@@ -68,7 +112,7 @@ npm run dev
 npm run build
 ```
 
-### 3. Десктопная разработка
+### 5. Десктопная разработка
 
 ```bash
 # Запуск в Electron (hot reload)
@@ -82,25 +126,8 @@ npm run electron:dist
 
 # Сборка для конкретной платформы
 npm run electron:dist:win    # Windows
-npm run electron:dist:mac    # macOS  
+npm run electron:dist:mac    # macOS
 npm run electron:dist:linux  # Linux
-```
-
-### 4. Настройка Firebase
-
-1. Создайте проект в [Firebase Console](https://console.firebase.google.com/)
-2. Включите Authentication (Email/Password)
-3. Создайте Firestore Database
-4. Скопируйте конфигурацию в `.env`:
-
-```env
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456
-VITE_FIREBASE_MEASUREMENT_ID=G-ABCDEF1234
 ```
 
 ## 🏗️ Архитектура десктопного приложения
@@ -118,7 +145,8 @@ FinanceTracker Desktop
 │   ├── Безопасный API
 │   └── IPC коммуникация
 └── Renderer Process (React App)
-    ├── Firebase интеграция
+    ├── Firebase Auth интеграция
+    ├── TimeWebCloud API интеграция
     ├── Компоненты UI
     ├── Десктопные фичи
     └── Общий код с веб-версией
@@ -161,33 +189,60 @@ npm run firebase:deploy     # Деплой веб-версии
 npm run firebase:emulators  # Локальные эмуляторы
 ```
 
-## 🗄️ Структура базы данных Firestore
+## 🧪 Тестирование
 
-### Collections:
+### Запуск тестов
+```bash
+# Запуск unit тестов
+npm test
+
+# Запуск e2e тестов
+npm run test:e2e
+
+# Запуск тестов с покрытием
+npm run test:coverage
+```
+
+### Тестирование десктопной версии
+```bash
+# Запуск e2e тестов для десктопа
+npm run test:e2e:desktop
+```
+
+## 🗄️ Структура базы данных
+
+### Таблицы PostgreSQL:
 
 **users** - профили пользователей
-- `id`, `email`, `fullName`, `avatarUrl`
-- `createdAt`, `updatedAt`
+- `id`, `email`, `full_name`, `avatar_url`
+- `created_at`, `updated_at`
 
 **transactions** - финансовые операции
-- `userId`, `type`, `amount`, `category`
-- `description`, `date`, `tags[]`
+- `id`, `user_id`, `type`, `amount`, `category`
+- `description`, `date`, `tags`
+- `created_at`, `updated_at`
 
 **categories** - категории доходов/расходов
-- `userId`, `name`, `type`, `color`
-- `parent`, `budget`
+- `id`, `user_id`, `name`, `type`, `color`
+- `parent_id`, `budget`
+- `created_at`, `updated_at`
 
 **budgets** - бюджетные лимиты
-- `userId`, `categoryId`, `amount`, `period`
+- `id`, `user_id`, `category_id`, `amount`, `period`
 - `spent`
+- `created_at`, `updated_at`
 
 **goals** - финансовые цели
-- `userId`, `name`, `targetAmount`, `currentAmount`
-- `deadline`, `monthlyContribution`, `priority`
+- `id`, `user_id`, `name`, `target_amount`, `current_amount`
+- `deadline`, `monthly_contribution`, `priority`
+- `description`
+- `created_at`, `updated_at`
 
-**recurringPayments** - регулярные платежи
-- `userId`, `name`, `amount`, `category`
-- `frequency`, `nextDate`, `isActive`
+**recurring_payments** - регулярные платежи
+- `id`, `user_id`, `name`, `amount`, `category`
+- `frequency`, `cron_expression`, `next_date`, `is_active`
+- `description`
+- `created_at`, `updated_at`
 
 ## 🎯 Основные функции
 
@@ -225,7 +280,7 @@ npm run firebase:emulators  # Локальные эмуляторы
 ## 📊 Архитектурные особенности
 
 - **Offline-first**: все операции сначала выполняются локально
-- **Real-time sync**: автоматическая синхронизация с Firebase
+- **Real-time sync**: автоматическая синхронизация с TimeWebCloud
 - **Optimistic updates**: мгновенный отклик интерфейса
 - **Error resilience**: graceful handling ошибок сети
 - **Performance**: мемоизация и оптимизация рендеринга
@@ -250,6 +305,19 @@ npm run firebase:emulators  # Локальные эмуляторы
 ```bash
 npm run build
 firebase deploy
+```
+
+### Сервер TimeWebCloud
+```bash
+# Инициализация базы данных
+cd server
+npm run init-db
+
+# Запуск сервера
+npm start
+
+# Или в режиме разработки
+npm run dev
 ```
 
 ### Десктопная версия

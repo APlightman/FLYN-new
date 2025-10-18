@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AppState, Transaction, Category, Budget, FinancialGoal, RecurringPayment, FilterOptions } from '../types';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
-import { useFirebaseSync } from '../hooks/useFirebaseSync';
+import { useTimeWebSync } from '../hooks/useTimeWebSync';
 
 // --- CONTEXT TYPE ---
 interface AppContextType {
@@ -96,7 +96,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'HYDRATE_STATE':
       return { ...state, ...action.payload };
 
-    // Real-time data updates from Firebase
+    // Data updates from TimeWebCloud
     case 'SET_TRANSACTIONS':
       return { ...state, transactions: action.payload };
     case 'SET_CATEGORIES':
@@ -133,7 +133,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
   
   const { user } = useFirebaseAuth();
-  const firebaseSync = useFirebaseSync();
+  const timeWebSync = useTimeWebSync();
 
   // --- EFFECTS ---
 
@@ -156,38 +156,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsHydrated(true);
   }, []);
 
-  // Connect Firebase real-time listeners to the app state
+  // Connect TimeWebCloud data sync to the app state
   useEffect(() => {
-    if (user && isOnline) {
-      firebaseSync.setTransactionsUpdateCallback(items => dispatch({ type: 'SET_TRANSACTIONS', payload: items }));
-      firebaseSync.setCategoriesUpdateCallback(items => dispatch({ type: 'SET_CATEGORIES', payload: items }));
-      firebaseSync.setBudgetsUpdateCallback(items => dispatch({ type: 'SET_BUDGETS', payload: items }));
-      firebaseSync.setGoalsUpdateCallback(items => dispatch({ type: 'SET_GOALS', payload: items }));
-      firebaseSync.setRecurringPaymentsUpdateCallback(items => dispatch({ type: 'SET_RECURRING_PAYMENTS', payload: items }));
+    if (user) {
+      timeWebSync.setTransactionsUpdateCallback((items: Transaction[]) => dispatch({ type: 'SET_TRANSACTIONS', payload: items }));
+      timeWebSync.setCategoriesUpdateCallback((items: Category[]) => dispatch({ type: 'SET_CATEGORIES', payload: items }));
+      timeWebSync.setBudgetsUpdateCallback((items: Budget[]) => dispatch({ type: 'SET_BUDGETS', payload: items }));
+      timeWebSync.setGoalsUpdateCallback((items: FinancialGoal[]) => dispatch({ type: 'SET_GOALS', payload: items }));
+      timeWebSync.setRecurringPaymentsUpdateCallback((items: RecurringPayment[]) => dispatch({ type: 'SET_RECURRING_PAYMENTS', payload: items }));
     }
-  }, [user, isOnline]);
+  }, [user]);
 
   // --- ACTION HANDLERS (API) ---
-  // These functions now only write to Firebase. The UI will update via the real-time listeners.
-  const addTransaction = (transaction: Omit<Transaction, 'id'>) => firebaseSync.addTransaction(transaction);
-  const updateTransaction = (id: string, updates: Partial<Transaction>) => firebaseSync.updateTransaction(id, updates);
-  const deleteTransaction = (id: string) => firebaseSync.deleteTransaction(id);
+  // These functions now only write to TimeWebCloud. The UI will update via the sync mechanism.
+  const addTransaction = (transaction: Omit<Transaction, 'id'>) => timeWebSync.addTransaction(transaction);
+  const updateTransaction = (id: string, updates: Partial<Transaction>) => timeWebSync.updateTransaction(id, updates);
+  const deleteTransaction = (id: string) => timeWebSync.deleteTransaction(id);
 
-  const addCategory = (category: Omit<Category, 'id'>) => firebaseSync.addCategory(category);
-  const updateCategory = (id: string, updates: Partial<Category>) => firebaseSync.updateCategory(id, updates);
-  const deleteCategory = (id: string) => firebaseSync.deleteCategory(id);
+  const addCategory = (category: Omit<Category, 'id'>) => timeWebSync.addCategory(category);
+  const updateCategory = (id: string, updates: Partial<Category>) => timeWebSync.updateCategory(id, updates);
+  const deleteCategory = (id: string) => timeWebSync.deleteCategory(id);
 
-  const addBudget = (budget: Omit<Budget, 'id'>) => firebaseSync.addBudget(budget);
-  const updateBudget = (id: string, updates: Partial<Budget>) => firebaseSync.updateBudget(id, updates);
-  const deleteBudget = (id: string) => firebaseSync.deleteBudget(id);
+  const addBudget = (budget: Omit<Budget, 'id'>) => timeWebSync.addBudget(budget);
+  const updateBudget = (id: string, updates: Partial<Budget>) => timeWebSync.updateBudget(id, updates);
+  const deleteBudget = (id: string) => timeWebSync.deleteBudget(id);
 
-  const addGoal = (goal: Omit<FinancialGoal, 'id'>) => firebaseSync.addGoal(goal);
-  const updateGoal = (id: string, updates: Partial<FinancialGoal>) => firebaseSync.updateGoal(id, updates);
-  const deleteGoal = (id: string) => firebaseSync.deleteGoal(id);
+  const addGoal = (goal: Omit<FinancialGoal, 'id'>) => timeWebSync.addGoal(goal);
+  const updateGoal = (id: string, updates: Partial<FinancialGoal>) => timeWebSync.updateGoal(id, updates);
+  const deleteGoal = (id: string) => timeWebSync.deleteGoal(id);
 
-  const addRecurringPayment = (payment: Omit<RecurringPayment, 'id'>) => firebaseSync.addRecurringPayment(payment);
-  const updateRecurringPayment = (id: string, updates: Partial<RecurringPayment>) => firebaseSync.updateRecurringPayment(id, updates);
-  const deleteRecurringPayment = (id: string) => firebaseSync.deleteRecurringPayment(id);
+  const addRecurringPayment = (payment: Omit<RecurringPayment, 'id'>) => timeWebSync.addRecurringPayment(payment);
+  const updateRecurringPayment = (id: string, updates: Partial<RecurringPayment>) => timeWebSync.updateRecurringPayment(id, updates);
+  const deleteRecurringPayment = (id: string) => timeWebSync.deleteRecurringPayment(id);
 
   // Local state actions
   const setFilters = (filters: Partial<FilterOptions>) => dispatch({ type: 'SET_FILTERS', payload: filters });
