@@ -12,22 +12,24 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run build:web",
+    "build:web": "cross-env BUILD_TARGET=web vite build",
+    "build:desktop": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "clean": "rimraf dist-electron",
+    "clean": "rimraf dist-electron build dist",
     "electron-start": "electron .",
     "electron-wait": "wait-on http://localhost:5179 && npm run electron-start",
     "electron:dev": "concurrently -k \"npm:dev\" \"npm:electron-wait\"",
-    "electron:pack": "npm run build && electron-builder --dir",
-    "electron:dist": "npm run clean && npm run build && electron-builder",
-    "electron:dist:win": "npm run clean && npm run build && electron-builder --win",
-    "electron:dist:mac": "npm run clean && npm run build && electron-builder --mac",
-    "electron:dist:linux": "npm run clean && npm run build && electron-builder --linux",
+    "electron:pack": "npm run build:desktop && electron-builder --dir",
+    "electron:dist": "npm run clean && npm run build:desktop && electron-builder",
+    "electron:dist:win": "npm run clean && npm run build:desktop && electron-builder --win",
+    "electron:dist:mac": "npm run clean && npm run build:desktop && electron-builder --mac",
+    "electron:dist:linux": "npm run clean && npm run build:desktop && electron-builder --linux",
     "release:electron": "npm version patch && npm run electron:dist",
     "postinstall": "electron-builder install-app-deps",
     "firebase:emulators": "firebase emulators:start",
-    "firebase:deploy": "npm run build && firebase deploy",
+    "firebase:deploy": "npm run build:web && firebase deploy",
     "firebase:init": "firebase init"
   },
   "build": {
@@ -121,6 +123,7 @@
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.18",
     "concurrently": "^8.2.2",
+    "cross-env": "^10.1.0",
     "electron": "^28.3.3",
     "electron-builder": "^24.13.3",
     "eslint": "^9.9.1",
@@ -134,6 +137,7 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
     "vite": "^5.4.2",
+    "vite-plugin-pwa": "^1.1.0",
     "wait-on": "^7.2.0"
   }
 }
