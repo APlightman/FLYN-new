@@ -82,8 +82,8 @@ export function useFirebaseAuth() {
       const userData: FirestoreUser = {
         id: user.uid,
         email: user.email!,
-        fullName: user.displayName || undefined,
-        avatarUrl: user.photoURL || undefined,
+        fullName: user.displayName || null,
+        avatarUrl: user.photoURL || null,
         createdAt: userSnap.exists() ? userSnap.data().createdAt : new Date(),
         updatedAt: new Date()
       };

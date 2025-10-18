@@ -165,7 +165,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       firebaseSync.setGoalsUpdateCallback(items => dispatch({ type: 'SET_GOALS', payload: items }));
       firebaseSync.setRecurringPaymentsUpdateCallback(items => dispatch({ type: 'SET_RECURRING_PAYMENTS', payload: items }));
     }
-  }, [user, isOnline, firebaseSync]);
+  }, [user, isOnline]);
 
   // --- ACTION HANDLERS (API) ---
   // These functions now only write to Firebase. The UI will update via the real-time listeners.

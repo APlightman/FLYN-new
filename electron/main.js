@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, session } from 'electron';
 import path from 'path';
 import { createMainWindow } from './modules/windowManager.js';
 import { createTray } from './modules/trayManager.js';
@@ -42,7 +42,26 @@ const initializeApp = () => {
   }
 };
 
-app.whenReady().then(initializeApp);
+app.whenReady().then(() => {
+  // Set Content Security Policy
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self'; " +
+          "script-src 'self' 'unsafe-inline' data: https://www.googletagmanager.com; " +
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+          "img-src 'self' data:; " +
+          "font-src 'self' https://fonts.gstatic.com; " +
+          "connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.googleapis.com;"
+        ]
+      }
+    });
+  });
+
+  initializeApp();
+});
 
 app.on('window-all-closed', () => {
   if (!isMac) {
