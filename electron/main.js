@@ -54,7 +54,7 @@ app.whenReady().then(() => {
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
           "img-src 'self' data:; " +
           "font-src 'self' https://fonts.gstatic.com; " +
-          "connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.googleapis.com;"
+          "connect-src 'self' http://localhost:3001 https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.googleapis.com;"
         ]
       }
     });
