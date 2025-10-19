@@ -18,3 +18,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FINTRACKER_1EB7D }}
           channelId: live
           projectId: fintracker-1eb7d
+          public: build
