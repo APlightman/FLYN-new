@@ -70,7 +70,7 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
     return () => {
       clearInterval(interval);
     };
-  }, [isAvailable, user, syncOptions.syncInterval, syncAllData]);
+  }, [isAvailable, user, syncOptions.syncInterval]);
   
   // --- DATA SYNC FUNCTION ---
   const syncAllData = useCallback(async () => {

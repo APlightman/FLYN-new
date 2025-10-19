@@ -1,5 +1,5 @@
 // Регистрируем Service Worker как можно раньше
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !window.electronAPI) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(registration => {
