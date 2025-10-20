@@ -86,7 +86,7 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
       
       if (syncOptions.syncTransactions !== false) {
         promises.push(
-          timeWebApi.transactionsApi.getAll(user.uid)
+          timeWebApi.transactionsApi.getAll()
             .then(onTransactionsUpdate)
             .catch(error => {
               console.error('Transactions sync error:', error);
@@ -97,7 +97,7 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
       
       if (syncOptions.syncCategories !== false) {
         promises.push(
-          timeWebApi.categoriesApi.getAll(user.uid)
+          timeWebApi.categoriesApi.getAll()
             .then(onCategoriesUpdate)
             .catch(error => {
               console.error('Categories sync error:', error);
@@ -108,7 +108,7 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
       
       if (syncOptions.syncBudgets !== false) {
         promises.push(
-          timeWebApi.budgetsApi.getAll(user.uid)
+          timeWebApi.budgetsApi.getAll()
             .then(onBudgetsUpdate)
             .catch(error => {
               console.error('Budgets sync error:', error);
@@ -119,7 +119,7 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
       
       if (syncOptions.syncGoals !== false) {
         promises.push(
-          timeWebApi.goalsApi.getAll(user.uid)
+          timeWebApi.goalsApi.getAll()
             .then(onGoalsUpdate)
             .catch(error => {
               console.error('Goals sync error:', error);
@@ -130,7 +130,7 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
       
       if (syncOptions.syncRecurringPayments !== false) {
         promises.push(
-          timeWebApi.recurringPaymentsApi.getAll(user.uid)
+          timeWebApi.recurringPaymentsApi.getAll()
             .then(onRecurringPaymentsUpdate)
             .catch(error => {
               console.error('Recurring payments sync error:', error);
@@ -280,13 +280,13 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
       }
       return safeDbOperation(() => {
         if (!user) throw new Error('User not available');
-        return timeWebApi.transactionsApi.create(data, user.uid);
+        return timeWebApi.transactionsApi.create(data);
       }, 'addTransaction');
     },
     update: (id: string, updates: Partial<Transaction>) => {
       return safeDbOperation(() => {
         if (!user) throw new Error('User not available');
-        return timeWebApi.transactionsApi.update(id, updates, user.uid);
+        return timeWebApi.transactionsApi.update(id, updates);
       }, 'updateTransaction');
     },
     remove: (id: string) => {
@@ -303,13 +303,13 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
       }
       return safeDbOperation(() => {
         if (!user) throw new Error('User not available');
-        return timeWebApi.categoriesApi.create(data, user.uid);
+        return timeWebApi.categoriesApi.create(data);
       }, 'addCategory');
     },
     update: (id: string, updates: Partial<Category>) => {
       return safeDbOperation(() => {
         if (!user) throw new Error('User not available');
-        return timeWebApi.categoriesApi.update(id, updates, user.uid);
+        return timeWebApi.categoriesApi.update(id, updates);
       }, 'updateCategory');
     },
     remove: (id: string) => {
@@ -326,13 +326,13 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
       }
       return safeDbOperation(() => {
         if (!user) throw new Error('User not available');
-        return timeWebApi.budgetsApi.create(data, user.uid);
+        return timeWebApi.budgetsApi.create(data);
       }, 'addBudget');
     },
     update: (id: string, updates: Partial<Budget>) => {
       return safeDbOperation(() => {
         if (!user) throw new Error('User not available');
-        return timeWebApi.budgetsApi.update(id, updates, user.uid);
+        return timeWebApi.budgetsApi.update(id, updates);
       }, 'updateBudget');
     },
     remove: (id: string) => {
@@ -349,13 +349,13 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
       }
       return safeDbOperation(() => {
         if (!user) throw new Error('User not available');
-        return timeWebApi.goalsApi.create(data, user.uid);
+        return timeWebApi.goalsApi.create(data);
       }, 'addGoal');
     },
     update: (id: string, updates: Partial<FinancialGoal>) => {
       return safeDbOperation(() => {
         if (!user) throw new Error('User not available');
-        return timeWebApi.goalsApi.update(id, updates, user.uid);
+        return timeWebApi.goalsApi.update(id, updates);
       }, 'updateGoal');
     },
     remove: (id: string) => {
@@ -372,13 +372,13 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
       }
       return safeDbOperation(() => {
         if (!user) throw new Error('User not available');
-        return timeWebApi.recurringPaymentsApi.create(data, user.uid);
+        return timeWebApi.recurringPaymentsApi.create(data);
       }, 'addRecurringPayment');
     },
     update: (id: string, updates: Partial<RecurringPayment>) => {
       return safeDbOperation(() => {
         if (!user) throw new Error('User not available');
-        return timeWebApi.recurringPaymentsApi.update(id, updates, user.uid);
+        return timeWebApi.recurringPaymentsApi.update(id, updates);
       }, 'updateRecurringPayment');
     },
     remove: (id: string) => {

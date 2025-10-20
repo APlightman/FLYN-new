@@ -2,7 +2,7 @@ import { Transaction, Category, Budget, FinancialGoal, RecurringPayment } from '
 
 // Базовый URL для API TimeWebCloud
 // TODO: Заменить на реальный URL вашего TimeWebCloud API
-const API_BASE_URL = import.meta.env.VITE_TIMEWEB_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_TIMEWEB_API_URL || 'http://localhost:3001/api';
 
 // Типы для API
 export interface TimeWebTransaction extends Transaction {
@@ -25,6 +25,13 @@ export interface TimeWebRecurringPayment extends RecurringPayment {
   userId: string;
 }
 
+// Установка токена аутентификации
+let authToken: string | null = null;
+
+export const setAuthToken = (token: string | null) => {
+  authToken = token;
+};
+
 // Утилита для выполнения API запросов
 const apiRequest = async <T>(
   endpoint: string,
@@ -35,6 +42,7 @@ const apiRequest = async <T>(
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
+      ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
       ...options.headers,
     },
     ...options,
@@ -54,31 +62,23 @@ const apiRequest = async <T>(
   }
 };
 
-// Установка токена аутентификации
-export const setAuthToken = (token: string | null) => {
-  if (token) {
-    // Токен будет добавляться к каждому запросу в заголовке
-    // Это реализуется в контексте приложения
-  }
-};
-
 // API для транзакций
 export const transactionsApi = {
-  getAll: async (userId: string): Promise<Transaction[]> => {
-    return apiRequest(`/transactions?userId=${userId}`);
+  getAll: async (): Promise<Transaction[]> => {
+    return apiRequest(`/transactions`);
   },
   
-  create: async (transaction: Omit<Transaction, 'id'>, userId: string): Promise<Transaction> => {
+  create: async (transaction: Omit<Transaction, 'id'>): Promise<Transaction> => {
     return apiRequest('/transactions', {
       method: 'POST',
-      body: JSON.stringify({ ...transaction, userId }),
+      body: JSON.stringify(transaction),
     });
   },
   
-  update: async (id: string, updates: Partial<Transaction>, userId: string): Promise<Transaction> => {
+  update: async (id: string, updates: Partial<Transaction>): Promise<Transaction> => {
     return apiRequest(`/transactions/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ ...updates, userId }),
+      body: JSON.stringify(updates),
     });
   },
   
@@ -91,21 +91,21 @@ export const transactionsApi = {
 
 // API для категорий
 export const categoriesApi = {
-  getAll: async (userId: string): Promise<Category[]> => {
-    return apiRequest(`/categories?userId=${userId}`);
+  getAll: async (): Promise<Category[]> => {
+    return apiRequest(`/categories`);
   },
   
-  create: async (category: Omit<Category, 'id'>, userId: string): Promise<Category> => {
+  create: async (category: Omit<Category, 'id'>): Promise<Category> => {
     return apiRequest('/categories', {
       method: 'POST',
-      body: JSON.stringify({ ...category, userId }),
+      body: JSON.stringify(category),
     });
   },
   
-  update: async (id: string, updates: Partial<Category>, userId: string): Promise<Category> => {
+  update: async (id: string, updates: Partial<Category>): Promise<Category> => {
     return apiRequest(`/categories/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ ...updates, userId }),
+      body: JSON.stringify(updates),
     });
   },
   
@@ -118,21 +118,21 @@ export const categoriesApi = {
 
 // API для бюджетов
 export const budgetsApi = {
-  getAll: async (userId: string): Promise<Budget[]> => {
-    return apiRequest(`/budgets?userId=${userId}`);
+  getAll: async (): Promise<Budget[]> => {
+    return apiRequest(`/budgets`);
   },
   
-  create: async (budget: Omit<Budget, 'id'>, userId: string): Promise<Budget> => {
+  create: async (budget: Omit<Budget, 'id'>): Promise<Budget> => {
     return apiRequest('/budgets', {
       method: 'POST',
-      body: JSON.stringify({ ...budget, userId }),
+      body: JSON.stringify(budget),
     });
   },
   
-  update: async (id: string, updates: Partial<Budget>, userId: string): Promise<Budget> => {
+  update: async (id: string, updates: Partial<Budget>): Promise<Budget> => {
     return apiRequest(`/budgets/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ ...updates, userId }),
+      body: JSON.stringify(updates),
     });
   },
   
@@ -145,21 +145,21 @@ export const budgetsApi = {
 
 // API для финансовых целей
 export const goalsApi = {
-  getAll: async (userId: string): Promise<FinancialGoal[]> => {
-    return apiRequest(`/goals?userId=${userId}`);
+  getAll: async (): Promise<FinancialGoal[]> => {
+    return apiRequest(`/goals`);
   },
   
-  create: async (goal: Omit<FinancialGoal, 'id'>, userId: string): Promise<FinancialGoal> => {
+  create: async (goal: Omit<FinancialGoal, 'id'>): Promise<FinancialGoal> => {
     return apiRequest('/goals', {
       method: 'POST',
-      body: JSON.stringify({ ...goal, userId }),
+      body: JSON.stringify(goal),
     });
   },
   
-  update: async (id: string, updates: Partial<FinancialGoal>, userId: string): Promise<FinancialGoal> => {
+  update: async (id: string, updates: Partial<FinancialGoal>): Promise<FinancialGoal> => {
     return apiRequest(`/goals/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ ...updates, userId }),
+      body: JSON.stringify(updates),
     });
   },
   
@@ -172,21 +172,21 @@ export const goalsApi = {
 
 // API для регулярных платежей
 export const recurringPaymentsApi = {
-  getAll: async (userId: string): Promise<RecurringPayment[]> => {
-    return apiRequest(`/recurring-payments?userId=${userId}`);
+  getAll: async (): Promise<RecurringPayment[]> => {
+    return apiRequest(`/recurring-payments`);
   },
   
-  create: async (payment: Omit<RecurringPayment, 'id'>, userId: string): Promise<RecurringPayment> => {
+  create: async (payment: Omit<RecurringPayment, 'id'>): Promise<RecurringPayment> => {
     return apiRequest('/recurring-payments', {
       method: 'POST',
-      body: JSON.stringify({ ...payment, userId }),
+      body: JSON.stringify(payment),
     });
   },
   
-  update: async (id: string, updates: Partial<RecurringPayment>, userId: string): Promise<RecurringPayment> => {
+  update: async (id: string, updates: Partial<RecurringPayment>): Promise<RecurringPayment> => {
     return apiRequest(`/recurring-payments/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ ...updates, userId }),
+      body: JSON.stringify(updates),
     });
   },
   
