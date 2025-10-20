@@ -44,34 +44,6 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
 
   const isAvailable = isFirebaseEnabled && user;
   
-  // --- SYNC INTERVAL EFFECT ---
-  useEffect(() => {
-    if (!isAvailable) {
-      return;
-    }
-    
-    // Инициализируем API с токеном аутентификации Firebase
-    const idToken = user && user.getIdToken ? user.getIdToken() : Promise.resolve(null);
-    
-    idToken.then(token => {
-      if (token) {
-        timeWebApi.setAuthToken(token);
-      }
-    });
-    
-    // Устанавливаем интервал синхронизации
-    const interval = setInterval(() => {
-      syncAllData();
-    }, syncOptions.syncInterval || 30000); // По умолчанию 30 секунд
-    
-    // Выполняем первую синхронизацию сразу
-    syncAllData();
-    
-    return () => {
-      clearInterval(interval);
-    };
-  }, [isAvailable, user, syncOptions.syncInterval]);
-  
   // --- DATA SYNC FUNCTION ---
   const syncAllData = useCallback(async () => {
     if (!isAvailable || !user) {
@@ -169,6 +141,34 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
     syncOptions.syncGoals,
     syncOptions.syncRecurringPayments
   ]);
+  
+  // --- SYNC INTERVAL EFFECT ---
+  useEffect(() => {
+    if (!isAvailable) {
+      return;
+    }
+    
+    // Инициализируем API с токеном аутентификации Firebase
+    const idToken = user && user.getIdToken ? user.getIdToken() : Promise.resolve(null);
+    
+    idToken.then(token => {
+      if (token) {
+        timeWebApi.setAuthToken(token);
+      }
+    });
+    
+    // Устанавливаем интервал синхронизации
+    const interval = setInterval(() => {
+      syncAllData();
+    }, syncOptions.syncInterval || 30000); // По умолчанию 30 секунд
+    
+    // Выполняем первую синхронизацию сразу
+    syncAllData();
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isAvailable, user, syncOptions.syncInterval, syncAllData]);
   
   // --- CALLBACK SETTERS ---
   const setTransactionsUpdateCallback = useCallback((cb: (items: Transaction[]) => void) => setOnTransactionsUpdate(() => cb), []);
