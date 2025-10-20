@@ -54,7 +54,7 @@ export default defineConfig({
   },
   server: {
     port: 5179,
-    strictPort: true
+    strictPort: false
   },
   define: {
     __ELECTRON__: JSON.stringify(process.env.ELECTRON === 'true')
