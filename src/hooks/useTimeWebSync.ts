@@ -149,21 +149,30 @@ export function useTimeWebSync(syncOptions: SyncOptions = {}) {
     }
     
     // Инициализируем API с токеном аутентификации Firebase
-    const idToken = user && user.getIdToken ? user.getIdToken() : Promise.resolve(null);
-    
-    idToken.then(token => {
-      if (token) {
-        timeWebApi.setAuthToken(token);
+    const initializeAuth = async () => {
+      try {
+        const token = user && user.getIdToken ? await user.getIdToken() : null;
+        
+        if (token) {
+          timeWebApi.setAuthToken(token);
+        }
+        
+        // Выполняем первую синхронизацию после установки токена
+        await syncAllData();
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+        // Выполняем синхронизацию даже без токена, чтобы не блокировать UI
+        await syncAllData();
       }
-    });
+    };
+    
+    // Инициализируем аутентификацию и выполняем первую синхронизацию
+    initializeAuth();
     
     // Устанавливаем интервал синхронизации
     const interval = setInterval(() => {
       syncAllData();
     }, syncOptions.syncInterval || 30000); // По умолчанию 30 секунд
-    
-    // Выполняем первую синхронизацию сразу
-    syncAllData();
     
     return () => {
       clearInterval(interval);

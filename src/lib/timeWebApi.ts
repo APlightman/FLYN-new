@@ -30,6 +30,7 @@ let authToken: string | null = null;
 
 export const setAuthToken = (token: string | null) => {
   authToken = token;
+  console.log('Auth token set:', token ? 'token present' : 'null');
 };
 
 // Утилита для выполнения API запросов
