@@ -283,20 +283,12 @@ manifest-*.json
 sw-*.js
 
 # Analytics and tracking
-.vercel
-.netlify
 
 # Sentry
 .sentryclirc
 
 # Turborepo
 .turbo
-
-# Vercel
-.vercel
-
-# Netlify
-.netlify
 
 # Local development
 .local

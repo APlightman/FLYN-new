@@ -1,37 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Database, CheckCircle, AlertTriangle, XCircle, RefreshCw, Activity, HardDrive, Users } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { transactionsApi } from '../../lib/timeWebApi';
+import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 
 interface DatabaseHealth {
   status: 'healthy' | 'warning' | 'error';
   timestamp: string;
   database: {
     connected: boolean;
-    connectionTime: string | null;
     version: string;
-    size: string;
     activeConnections: number;
   };
-  schema: {
-    expectedTables: number;
-    existingTables: number;
-    missingTables: string[];
-    tableStats: Record<string, number | string>;
-  };
   environment: {
-    nodeVersion: string;
     platform: string;
-    netlifyRegion: string;
   };
   error?: {
     message: string;
     code: string;
-    details: string | null;
-  };
-  troubleshooting?: {
-    commonCauses: string[];
-    nextSteps: string[];
   };
 }
 
@@ -39,15 +26,27 @@ export function DatabaseStatus() {
   const [health, setHealth] = useState<DatabaseHealth | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
+  const { user } = useFirebaseAuth();
 
   const checkDatabaseHealth = async () => {
     setLoading(true);
     
     try {
-      const response = await fetch('/.netlify/functions/health-check');
-      const data = await response.json();
+      // Проверяем подключение к TimeWebCloud API
+      await transactionsApi.getAll();
       
-      setHealth(data);
+      setHealth({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        database: {
+          connected: true,
+          version: 'TimeWebCloud API v1',
+          activeConnections: 1
+        },
+        environment: {
+          platform: 'TimeWebCloud'
+        }
+      });
       setLastCheck(new Date());
     } catch (error) {
       console.error('Health check failed:', error);
@@ -56,74 +55,17 @@ export function DatabaseStatus() {
         timestamp: new Date().toISOString(),
         database: {
           connected: false,
-          connectionTime: null,
           version: 'Unknown',
-          size: 'Unknown',
           activeConnections: 0
         },
-        schema: {
-          expectedTables: 0,
-          existingTables: 0,
-          missingTables: [],
-          tableStats: {}
-        },
         environment: {
-          nodeVersion: 'Unknown',
-          platform: 'Unknown',
-          netlifyRegion: 'Unknown'
+          platform: 'TimeWebCloud'
         },
         error: {
-          message: 'Не удалось подключиться к функции проверки',
-          code: 'NETWORK_ERROR',
-          details: null
+          message: (error as Error).message || 'Не удалось подключиться к API',
+          code: 'NETWORK_ERROR'
         }
       });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const initializeDatabase = async () => {
-    setLoading(true);
-    
-    try {
-      const response = await fetch('/.netlify/functions/init-database', {
-        method: 'POST'
-      });
-      const result = await response.json();
-      
-      if (result.success) {
-        alert('База данных успешно инициализирована!');
-        await checkDatabaseHealth();
-      } else {
-        alert(`Ошибка инициализации: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Initialization failed:', error);
-      alert('Ошибка при инициализации базы данных');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const seedDefaultData = async () => {
-    setLoading(true);
-    
-    try {
-      const response = await fetch('/.netlify/functions/seed-data', {
-        method: 'POST'
-      });
-      const result = await response.json();
-      
-      if (result.success) {
-        alert('Данные по умолчанию добавлены!');
-        await checkDatabaseHealth();
-      } else {
-        alert(`Ошибка добавления данных: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Seeding failed:', error);
-      alert('Ошибка при добавлении данных');
     } finally {
       setLoading(false);
     }
@@ -168,11 +110,11 @@ export function DatabaseStatus() {
     
     switch (health.status) {
       case 'healthy':
-        return 'База данных работает нормально';
+        return 'Подключение к TimeWebCloud API установлено';
       case 'warning':
-        return 'База данных работает с предупреждениями';
+        return 'Подключение с предупреждениями';
       case 'error':
-        return 'Проблемы с базой данных';
+        return 'Проблемы с подключением к TimeWebCloud API';
       default:
         return 'Неизвестный статус';
     }
@@ -186,10 +128,10 @@ export function DatabaseStatus() {
         </div>
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            Состояние базы данных
+            Состояние подключения
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Мониторинг подключения к Neon PostgreSQL
+            Мониторинг подключения к TimeWebCloud API
           </p>
         </div>
       </div>
@@ -226,20 +168,20 @@ export function DatabaseStatus() {
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
                 <Activity className="text-blue-600 dark:text-blue-400" size={16} />
-                <span className="font-medium text-blue-800 dark:text-blue-200">Производительность</span>
+                <span className="font-medium text-blue-800 dark:text-blue-200">Статус</span>
               </div>
               <div className="text-sm text-blue-700 dark:text-blue-300">
-                Время подключения: {health.database.connectionTime}
+                Подключено
               </div>
             </div>
 
             <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
                 <HardDrive className="text-green-600 dark:text-green-400" size={16} />
-                <span className="font-medium text-green-800 dark:text-green-200">Размер БД</span>
+                <span className="font-medium text-green-800 dark:text-green-200">Платформа</span>
               </div>
               <div className="text-sm text-green-700 dark:text-green-300">
-                {health.database.size}
+                {health.environment.platform}
               </div>
             </div>
 
@@ -256,80 +198,7 @@ export function DatabaseStatus() {
         )}
       </Card>
 
-      {/* Информация о схеме */}
-      {health && (
-        <Card>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
-            Схема базы данных
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium text-slate-700 dark:text-slate-300 mb-3">
-                Статистика таблиц
-              </h4>
-              <div className="space-y-2">
-                {Object.entries(health.schema.tableStats).map(([table, count]) => (
-                  <div key={table} className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                      {table}
-                    </span>
-                    <span className={`text-sm font-semibold ${
-                      typeof count === 'number' 
-                        ? 'text-green-600 dark:text-green-400' 
-                        : 'text-red-600 dark:text-red-400'
-                    }`}>
-                      {typeof count === 'number' ? `${count} записей` : count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-medium text-slate-700 dark:text-slate-300 mb-3">
-                Информация о системе
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">PostgreSQL:</span>
-                  <span className="font-medium text-slate-900 dark:text-slate-100">
-                    {health.database.version.split(' ')[1]}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">Node.js:</span>
-                  <span className="font-medium text-slate-900 dark:text-slate-100">
-                    {health.environment.nodeVersion}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">Регион:</span>
-                  <span className="font-medium text-slate-900 dark:text-slate-100">
-                    {health.environment.netlifyRegion}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {health.schema.missingTables.length > 0 && (
-            <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="text-yellow-600 dark:text-yellow-400" size={16} />
-                <span className="font-medium text-yellow-800 dark:text-yellow-200">
-                  Отсутствующие таблицы
-                </span>
-              </div>
-              <div className="text-sm text-yellow-700 dark:text-yellow-300">
-                {health.schema.missingTables.join(', ')}
-              </div>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* Ошибки и устранение неполадок */}
+      {/* Ошибки */}
       {health && health.status === 'error' && health.error && (
         <Card>
           <div className="flex items-center gap-2 mb-4">
@@ -348,71 +217,9 @@ export function DatabaseStatus() {
                 Код ошибки: {health.error.code}
               </div>
             </div>
-
-            {health.troubleshooting && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Возможные причины:
-                  </h4>
-                  <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                    {health.troubleshooting.commonCauses.map((cause, index) => (
-                      <li key={index}>• {cause}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Рекомендуемые действия:
-                  </h4>
-                  <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                    {health.troubleshooting.nextSteps.map((step, index) => (
-                      <li key={index}>• {step}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
           </div>
         </Card>
       )}
-
-      {/* Действия администратора */}
-      <Card>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
-          Действия администратора
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button
-            onClick={initializeDatabase}
-            disabled={loading}
-            variant="secondary"
-            fullWidth
-          >
-            <Database size={16} className="mr-2" />
-            Инициализировать схему БД
-          </Button>
-          
-          <Button
-            onClick={seedDefaultData}
-            disabled={loading}
-            variant="secondary"
-            fullWidth
-          >
-            <HardDrive size={16} className="mr-2" />
-            Добавить данные по умолчанию
-          </Button>
-        </div>
-        
-        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-          <div className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Примечание:</strong> Эти функции следует использовать только при первом развертывании 
-            или для восстановления схемы базы данных.
-          </div>
-        </div>
-      </Card>
 
       {/* Детальная информация */}
       {health && health.database.connected && (
@@ -424,19 +231,19 @@ export function DatabaseStatus() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h4 className="font-medium text-slate-700 dark:text-slate-300 mb-3">
-                База данных
+                Подключение
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">Версия:</span>
+                  <span className="text-slate-600 dark:text-slate-400">Статус:</span>
                   <span className="font-medium text-slate-900 dark:text-slate-100">
-                    {health.database.version.split(' ')[0]} {health.database.version.split(' ')[1]}
+                    Подключено
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">Размер:</span>
+                  <span className="text-slate-600 dark:text-slate-400">Версия API:</span>
                   <span className="font-medium text-slate-900 dark:text-slate-100">
-                    {health.database.size}
+                    {health.database.version}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -454,21 +261,15 @@ export function DatabaseStatus() {
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">Node.js:</span>
-                  <span className="font-medium text-slate-900 dark:text-slate-100">
-                    {health.environment.nodeVersion}
-                  </span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400">Платформа:</span>
                   <span className="font-medium text-slate-900 dark:text-slate-100">
                     {health.environment.platform}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">Регион:</span>
+                  <span className="text-slate-600 dark:text-slate-400">Пользователь:</span>
                   <span className="font-medium text-slate-900 dark:text-slate-100">
-                    {health.environment.netlifyRegion}
+                    {user ? user.email : 'Не авторизован'}
                   </span>
                 </div>
               </div>

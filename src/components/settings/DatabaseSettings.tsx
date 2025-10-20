@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Database, Settings as SettingsIcon } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -14,11 +14,11 @@ export function DatabaseSettings() {
           <div className="flex items-center gap-3 mb-3">
             <Database className="text-blue-600 dark:text-blue-400" size={20} />
             <h4 className="font-semibold text-blue-800 dark:text-blue-200">
-              База данных Neon
+              База данных TimeWebCloud
             </h4>
           </div>
           <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
-            Мониторинг состояния PostgreSQL базы данных и управление схемой
+            Мониторинг состояния подключения к TimeWebCloud API
           </p>
           
           <Button
@@ -36,10 +36,8 @@ export function DatabaseSettings() {
             <strong>Доступные функции:</strong>
           </div>
           <ul className="text-sm text-slate-600 dark:text-slate-400 mt-2 space-y-1">
-            <li>• Проверка подключения и производительности</li>
-            <li>• Мониторинг состояния таблиц и данных</li>
-            <li>• Инициализация схемы базы данных</li>
-            <li>• Добавление данных по умолчанию</li>
+            <li>• Проверка подключения к TimeWebCloud API</li>
+            <li>• Мониторинг состояния синхронизации данных</li>
           </ul>
         </div>
       </div>
