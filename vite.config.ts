@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig, PluginOption } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
@@ -58,5 +59,10 @@ export default defineConfig({
   },
   define: {
     __ELECTRON__: JSON.stringify(process.env.ELECTRON === 'true')
-  }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.ts',
+  },
 })

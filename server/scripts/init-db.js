@@ -1,11 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
-require('dotenv').config();
 
 // Создаем пул подключений к базе данных
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  // ssl: {
+  //   rejectUnauthorized: false,
+  // },
 });
 
 // Функция для выполнения SQL файла

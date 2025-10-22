@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "init-db": "node scripts/init-db.js"
+    "start": "node -r dotenv/config index.js",
+    "dev": "nodemon -r dotenv/config index.js",
+    "init-db": "node -r dotenv/config scripts/init-db.js"
   },
   "keywords": [],
   "author": "",
@@ -15,8 +15,9 @@
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
+    "dotenv": "^16.4.5",
     "express": "^5.1.0",
+    "financetracker-desktop": "file:..",
     "firebase-admin": "^13.5.0",
     "pg": "^8.16.3"
   },
