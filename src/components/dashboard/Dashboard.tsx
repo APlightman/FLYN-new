@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { TrendingUp, TrendingDown, Wallet, Target, WifiOff } from 'lucide-react';
 import { isFirebaseConfigured } from '../../lib/firebase';
@@ -7,26 +7,37 @@ import { isElectronApp } from '../../hooks/useElectronIntegration';
 export function Dashboard() {
   const { state, isOnline } = useApp();
   
-  const totalIncome = state.transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+  // Мемоизированные вычисления доходов и расходов
+  const { totalIncome, totalExpenses, balance } = useMemo(() => {
+    const totalIncome = state.transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
     
-  const totalExpenses = state.transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+    const totalExpenses = state.transactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
 
-  const balance = totalIncome - totalExpenses;
+    return {
+      totalIncome,
+      totalExpenses,
+      balance: totalIncome - totalExpenses
+    };
+  }, [state.transactions]);
 
-  const formatCurrency = (amount: number) => {
+  // Мемоизированная функция форматирования валюты
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',
       currency: 'RUB',
     }).format(amount);
-  };
+  }, []);
 
-  const recentTransactions = state.transactions
-    .slice(0, 5)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Мемоизированные последние транзакции
+  const recentTransactions = useMemo(() => {
+    return [...state.transactions]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  }, [state.transactions]);
 
   return (
     <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">

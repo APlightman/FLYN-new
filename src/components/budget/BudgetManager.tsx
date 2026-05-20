@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { TrendingUp, Plus, Settings, Wand2 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { Card } from '../ui/Card';
@@ -13,13 +13,21 @@ export function BudgetManager() {
   const { state, addBudget } = useApp();
   const [showWizard, setShowWizard] = useState(false);
 
-  // Вычисляем потраченные суммы для каждого бюджета
+  // Оптимизированное вычисление потраченных сумм с использованием Map для O(n) сложности
   const budgetsWithSpent = useMemo(() => {
+    // Создаем Map для быстрого подсчета расходов по категориям - O(n) вместо O(n²)
+    const expensesByCategory = new Map<string, number>();
+    
+    state.transactions.forEach(transaction => {
+      if (transaction.type === 'expense') {
+        const currentSum = expensesByCategory.get(transaction.category) || 0;
+        expensesByCategory.set(transaction.category, currentSum + transaction.amount);
+      }
+    });
+
     return state.budgets.map(budget => {
       const category = state.categories.find(c => c.id === budget.categoryId);
-      const spent = state.transactions
-        .filter(t => t.type === 'expense' && t.category === category?.name)
-        .reduce((sum, t) => sum + t.amount, 0);
+      const spent = expensesByCategory.get(category?.name || '') || 0;
       
       return {
         ...budget,

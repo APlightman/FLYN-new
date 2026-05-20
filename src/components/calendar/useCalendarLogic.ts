@@ -68,10 +68,9 @@ export function useCalendarLogic() {
   const transactionsByDate = useMemo(() => {
     const grouped: Record<string, typeof periodTransactions> = {};
     
-    // Исправляем группировку транзакций по датам
-    state.transactions.forEach(transaction => {
-      // Используем правильный формат даты
-      const dateKey = transaction.date; // Уже в формате YYYY-MM-DD
+    // Группируем только транзакции текущего периода для оптимизации
+    periodTransactions.forEach(transaction => {
+      const dateKey = transaction.date;
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
@@ -79,7 +78,7 @@ export function useCalendarLogic() {
     });
     
     return grouped;
-  }, [state.transactions]);
+  }, [periodTransactions]);
 
   const currentDayTransactions = useMemo(() => {
     const dateKey = formatDateKey(currentDate);

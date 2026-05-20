@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { Header } from './Header';
@@ -50,17 +50,24 @@ export function AppContent() {
     }
   }, [state.darkMode]);
 
+  // Мемоизируем функцию синхронизации для предотвращения утечки интервалов
+  const handleSync = useCallback(async () => {
+    if (user && isOnline && isFirebaseConfigured) {
+      await syncData().catch(error => {
+        console.error('Background sync error:', error);
+      });
+    }
+  }, [user, isOnline, syncData]);
+
   useEffect(() => {
     if (user && isOnline && isFirebaseConfigured) {
       const interval = setInterval(() => {
-        syncData().catch(error => {
-          console.error('Background sync error:', error);
-        });
+        handleSync();
       }, 30000);
 
       return () => clearInterval(interval);
     }
-  }, [user, isOnline, syncData]);
+  }, [handleSync]);
 
   const getPageTitle = () => {
     const titles: Record<string, string> = {

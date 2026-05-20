@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Target, Edit, Trash2, Plus } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { FinancialGoal } from '../../types';
@@ -12,47 +12,57 @@ export function GoalsManager() {
   const [showForm, setShowForm] = useState(false);
   const [editingGoal, setEditingGoal] = useState<FinancialGoal | null>(null);
 
-  const formatCurrency = (amount: number) => {
+  // Мемоизированная функция форматирования валюты
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',
       currency: 'RUB',
     }).format(amount);
-  };
+  }, []);
 
-  const calculateProgress = (goal: FinancialGoal) => {
-    return (goal.currentAmount / goal.targetAmount) * 100;
-  };
+  // Мемоизированные вычисления для всех целей
+  const goalsWithCalculations = useMemo(() => {
+    return state.goals.map(goal => {
+      const progress = (goal.currentAmount / goal.targetAmount) * 100;
+      
+      const deadline = new Date(goal.deadline);
+      const now = new Date();
+      const monthsRemaining = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30)));
+      
+      const remaining = goal.targetAmount - goal.currentAmount;
+      const requiredMonthly = monthsRemaining > 0 ? remaining / monthsRemaining : 0;
 
-  const calculateMonthsRemaining = (goal: FinancialGoal) => {
-    const deadline = new Date(goal.deadline);
-    const now = new Date();
-    const monthsRemaining = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30)));
-    return monthsRemaining;
-  };
+      let priorityColor: string;
+      let priorityText: string;
+      
+      switch (goal.priority) {
+        case 'high': 
+          priorityColor = 'bg-red-500';
+          priorityText = 'Высокий';
+          break;
+        case 'medium': 
+          priorityColor = 'bg-yellow-500';
+          priorityText = 'Средний';
+          break;
+        case 'low': 
+          priorityColor = 'bg-green-500';
+          priorityText = 'Низкий';
+          break;
+        default: 
+          priorityColor = 'bg-gray-500';
+          priorityText = 'Не указан';
+      }
 
-  const calculateRequiredMonthly = (goal: FinancialGoal) => {
-    const remaining = goal.targetAmount - goal.currentAmount;
-    const monthsRemaining = calculateMonthsRemaining(goal);
-    return monthsRemaining > 0 ? remaining / monthsRemaining : 0;
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getPriorityText = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'Высокий';
-      case 'medium': return 'Средний';
-      case 'low': return 'Низкий';
-      default: return 'Не указан';
-    }
-  };
+      return {
+        ...goal,
+        progress,
+        monthsRemaining,
+        requiredMonthly,
+        priorityColor,
+        priorityText
+      };
+    });
+  }, [state.goals]);
 
   return (
     <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
@@ -93,10 +103,8 @@ export function GoalsManager() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {state.goals.map((goal) => {
-            const progress = calculateProgress(goal);
-            const monthsRemaining = calculateMonthsRemaining(goal);
-            const requiredMonthly = calculateRequiredMonthly(goal);
+          {goalsWithCalculations.map((goal) => {
+            const { progress, monthsRemaining, requiredMonthly, priorityColor, priorityText } = goal;
 
             return (
               <Card key={goal.id} className="relative">
@@ -106,9 +114,9 @@ export function GoalsManager() {
                       {goal.name}
                     </h3>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${getPriorityColor(goal.priority)}`} />
+                      <div className={`w-2 h-2 rounded-full ${priorityColor}`} />
                       <span className="text-xs text-slate-500 dark:text-slate-400">
-                        {getPriorityText(goal.priority)}
+                        {priorityText}
                       </span>
                     </div>
                   </div>
