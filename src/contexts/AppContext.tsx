@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { AppState, Transaction, Category, Budget, FinancialGoal, RecurringPayment, FilterOptions } from '../types';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
 import { useTimeWebSync } from '../hooks/useTimeWebSync';
@@ -25,6 +25,7 @@ interface AppContextType {
   toggleDarkMode: () => void;
   setSelectedDate: (date: string | null) => void;
   isOnline: boolean;
+  syncData: () => Promise<void>;
 }
 
 // --- ACTIONS ---
@@ -169,30 +170,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // --- ACTION HANDLERS (API) ---
   // These functions now only write to TimeWebCloud. The UI will update via the sync mechanism.
-  const addTransaction = (transaction: Omit<Transaction, 'id'>) => timeWebSync.addTransaction(transaction);
-  const updateTransaction = (id: string, updates: Partial<Transaction>) => timeWebSync.updateTransaction(id, updates);
-  const deleteTransaction = (id: string) => timeWebSync.deleteTransaction(id);
+  const addTransaction = useCallback((transaction: Omit<Transaction, 'id'>) => timeWebSync.addTransaction(transaction), [timeWebSync]);
+  const updateTransaction = useCallback((id: string, updates: Partial<Transaction>) => timeWebSync.updateTransaction(id, updates), [timeWebSync]);
+  const deleteTransaction = useCallback((id: string) => timeWebSync.deleteTransaction(id), [timeWebSync]);
 
-  const addCategory = (category: Omit<Category, 'id'>) => timeWebSync.addCategory(category);
-  const updateCategory = (id: string, updates: Partial<Category>) => timeWebSync.updateCategory(id, updates);
-  const deleteCategory = (id: string) => timeWebSync.deleteCategory(id);
+  const addCategory = useCallback((category: Omit<Category, 'id'>) => timeWebSync.addCategory(category), [timeWebSync]);
+  const updateCategory = useCallback((id: string, updates: Partial<Category>) => timeWebSync.updateCategory(id, updates), [timeWebSync]);
+  const deleteCategory = useCallback((id: string) => timeWebSync.deleteCategory(id), [timeWebSync]);
 
-  const addBudget = (budget: Omit<Budget, 'id'>) => timeWebSync.addBudget(budget);
-  const updateBudget = (id: string, updates: Partial<Budget>) => timeWebSync.updateBudget(id, updates);
-  const deleteBudget = (id: string) => timeWebSync.deleteBudget(id);
+  const addBudget = useCallback((budget: Omit<Budget, 'id'>) => timeWebSync.addBudget(budget), [timeWebSync]);
+  const updateBudget = useCallback((id: string, updates: Partial<Budget>) => timeWebSync.updateBudget(id, updates), [timeWebSync]);
+  const deleteBudget = useCallback((id: string) => timeWebSync.deleteBudget(id), [timeWebSync]);
 
-  const addGoal = (goal: Omit<FinancialGoal, 'id'>) => timeWebSync.addGoal(goal);
-  const updateGoal = (id: string, updates: Partial<FinancialGoal>) => timeWebSync.updateGoal(id, updates);
-  const deleteGoal = (id: string) => timeWebSync.deleteGoal(id);
+  const addGoal = useCallback((goal: Omit<FinancialGoal, 'id'>) => timeWebSync.addGoal(goal), [timeWebSync]);
+  const updateGoal = useCallback((id: string, updates: Partial<FinancialGoal>) => timeWebSync.updateGoal(id, updates), [timeWebSync]);
+  const deleteGoal = useCallback((id: string) => timeWebSync.deleteGoal(id), [timeWebSync]);
 
-  const addRecurringPayment = (payment: Omit<RecurringPayment, 'id'>) => timeWebSync.addRecurringPayment(payment);
-  const updateRecurringPayment = (id: string, updates: Partial<RecurringPayment>) => timeWebSync.updateRecurringPayment(id, updates);
-  const deleteRecurringPayment = (id: string) => timeWebSync.deleteRecurringPayment(id);
+  const addRecurringPayment = useCallback((payment: Omit<RecurringPayment, 'id'>) => timeWebSync.addRecurringPayment(payment), [timeWebSync]);
+  const updateRecurringPayment = useCallback((id: string, updates: Partial<RecurringPayment>) => timeWebSync.updateRecurringPayment(id, updates), [timeWebSync]);
+  const deleteRecurringPayment = useCallback((id: string) => timeWebSync.deleteRecurringPayment(id), [timeWebSync]);
 
   // Local state actions
-  const setFilters = (filters: Partial<FilterOptions>) => dispatch({ type: 'SET_FILTERS', payload: filters });
-  const toggleDarkMode = () => dispatch({ type: 'TOGGLE_DARK_MODE' });
-  const setSelectedDate = (date: string | null) => dispatch({ type: 'SET_SELECTED_DATE', payload: date });
+  const setFilters = useCallback((filters: Partial<FilterOptions>) => dispatch({ type: 'SET_FILTERS', payload: filters }), []);
+  const toggleDarkMode = useCallback(() => dispatch({ type: 'TOGGLE_DARK_MODE' }), []);
+  const setSelectedDate = useCallback((date: string | null) => dispatch({ type: 'SET_SELECTED_DATE', payload: date }), []);
 
   if (!isHydrated) {
     return (
@@ -226,7 +227,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFilters,
       toggleDarkMode,
       setSelectedDate,
-      isOnline
+      isOnline,
+      syncData: timeWebSync.syncData
     }}>
       {children}
     </AppContext.Provider>
