@@ -1,11 +1,12 @@
-import { app, BrowserWindow, session } from 'electron';
 import path from 'path';
+import { app, BrowserWindow, session } from './modules/electronRuntime.js';
 import { createMainWindow } from './modules/windowManager.js';
 import { createTray } from './modules/trayManager.js';
 import { createApplicationMenu } from './modules/menuManager.js';
 import { setupIPC } from './modules/ipcHandlers.js';
 import { setupAutoUpdater } from './modules/autoUpdater.js';
 import { registerGlobalShortcuts } from './modules/shortcuts.js';
+import { closeDatabaseConnection, getStorageStatus } from './modules/db/index.js';
 
 const isDev = process.env.NODE_ENV === 'development';
 const isMac = process.platform === 'darwin';
@@ -43,6 +44,13 @@ const initializeApp = () => {
 };
 
 app.whenReady().then(() => {
+  const storageStatus = getStorageStatus();
+  if (storageStatus.available) {
+    console.log(`SQLite storage ready: ${storageStatus.path}`);
+  } else {
+    console.warn(`SQLite storage unavailable: ${storageStatus.error || 'driver not installed'}`);
+  }
+
   // Set Content Security Policy
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -80,6 +88,7 @@ app.on('activate', () => {
 
 app.on('before-quit', () => {
   isQuitting = true;
+  closeDatabaseConnection();
 });
 
 // Handle the update-tray-badge IPC call

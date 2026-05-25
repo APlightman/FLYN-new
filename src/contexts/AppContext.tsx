@@ -1,7 +1,14 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AppState, Transaction, Category, Budget, FinancialGoal, RecurringPayment, FilterOptions } from '../types';
-import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
-import { useTimeWebSync } from '../hooks/useTimeWebSync';
+import {
+  bootstrapDesktopDomainData,
+  createDesktopEntity,
+  deleteDesktopEntity,
+  loadDesktopAppState,
+  loadDesktopDomainData,
+  saveDesktopAppState,
+  updateDesktopEntity,
+} from '../lib/desktopStorage';
 
 // --- CONTEXT TYPE ---
 interface AppContextType {
@@ -29,17 +36,25 @@ interface AppContextType {
 
 // --- ACTIONS ---
 type AppAction = 
-  | { type: 'SET_TRANSACTIONS'; payload: Transaction[] }
-  | { type: 'SET_CATEGORIES'; payload: Category[] }
-  | { type: 'SET_BUDGETS'; payload: Budget[] }
-  | { type: 'SET_GOALS'; payload: FinancialGoal[] }
-  | { type: 'SET_RECURRING_PAYMENTS'; payload: RecurringPayment[] }
+  | { type: 'HYDRATE_STATE'; payload: AppState }
+  | { type: 'ADD_TRANSACTION'; payload: Transaction }
+  | { type: 'UPDATE_TRANSACTION'; payload: { id: string; updates: Partial<Transaction> } }
+  | { type: 'DELETE_TRANSACTION'; payload: string }
+  | { type: 'ADD_CATEGORY'; payload: Category }
+  | { type: 'UPDATE_CATEGORY'; payload: { id: string; updates: Partial<Category> } }
+  | { type: 'DELETE_CATEGORY'; payload: string }
+  | { type: 'ADD_BUDGET'; payload: Budget }
+  | { type: 'UPDATE_BUDGET'; payload: { id: string; updates: Partial<Budget> } }
+  | { type: 'DELETE_BUDGET'; payload: string }
+  | { type: 'ADD_GOAL'; payload: FinancialGoal }
+  | { type: 'UPDATE_GOAL'; payload: { id: string; updates: Partial<FinancialGoal> } }
+  | { type: 'DELETE_GOAL'; payload: string }
+  | { type: 'ADD_RECURRING_PAYMENT'; payload: RecurringPayment }
+  | { type: 'UPDATE_RECURRING_PAYMENT'; payload: { id: string; updates: Partial<RecurringPayment> } }
+  | { type: 'DELETE_RECURRING_PAYMENT'; payload: string }
   | { type: 'SET_FILTERS'; payload: Partial<FilterOptions> }
   | { type: 'TOGGLE_DARK_MODE' }
-  | { type: 'SET_SELECTED_DATE'; payload: string | null }
-  | { type: 'HYDRATE_STATE'; payload: Partial<AppState> };
-
-const STORAGE_KEY = 'financeAppSettings';
+  | { type: 'SET_SELECTED_DATE'; payload: string | null };
 
 // --- INITIAL STATE ---
 const getDefaultCategories = (): Category[] => [
@@ -70,52 +85,183 @@ const getDefaultState = (): AppState => ({
   selectedDate: null,
 });
 
-// --- LOCAL STORAGE (for settings only) ---
-const saveToStorage = (state: AppState) => {
-  try {
-    const settings = { darkMode: state.darkMode };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-  } catch (error) {
-    console.error('Storage error:', error);
+const createEntityId = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
   }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 };
 
-const loadFromStorage = (): Partial<AppState> => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {};
-  } catch (error) {
-    console.error('Load error:', error);
-  }
-  return {};
+const normalizeBudget = (budget: Budget): Budget => ({
+  ...budget,
+  spent: budget.spent ?? 0,
+  remaining: budget.remaining ?? budget.amount - (budget.spent ?? 0),
+});
+
+const normalizeState = (state: Partial<AppState>): AppState => {
+  const defaultState = getDefaultState();
+
+  return {
+    ...defaultState,
+    ...state,
+    transactions: Array.isArray(state.transactions) ? state.transactions : defaultState.transactions,
+    categories: Array.isArray(state.categories) ? state.categories : defaultState.categories,
+    budgets: Array.isArray(state.budgets) ? state.budgets.map(normalizeBudget) : defaultState.budgets,
+    goals: Array.isArray(state.goals) ? state.goals : defaultState.goals,
+    recurringPayments: Array.isArray(state.recurringPayments) ? state.recurringPayments : defaultState.recurringPayments,
+    filters: {
+      ...defaultState.filters,
+      ...state.filters,
+      dateRange: {
+        ...defaultState.filters.dateRange,
+        ...state.filters?.dateRange,
+      },
+      categories: Array.isArray(state.filters?.categories)
+        ? state.filters.categories
+        : defaultState.filters.categories,
+    },
+    darkMode: typeof state.darkMode === 'boolean' ? state.darkMode : defaultState.darkMode,
+    selectedDate: state.selectedDate ?? defaultState.selectedDate,
+  };
 };
 
 // --- REDUCER ---
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'HYDRATE_STATE':
-      return { ...state, ...action.payload };
+      return action.payload;
 
-    // Data updates from TimeWebCloud
-    case 'SET_TRANSACTIONS':
-      return { ...state, transactions: action.payload };
-    case 'SET_CATEGORIES':
-      return { ...state, categories: action.payload.length > 0 ? action.payload : state.categories };
-    case 'SET_BUDGETS':
-      return { ...state, budgets: action.payload };
-    case 'SET_GOALS':
-      return { ...state, goals: action.payload };
-    case 'SET_RECURRING_PAYMENTS':
-      return { ...state, recurringPayments: action.payload };
+    case 'ADD_TRANSACTION':
+      return { ...state, transactions: [action.payload, ...state.transactions] };
+    case 'UPDATE_TRANSACTION':
+      return {
+        ...state,
+        transactions: state.transactions.map(transaction =>
+          transaction.id === action.payload.id
+            ? { ...transaction, ...action.payload.updates }
+            : transaction
+        ),
+      };
+    case 'DELETE_TRANSACTION':
+      return {
+        ...state,
+        transactions: state.transactions.filter(transaction => transaction.id !== action.payload),
+      };
+
+    case 'ADD_CATEGORY':
+      return { ...state, categories: [...state.categories, action.payload] };
+    case 'UPDATE_CATEGORY': {
+      const currentCategory = state.categories.find(category => category.id === action.payload.id);
+      if (!currentCategory) {
+        return state;
+      }
+
+      const nextName = action.payload.updates.name?.trim() || currentCategory.name;
+      const hasNameChanged = nextName !== currentCategory.name;
+
+      return {
+        ...state,
+        categories: state.categories.map(category =>
+          category.id === action.payload.id
+            ? { ...category, ...action.payload.updates, name: nextName }
+            : category
+        ),
+        transactions: hasNameChanged
+          ? state.transactions.map(transaction =>
+              transaction.category === currentCategory.name
+                ? { ...transaction, category: nextName }
+                : transaction
+            )
+          : state.transactions,
+        recurringPayments: hasNameChanged
+          ? state.recurringPayments.map(payment =>
+              payment.category === currentCategory.name
+                ? { ...payment, category: nextName }
+                : payment
+            )
+          : state.recurringPayments,
+      };
+    }
+    case 'DELETE_CATEGORY':
+      return {
+        ...state,
+        categories: state.categories
+          .filter(category => category.id !== action.payload)
+          .map(category =>
+            category.parent === action.payload
+              ? { ...category, parent: undefined }
+              : category
+          ),
+        budgets: state.budgets.filter(budget => budget.categoryId !== action.payload),
+      };
+
+    case 'ADD_BUDGET':
+      return { ...state, budgets: [...state.budgets, normalizeBudget(action.payload)] };
+    case 'UPDATE_BUDGET':
+      return {
+        ...state,
+        budgets: state.budgets.map(budget =>
+          budget.id === action.payload.id
+            ? normalizeBudget({ ...budget, ...action.payload.updates })
+            : budget
+        ),
+      };
+    case 'DELETE_BUDGET':
+      return {
+        ...state,
+        budgets: state.budgets.filter(budget => budget.id !== action.payload),
+      };
+
+    case 'ADD_GOAL':
+      return { ...state, goals: [...state.goals, action.payload] };
+    case 'UPDATE_GOAL':
+      return {
+        ...state,
+        goals: state.goals.map(goal =>
+          goal.id === action.payload.id
+            ? { ...goal, ...action.payload.updates }
+            : goal
+        ),
+      };
+    case 'DELETE_GOAL':
+      return {
+        ...state,
+        goals: state.goals.filter(goal => goal.id !== action.payload),
+      };
+
+    case 'ADD_RECURRING_PAYMENT':
+      return { ...state, recurringPayments: [...state.recurringPayments, action.payload] };
+    case 'UPDATE_RECURRING_PAYMENT':
+      return {
+        ...state,
+        recurringPayments: state.recurringPayments.map(payment =>
+          payment.id === action.payload.id
+            ? { ...payment, ...action.payload.updates }
+            : payment
+        ),
+      };
+    case 'DELETE_RECURRING_PAYMENT':
+      return {
+        ...state,
+        recurringPayments: state.recurringPayments.filter(payment => payment.id !== action.payload),
+      };
 
     // Local UI state updates
     case 'SET_FILTERS':
-      return { ...state, filters: { ...state.filters, ...action.payload } };
-    case 'TOGGLE_DARK_MODE': {
-      const newState = { ...state, darkMode: !state.darkMode };
-      saveToStorage(newState); // Save settings change
-      return newState;
-    }
+      return {
+        ...state,
+        filters: {
+          ...state.filters,
+          ...action.payload,
+          dateRange: {
+            ...state.filters.dateRange,
+            ...action.payload.dateRange,
+          },
+        },
+      };
+    case 'TOGGLE_DARK_MODE':
+      return { ...state, darkMode: !state.darkMode };
     case 'SET_SELECTED_DATE':
       return { ...state, selectedDate: action.payload };
 
@@ -130,10 +276,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, getDefaultState());
   const [isHydrated, setIsHydrated] = React.useState(false);
-  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
-  
-  const { user } = useFirebaseAuth();
-  const timeWebSync = useTimeWebSync();
+  const [isOnline, setIsOnline] = React.useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
   // --- EFFECTS ---
 
@@ -149,45 +292,209 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Hydrate non-data state (like darkMode) from localStorage
+  // Hydrate local state from storage
   useEffect(() => {
-    const storedState = loadFromStorage();
-    dispatch({ type: 'HYDRATE_STATE', payload: { ...getDefaultState(), ...storedState } });
-    setIsHydrated(true);
+    let isMounted = true;
+
+    const hydrateState = async () => {
+      const result = await loadDesktopAppState();
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (result.error) {
+        console.warn('Storage hydrate fallback:', result.error);
+      }
+
+      const hydratedState = normalizeState(result.state ?? getDefaultState());
+      const bootstrapResult = await bootstrapDesktopDomainData(hydratedState);
+      const domainResult = await loadDesktopDomainData();
+
+      const mergedState = domainResult?.success
+        ? normalizeState({
+            ...hydratedState,
+            budgets: domainResult.budgets ?? hydratedState.budgets,
+            categories: domainResult.categories ?? hydratedState.categories,
+            goals: domainResult.goals ?? hydratedState.goals,
+            recurringPayments: domainResult.recurringPayments ?? hydratedState.recurringPayments,
+            transactions: domainResult.transactions ?? hydratedState.transactions,
+          })
+        : hydratedState;
+
+      if (bootstrapResult && !domainResult?.success) {
+        console.warn('Domain bootstrap completed without domain read confirmation yet.');
+      }
+
+      dispatch({
+        type: 'HYDRATE_STATE',
+        payload: mergedState,
+      });
+      setIsHydrated(true);
+    };
+
+    hydrateState();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Connect TimeWebCloud data sync to the app state
   useEffect(() => {
-    if (user) {
-      timeWebSync.setTransactionsUpdateCallback((items: Transaction[]) => dispatch({ type: 'SET_TRANSACTIONS', payload: items }));
-      timeWebSync.setCategoriesUpdateCallback((items: Category[]) => dispatch({ type: 'SET_CATEGORIES', payload: items }));
-      timeWebSync.setBudgetsUpdateCallback((items: Budget[]) => dispatch({ type: 'SET_BUDGETS', payload: items }));
-      timeWebSync.setGoalsUpdateCallback((items: FinancialGoal[]) => dispatch({ type: 'SET_GOALS', payload: items }));
-      timeWebSync.setRecurringPaymentsUpdateCallback((items: RecurringPayment[]) => dispatch({ type: 'SET_RECURRING_PAYMENTS', payload: items }));
+    if (isHydrated) {
+      void saveDesktopAppState(state).then((result) => {
+        if (result.error) {
+          console.warn('Storage save fallback:', result.error);
+        }
+      });
     }
-  }, [user]);
+  }, [state, isHydrated]);
 
-  // --- ACTION HANDLERS (API) ---
-  // These functions now only write to TimeWebCloud. The UI will update via the sync mechanism.
-  const addTransaction = (transaction: Omit<Transaction, 'id'>) => timeWebSync.addTransaction(transaction);
-  const updateTransaction = (id: string, updates: Partial<Transaction>) => timeWebSync.updateTransaction(id, updates);
-  const deleteTransaction = (id: string) => timeWebSync.deleteTransaction(id);
+  // --- ACTION HANDLERS ---
+  const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
+    const payload = {
+      ...(transaction as Transaction),
+      id: (transaction as Partial<Transaction>).id ?? createEntityId(),
+    };
 
-  const addCategory = (category: Omit<Category, 'id'>) => timeWebSync.addCategory(category);
-  const updateCategory = (id: string, updates: Partial<Category>) => timeWebSync.updateCategory(id, updates);
-  const deleteCategory = (id: string) => timeWebSync.deleteCategory(id);
+    dispatch({
+      type: 'ADD_TRANSACTION',
+      payload,
+    });
 
-  const addBudget = (budget: Omit<Budget, 'id'>) => timeWebSync.addBudget(budget);
-  const updateBudget = (id: string, updates: Partial<Budget>) => timeWebSync.updateBudget(id, updates);
-  const deleteBudget = (id: string) => timeWebSync.deleteBudget(id);
+    void createDesktopEntity('transaction', payload);
+  };
 
-  const addGoal = (goal: Omit<FinancialGoal, 'id'>) => timeWebSync.addGoal(goal);
-  const updateGoal = (id: string, updates: Partial<FinancialGoal>) => timeWebSync.updateGoal(id, updates);
-  const deleteGoal = (id: string) => timeWebSync.deleteGoal(id);
+  const updateTransaction = (id: string, updates: Partial<Transaction>) => {
+    dispatch({ type: 'UPDATE_TRANSACTION', payload: { id, updates } });
+    void updateDesktopEntity('transaction', id, updates);
+  };
 
-  const addRecurringPayment = (payment: Omit<RecurringPayment, 'id'>) => timeWebSync.addRecurringPayment(payment);
-  const updateRecurringPayment = (id: string, updates: Partial<RecurringPayment>) => timeWebSync.updateRecurringPayment(id, updates);
-  const deleteRecurringPayment = (id: string) => timeWebSync.deleteRecurringPayment(id);
+  const deleteTransaction = (id: string) => {
+    dispatch({ type: 'DELETE_TRANSACTION', payload: id });
+    void deleteDesktopEntity('transaction', id);
+  };
+
+  const addCategory = (category: Omit<Category, 'id'>) => {
+    const payload = {
+      ...(category as Category),
+      id: (category as Partial<Category>).id ?? createEntityId(),
+    };
+
+    dispatch({
+      type: 'ADD_CATEGORY',
+      payload,
+    });
+
+    void createDesktopEntity('category', payload);
+  };
+
+  const updateCategory = (id: string, updates: Partial<Category>) => {
+    const currentCategory = state.categories.find(category => category.id === id);
+    const nextName = updates.name?.trim() || currentCategory?.name;
+
+    dispatch({ type: 'UPDATE_CATEGORY', payload: { id, updates } });
+    void updateDesktopEntity('category', id, updates);
+
+    if (currentCategory && nextName && nextName !== currentCategory.name) {
+      state.transactions
+        .filter(transaction => transaction.category === currentCategory.name)
+        .forEach((transaction) => {
+          void updateDesktopEntity('transaction', transaction.id, { category: nextName });
+        });
+
+      state.recurringPayments
+        .filter(payment => payment.category === currentCategory.name)
+        .forEach((payment) => {
+          void updateDesktopEntity('recurringPayment', payment.id, { category: nextName });
+        });
+    }
+  };
+
+  const deleteCategory = (id: string) => {
+    dispatch({ type: 'DELETE_CATEGORY', payload: id });
+    void deleteDesktopEntity('category', id);
+  };
+
+  const addBudget = (budget: Omit<Budget, 'id'>) => {
+    const payload = normalizeBudget({
+      ...(budget as Budget),
+      id: (budget as Partial<Budget>).id ?? createEntityId(),
+    });
+
+    dispatch({
+      type: 'ADD_BUDGET',
+      payload,
+    });
+
+    void createDesktopEntity('budget', payload);
+  };
+
+  const updateBudget = (id: string, updates: Partial<Budget>) => {
+    const currentBudget = state.budgets.find(budget => budget.id === id);
+    const normalizedUpdates = currentBudget
+      ? normalizeBudget({
+          ...currentBudget,
+          ...updates,
+        })
+      : updates;
+
+    dispatch({ type: 'UPDATE_BUDGET', payload: { id, updates: normalizedUpdates } });
+    void updateDesktopEntity('budget', id, normalizedUpdates);
+  };
+
+  const deleteBudget = (id: string) => {
+    dispatch({ type: 'DELETE_BUDGET', payload: id });
+    void deleteDesktopEntity('budget', id);
+  };
+
+  const addGoal = (goal: Omit<FinancialGoal, 'id'>) => {
+    const payload = {
+      ...(goal as FinancialGoal),
+      id: (goal as Partial<FinancialGoal>).id ?? createEntityId(),
+    };
+
+    dispatch({
+      type: 'ADD_GOAL',
+      payload,
+    });
+
+    void createDesktopEntity('goal', payload);
+  };
+
+  const updateGoal = (id: string, updates: Partial<FinancialGoal>) => {
+    dispatch({ type: 'UPDATE_GOAL', payload: { id, updates } });
+    void updateDesktopEntity('goal', id, updates);
+  };
+
+  const deleteGoal = (id: string) => {
+    dispatch({ type: 'DELETE_GOAL', payload: id });
+    void deleteDesktopEntity('goal', id);
+  };
+
+  const addRecurringPayment = (payment: Omit<RecurringPayment, 'id'>) => {
+    const payload = {
+      ...(payment as RecurringPayment),
+      id: (payment as Partial<RecurringPayment>).id ?? createEntityId(),
+    };
+
+    dispatch({
+      type: 'ADD_RECURRING_PAYMENT',
+      payload,
+    });
+
+    void createDesktopEntity('recurringPayment', payload);
+  };
+
+  const updateRecurringPayment = (id: string, updates: Partial<RecurringPayment>) => {
+    dispatch({ type: 'UPDATE_RECURRING_PAYMENT', payload: { id, updates } });
+    void updateDesktopEntity('recurringPayment', id, updates);
+  };
+
+  const deleteRecurringPayment = (id: string) => {
+    dispatch({ type: 'DELETE_RECURRING_PAYMENT', payload: id });
+    void deleteDesktopEntity('recurringPayment', id);
+  };
 
   // Local state actions
   const setFilters = (filters: Partial<FilterOptions>) => dispatch({ type: 'SET_FILTERS', payload: filters });

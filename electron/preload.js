@@ -15,6 +15,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Системная информация
   getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
 
+  // Локальное desktop-хранилище
+  getStorageStatus: () => ipcRenderer.invoke('storage:get-status'),
+  loadAppState: () => ipcRenderer.invoke('storage:load-app-state'),
+  saveAppState: (state) => ipcRenderer.invoke('storage:save-app-state', state),
+  bootstrapDomainData: (state) => ipcRenderer.invoke('storage:bootstrap-domain-data', state),
+  listDomainData: () => ipcRenderer.invoke('storage:list-domain-data'),
+  createEntity: (entityType, payload) => ipcRenderer.invoke('storage:create-entity', entityType, payload),
+  updateEntity: (entityType, id, updates) => ipcRenderer.invoke('storage:update-entity', entityType, id, updates),
+  deleteEntity: (entityType, id) => ipcRenderer.invoke('storage:delete-entity', entityType, id),
+
   // Подписка на события от main процесса
   onQuickAction: (callback) => {
     ipcRenderer.on('quick-action', (event, action) => callback(action));

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { MobileNavigation } from '../mobile/MobileNavigation';
@@ -19,14 +18,12 @@ import { Settings } from '../settings/Settings';
 import { FAQ } from '../faq/FAQ';
 import { DesktopIntegration } from '../desktop/DesktopIntegration';
 import { SystemIntegration } from '../desktop/SystemIntegration';
-import { isFirebaseConfigured } from '../../lib/firebase';
 
 export function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const { state, syncData, isOnline } = useApp();
-  const { user } = useFirebaseAuth();
+  const { state } = useApp();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -49,18 +46,6 @@ export function AppContent() {
       document.documentElement.classList.remove('dark');
     }
   }, [state.darkMode]);
-
-  useEffect(() => {
-    if (user && isOnline && isFirebaseConfigured) {
-      const interval = setInterval(() => {
-        syncData().catch(error => {
-          console.error('Background sync error:', error);
-        });
-      }, 30000);
-
-      return () => clearInterval(interval);
-    }
-  }, [user, isOnline, syncData]);
 
   const getPageTitle = () => {
     const titles: Record<string, string> = {

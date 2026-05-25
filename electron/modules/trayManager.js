@@ -1,4 +1,4 @@
-import { Menu, Tray, app } from 'electron';
+import { Menu, Tray, app } from './electronRuntime.js';
 import { getIconPath } from './windowManager.js';
 
 const showMainWindow = (mainWindow) => {

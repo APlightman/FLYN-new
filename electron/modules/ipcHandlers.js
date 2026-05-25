@@ -1,13 +1,37 @@
-import { ipcMain, dialog, Notification, app } from 'electron';
 import fs from 'fs';
 import pkg from 'electron-updater';
+import { ipcMain, dialog, Notification, app } from './electronRuntime.js';
 import { getIconPath } from './windowManager.js';
+import {
+  bootstrapDomainDataFromState,
+  createDomainEntity,
+  deleteDomainEntity,
+  getStorageStatus,
+  listDomainData,
+  loadPersistedAppState,
+  savePersistedAppState,
+  updateDomainEntity,
+} from './db/index.js';
 
-const { autoUpdater } = pkg;
+const getAutoUpdater = () => {
+  if (!app.isPackaged) {
+    return null;
+  }
+
+  try {
+    return pkg.autoUpdater;
+  } catch (error) {
+    console.warn('AutoUpdater unavailable in current runtime:', error instanceof Error ? error.message : String(error));
+    return null;
+  }
+};
 
 const setupIPC = (mainWindow, updateTrayBadge) => {
   ipcMain.on('restart-app', () => {
-    autoUpdater.quitAndInstall();
+    const autoUpdater = getAutoUpdater();
+    if (autoUpdater) {
+      autoUpdater.quitAndInstall();
+    }
   });
   ipcMain.handle('show-save-dialog', async (event, options) => {
     const result = await dialog.showSaveDialog(mainWindow, {
@@ -92,6 +116,38 @@ const setupIPC = (mainWindow, updateTrayBadge) => {
       nodeVersion: process.versions.node,
       chromeVersion: process.versions.chrome
     };
+  });
+
+  ipcMain.handle('storage:get-status', () => {
+    return getStorageStatus();
+  });
+
+  ipcMain.handle('storage:load-app-state', () => {
+    return loadPersistedAppState();
+  });
+
+  ipcMain.handle('storage:save-app-state', (event, state) => {
+    return savePersistedAppState(state);
+  });
+
+  ipcMain.handle('storage:bootstrap-domain-data', (event, state) => {
+    return bootstrapDomainDataFromState(state);
+  });
+
+  ipcMain.handle('storage:list-domain-data', () => {
+    return listDomainData();
+  });
+
+  ipcMain.handle('storage:create-entity', (event, entityType, payload) => {
+    return createDomainEntity(entityType, payload);
+  });
+
+  ipcMain.handle('storage:update-entity', (event, entityType, id, updates) => {
+    return updateDomainEntity(entityType, id, updates);
+  });
+
+  ipcMain.handle('storage:delete-entity', (event, entityType, id) => {
+    return deleteDomainEntity(entityType, id);
   });
 };
 

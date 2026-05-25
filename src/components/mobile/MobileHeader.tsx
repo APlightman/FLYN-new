@@ -1,8 +1,5 @@
-import React from 'react';
 import { Menu, Bell, Search } from 'lucide-react';
-import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { Button } from '../ui/Button';
-import { UserMenu } from '../layout/UserMenu';
 
 interface MobileHeaderProps {
   title: string;
@@ -21,8 +18,6 @@ export function MobileHeader({
   showNotifications = false,
   notificationCount = 0
 }: MobileHeaderProps) {
-  const { user } = useFirebaseAuth();
-
   return (
     <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-700/60 lg:hidden transition-all duration-300">
       <div className="flex items-center justify-between px-4 py-3 safe-area-inset">
@@ -64,7 +59,6 @@ export function MobileHeader({
               )}
             </Button>
           )}
-          {user && <UserMenu />}
         </div>
       </div>
     </header>

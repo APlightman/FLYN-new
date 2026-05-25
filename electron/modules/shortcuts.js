@@ -1,4 +1,4 @@
-import { globalShortcut } from 'electron';
+import { globalShortcut } from './electronRuntime.js';
 import { showMainWindow } from './trayManager.js';
 
 const registerGlobalShortcuts = (mainWindow) => {

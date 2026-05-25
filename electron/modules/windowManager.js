@@ -1,6 +1,6 @@
-import { BrowserWindow, shell, Notification, app } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { BrowserWindow, shell, Notification, app } from './electronRuntime.js';
 
 // В ES модулях __dirname не определен, создаем его вручную
 const __filename = fileURLToPath(import.meta.url);
@@ -61,10 +61,6 @@ const createMainWindow = (isDev) => {
         icon: getIconPath()
       }).show();
     }
-  });
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {

@@ -1,0 +1,6 @@
+{
+  "name": "electron-import-test",
+  "private": true,
+  "type": "module",
+  "main": "main.mjs"
+}

@@ -1,4 +1,4 @@
-import { Menu, shell, dialog, app } from 'electron';
+import { Menu, shell, dialog, app } from './electronRuntime.js';
 import { showMainWindow } from './trayManager.js';
 
 const isMac = process.platform === 'darwin';

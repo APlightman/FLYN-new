@@ -32,6 +32,8 @@ export interface Budget {
   period: 'monthly' | 'yearly';
   spent: number;
   remaining: number;
+  group?: 'needs' | 'wants' | 'savings';
+  percentage?: number;
   createdAt?: number; // timestamp создания
   updatedAt?: number; // timestamp последнего обновления
   version?: number;   // версия для разрешения конфликтов

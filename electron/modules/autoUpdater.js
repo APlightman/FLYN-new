@@ -1,8 +1,21 @@
 import pkg from 'electron-updater';
-const { autoUpdater } = pkg;
+
+const resolveAutoUpdater = () => {
+  try {
+    return pkg.autoUpdater;
+  } catch (error) {
+    console.warn('Автообновление недоступно в текущем runtime:', error instanceof Error ? error.message : String(error));
+    return null;
+  }
+};
 
 const setupAutoUpdater = (mainWindow) => {
-  if (process.env.NODE_ENV === 'development') return;
+  if (process.env.NODE_ENV === 'development' || !process.versions.electron) return;
+
+  const autoUpdater = resolveAutoUpdater();
+  if (!autoUpdater) {
+    return;
+  }
 
   autoUpdater.on('checking-for-update', () => {
     console.log('Проверка обновлений...');

@@ -1,11 +1,10 @@
-import React from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { TrendingUp, TrendingDown, Wallet, Target, WifiOff } from 'lucide-react';
-import { isFirebaseConfigured } from '../../lib/firebase';
-import { isElectronApp } from '../../hooks/useElectronIntegration';
+import { isElectronApp, useElectronIntegration } from '../../hooks/useElectronIntegration';
 
 export function Dashboard() {
   const { state, isOnline } = useApp();
+  const { storageInfo } = useElectronIntegration();
   
   const totalIncome = state.transactions
     .filter(t => t.type === 'income')
@@ -34,19 +33,19 @@ export function Dashboard() {
         <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-3 flex items-center gap-2">
           <WifiOff size={16} className="text-orange-600 dark:text-orange-400 flex-shrink-0" />
           <span className="text-sm text-orange-700 dark:text-orange-300">
-            Работаем в оффлайн режиме. Данные синхронизируются при подключении к интернету.
+            Интернет недоступен. Локальные данные и основные функции приложения продолжают работать.
           </span>
         </div>
       )}
 
-      {!isFirebaseConfigured && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center gap-2">
-          <Wallet size={16} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
-          <span className="text-sm text-blue-700 dark:text-blue-300">
-            Работаем в локальном режиме. Данные сохраняются только на этом устройстве.
-          </span>
-        </div>
-      )}
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center gap-2">
+        <Wallet size={16} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
+        <span className="text-sm text-blue-700 dark:text-blue-300">
+          Desktop-first режим активен. {storageInfo?.storage === 'sqlite'
+            ? 'Локальное SQLite-хранилище подключено.'
+            : 'Данные временно сохраняются локально в fallback-хранилище до подключения SQLite-драйвера.'}
+        </span>
+      </div>
 
       {isElectronApp() && (
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">

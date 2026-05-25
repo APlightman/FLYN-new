@@ -8,6 +8,14 @@ interface ElectronAPI {
   showNotification: (options: any) => Promise<boolean>;
   updateTrayBadge: (count: number) => Promise<void>;
   getSystemInfo: () => Promise<any>;
+  getStorageStatus: () => Promise<any>;
+  loadAppState: () => Promise<any>;
+  saveAppState: (state: any) => Promise<any>;
+  bootstrapDomainData: (state: any) => Promise<any>;
+  listDomainData: () => Promise<any>;
+  createEntity: (entityType: string, payload: any) => Promise<any>;
+  updateEntity: (entityType: string, id: string, updates: any) => Promise<any>;
+  deleteEntity: (entityType: string, id: string) => Promise<any>;
   onQuickAction: (callback: (action: string) => void) => void;
   onNavigateTo: (callback: (route: string) => void) => void;
   onShowImport: (callback: () => void) => void;
@@ -34,6 +42,7 @@ declare global {
 export function useElectronIntegration() {
   const [isElectron, setIsElectron] = useState(false);
   const [systemInfo, setSystemInfo] = useState<any>(null);
+  const [storageInfo, setStorageInfo] = useState<any>(null);
   const [updateInfo, setUpdateInfo] = useState<{
     available: boolean;
     downloaded: boolean;
@@ -51,6 +60,7 @@ export function useElectronIntegration() {
       
       // Получаем системную информацию
       electronAPI.getSystemInfo().then(setSystemInfo);
+      electronAPI.getStorageStatus?.().then(setStorageInfo).catch(() => null);
       
       // Настраиваем обработчики обновлений
       electronAPI.onUpdateAvailable((info) => {
@@ -151,6 +161,7 @@ export function useElectronIntegration() {
   return {
     isElectron,
     systemInfo,
+    storageInfo,
     updateInfo,
     showSaveDialog,
     showOpenDialog,
