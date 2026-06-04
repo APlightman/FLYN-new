@@ -1,10 +1,15 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState } from "react";
 
 interface ElectronAPI {
   showSaveDialog: (options: any) => Promise<any>;
   showOpenDialog: (options: any) => Promise<any>;
-  saveFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
-  readFile: (filePath: string) => Promise<{ success: boolean; content?: string; error?: string }>;
+  saveFile: (
+    filePath: string,
+    content: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  readFile: (
+    filePath: string,
+  ) => Promise<{ success: boolean; content?: string; error?: string }>;
   showNotification: (options: any) => Promise<boolean>;
   updateTrayBadge: (count: number) => Promise<void>;
   getSystemInfo: () => Promise<any>;
@@ -16,6 +21,29 @@ interface ElectronAPI {
   createEntity: (entityType: string, payload: any) => Promise<any>;
   updateEntity: (entityType: string, id: string, updates: any) => Promise<any>;
   deleteEntity: (entityType: string, id: string) => Promise<any>;
+  checkExternalDatabase: (
+    directoryPath?: string,
+  ) => Promise<{
+    found: boolean;
+    files: string[];
+    defaultPath: string;
+    error?: string;
+  }>;
+  importFromExternalDatabase: (
+    sourcePath: string,
+  ) => Promise<{
+    success: boolean;
+    imported: {
+      transactions: number;
+      categories: number;
+      budgets: number;
+      goals: number;
+      recurringPayments: number;
+      appState: boolean;
+    };
+    error?: string;
+    errors?: string[];
+  }>;
   onQuickAction: (callback: (action: string) => void) => void;
   onNavigateTo: (callback: (route: string) => void) => void;
   onShowImport: (callback: () => void) => void;
@@ -50,113 +78,130 @@ export function useElectronIntegration() {
     info?: any;
   }>({
     available: false,
-    downloaded: false
+    downloaded: false,
   });
 
   useEffect(() => {
     const electronAPI = window.electronAPI;
     if (electronAPI) {
       setIsElectron(true);
-      
+
       // Получаем системную информацию
       electronAPI.getSystemInfo().then(setSystemInfo);
-      electronAPI.getStorageStatus?.().then(setStorageInfo).catch(() => null);
-      
+      electronAPI
+        .getStorageStatus?.()
+        .then(setStorageInfo)
+        .catch(() => null);
+
       // Настраиваем обработчики обновлений
       electronAPI.onUpdateAvailable((info) => {
-        setUpdateInfo(prev => ({ ...prev, available: true, info }));
+        setUpdateInfo((prev) => ({ ...prev, available: true, info }));
       });
 
       electronAPI.onUpdateDownloaded((info) => {
-        setUpdateInfo(prev => ({ ...prev, downloaded: true, info }));
+        setUpdateInfo((prev) => ({ ...prev, downloaded: true, info }));
       });
 
       electronAPI.onDownloadProgress((progress) => {
-        setUpdateInfo(prev => ({ ...prev, progress: progress.percent }));
+        setUpdateInfo((prev) => ({ ...prev, progress: progress.percent }));
       });
     }
 
     return () => {
       if (electronAPI) {
-        electronAPI.removeAllListeners('update-available');
-        electronAPI.removeAllListeners('update-downloaded');
-        electronAPI.removeAllListeners('download-progress');
+        electronAPI.removeAllListeners("update-available");
+        electronAPI.removeAllListeners("update-downloaded");
+        electronAPI.removeAllListeners("download-progress");
       }
     };
   }, []);
 
-  const showSaveDialog = useCallback(async (options: {
-    defaultPath?: string;
-    filters?: Array<{ name: string; extensions: string[] }>;
-  }) => {
-    if (!window.electronAPI) return null;
-    return await window.electronAPI.showSaveDialog(options);
-  }, []);
+  const showSaveDialog = useCallback(
+    async (options: {
+      defaultPath?: string;
+      filters?: Array<{ name: string; extensions: string[] }>;
+    }) => {
+      if (!window.electronAPI) return null;
+      return await window.electronAPI.showSaveDialog(options);
+    },
+    [],
+  );
 
-  const showOpenDialog = useCallback(async (options: {
-    filters?: Array<{ name: string; extensions: string[] }>;
-  }) => {
-    if (!window.electronAPI) return null;
-    return await window.electronAPI.showOpenDialog(options);
-  }, []);
+  const showOpenDialog = useCallback(
+    async (options: {
+      filters?: Array<{ name: string; extensions: string[] }>;
+    }) => {
+      if (!window.electronAPI) return null;
+      return await window.electronAPI.showOpenDialog(options);
+    },
+    [],
+  );
 
   const saveFile = useCallback(async (filePath: string, content: string) => {
-    if (!window.electronAPI) return { success: false, error: 'Electron API недоступен' };
+    if (!window.electronAPI)
+      return { success: false, error: "Electron API недоступен" };
     return await window.electronAPI.saveFile(filePath, content);
   }, []);
 
   const readFile = useCallback(async (filePath: string) => {
-    if (!window.electronAPI) return { success: false, error: 'Electron API недоступен' };
+    if (!window.electronAPI)
+      return { success: false, error: "Electron API недоступен" };
     return await window.electronAPI.readFile(filePath);
   }, []);
 
-  const showNotification = useCallback(async (options: {
-    title?: string;
-    body: string;
-    silent?: boolean;
-    onClick?: boolean;
-  }) => {
-    if (!window.electronAPI) {
-      // Fallback для веб-версии
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(options.title || 'FinanceTracker', {
-          body: options.body,
-          icon: '/icons/icon-192x192.png',
-          silent: options.silent
-        });
-        return true;
+  const showNotification = useCallback(
+    async (options: {
+      title?: string;
+      body: string;
+      silent?: boolean;
+      onClick?: boolean;
+    }) => {
+      if (!window.electronAPI) {
+        // Fallback для веб-версии
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification(options.title || "FinanceTracker", {
+            body: options.body,
+            icon: "/icons/icon-192x192.png",
+            silent: options.silent,
+          });
+          return true;
+        }
+        return false;
       }
-      return false;
-    }
-    return await window.electronAPI.showNotification(options);
-  }, []);
+      return await window.electronAPI.showNotification(options);
+    },
+    [],
+  );
 
   const updateTrayBadge = useCallback(async (count: number) => {
     if (!window.electronAPI) return;
     await window.electronAPI.updateTrayBadge(count);
   }, []);
 
-  const setupElectronListeners = useCallback((callbacks: {
-    onQuickAction?: (action: string) => void;
-    onNavigateTo?: (route: string) => void;
-    onShowImport?: () => void;
-    onDeepLink?: (url: string) => void;
-  }) => {
-    if (!window.electronAPI) return;
+  const setupElectronListeners = useCallback(
+    (callbacks: {
+      onQuickAction?: (action: string) => void;
+      onNavigateTo?: (route: string) => void;
+      onShowImport?: () => void;
+      onDeepLink?: (url: string) => void;
+    }) => {
+      if (!window.electronAPI) return;
 
-    if (callbacks.onQuickAction) {
-      window.electronAPI.onQuickAction(callbacks.onQuickAction);
-    }
-    if (callbacks.onNavigateTo) {
-      window.electronAPI.onNavigateTo(callbacks.onNavigateTo);
-    }
-    if (callbacks.onShowImport) {
-      window.electronAPI.onShowImport(callbacks.onShowImport);
-    }
-    if (callbacks.onDeepLink) {
-      window.electronAPI.onDeepLink(callbacks.onDeepLink);
-    }
-  }, []);
+      if (callbacks.onQuickAction) {
+        window.electronAPI.onQuickAction(callbacks.onQuickAction);
+      }
+      if (callbacks.onNavigateTo) {
+        window.electronAPI.onNavigateTo(callbacks.onNavigateTo);
+      }
+      if (callbacks.onShowImport) {
+        window.electronAPI.onShowImport(callbacks.onShowImport);
+      }
+      if (callbacks.onDeepLink) {
+        window.electronAPI.onDeepLink(callbacks.onDeepLink);
+      }
+    },
+    [],
+  );
 
   return {
     isElectron,
@@ -169,13 +214,13 @@ export function useElectronIntegration() {
     readFile,
     showNotification,
     updateTrayBadge,
-    setupElectronListeners
+    setupElectronListeners,
   };
 }
 
 // Утилита для проверки Electron окружения
 export const isElectronApp = (): boolean => {
-  return !!(window.electronAPI?.isElectron);
+  return !!window.electronAPI?.isElectron;
 };
 
 // Утилита для получения информации о платформе
@@ -184,15 +229,15 @@ export const getPlatformInfo = () => {
     return {
       platform: window.electronAPI.platform,
       isElectron: true,
-      versions: window.electronAPI.versions
+      versions: window.electronAPI.versions,
     };
   }
-  
+
   return {
-    platform: 'web',
+    platform: "web",
     isElectron: false,
     versions: {
-      userAgent: navigator.userAgent
-    }
+      userAgent: navigator.userAgent,
+    },
   };
 };

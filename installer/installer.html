@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Установка FinanceTracker</title>
+    <style>
+      /* ===== СБРОС ===== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ===== ПЕРЕМЕННЫЕ ===== */
+      :root {
+        --bg-primary: #0f0f1a;
+        --bg-secondary: #1a1a2e;
+        --bg-card: #16213e;
+        --bg-card-hover: #1a2744;
+        --text-primary: #e8e8f0;
+        --text-secondary: #9090a8;
+        --text-muted: #606078;
+        --accent: #6c63ff;
+        --accent-hover: #5a52e0;
+        --accent-glow: rgba(108, 99, 255, 0.3);
+        --success: #4ade80;
+        --success-glow: rgba(74, 222, 128, 0.3);
+        --error: #f87171;
+        --border: #2a2a4a;
+        --border-hover: #3a3a6a;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: transparent;
+        color: var(--text-primary);
+        overflow: hidden;
+        height: 100vh;
+        user-select: none;
+      }
+
+      /* ===== ДРАГ-БАР ===== */
+      .titlebar {
+        -webkit-app-region: drag;
+        app-region: drag;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 12px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+      }
+      .titlebar-btn {
+        -webkit-app-region: no-drag;
+        app-region: no-drag;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        color: transparent;
+        transition: all 0.2s;
+      }
+      .titlebar-btn:hover {
+        color: rgba(0, 0, 0, 0.5);
+      }
+      .titlebar-close {
+        background: #ff5f57;
+        margin-left: 8px;
+      }
+      .titlebar-minimize {
+        background: #febc2e;
+      }
+      .titlebar-close:hover {
+        background: #e0443e;
+      }
+      .titlebar-minimize:hover {
+        background: #e0a020;
+      }
+
+      /* ===== ОСНОВНОЙ КОНТЕЙНЕР ===== */
+      .container {
+        height: 100vh;
+        background: var(--bg-primary);
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* ===== ШАПКА ===== */
+      .header {
+        padding: 48px 40px 24px;
+        text-align: center;
+        position: relative;
+      }
+      .header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 10%;
+        right: 10%;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border),
+          transparent
+        );
+      }
+      .logo {
+        width: 72px;
+        height: 72px;
+        background: linear-gradient(135deg, var(--accent), #8b5cf6);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        box-shadow: 0 8px 32px var(--accent-glow);
+        font-size: 32px;
+      }
+      .header h1 {
+        font-size: 24px;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--text-primary), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .header p {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-top: 4px;
+      }
+
+      /* ===== КОНТЕНТ ===== */
+      .content {
+        flex: 1;
+        padding: 24px 40px;
+        overflow-y: auto;
+      }
+
+      /* ===== СТРАНИЦЫ ===== */
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+
+      /* ===== СТРАНИЦА ПРИВЕТСТВИЯ ===== */
+      .welcome-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      .info-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        text-align: center;
+        transition: all 0.3s;
+      }
+      .info-card:hover {
+        border-color: var(--border-hover);
+        background: var(--bg-card-hover);
+      }
+      .info-card .icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+      .info-card .label {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .info-card .value {
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 4px;
+      }
+      .features {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 16px 20px;
+      }
+      .features h3 {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+      .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0;
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+      .feature-item .check {
+        color: var(--success);
+        font-weight: bold;
+      }
+
+      /* ===== СТРАНИЦА УСТАНОВКИ ===== */
+      .install-path {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 16px 20px;
+        margin-bottom: 20px;
+      }
+      .install-path .label {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+      .path-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .path-row input {
+        flex: 1;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-family: "Consolas", "Courier New", monospace;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .path-row input:focus {
+        border-color: var(--accent);
+      }
+      .btn-browse {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 16px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .btn-browse:hover {
+        border-color: var(--accent);
+        color: var(--text-primary);
+      }
+
+      .install-options {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 16px 20px;
+        margin-bottom: 20px;
+      }
+      .install-options .label {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+      }
+      .option-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0;
+      }
+      .option-row input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+        cursor: pointer;
+      }
+      .option-row label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+
+      /* ===== ПРОГРЕСС-БАР ===== */
+      .progress-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 20px;
+        text-align: center;
+      }
+      .progress-status {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+      }
+      .progress-bar-container {
+        width: 100%;
+        height: 8px;
+        background: var(--bg-primary);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), #8b5cf6);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        box-shadow: 0 0 12px var(--accent-glow);
+      }
+      .progress-percent {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .progress-detail {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+
+      /* ===== СТРАНИЦА ЗАВЕРШЕНИЯ ===== */
+      .complete-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(
+          135deg,
+          rgba(74, 222, 128, 0.2),
+          rgba(74, 222, 128, 0.05)
+        );
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 40px;
+        box-shadow: 0 8px 32px var(--success-glow);
+      }
+      .complete-title {
+        font-size: 22px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 8px;
+      }
+      .complete-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+      .complete-path {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 24px;
+      }
+      .complete-path strong {
+        color: var(--text-secondary);
+        font-family: "Consolas", "Courier New", monospace;
+      }
+
+      /* ===== КНОПКИ ===== */
+      .actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        padding: 20px 40px;
+        border-top: 1px solid var(--border);
+      }
+      .btn {
+        padding: 12px 32px;
+        border-radius: 10px;
+        border: none;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent), #8b5cf6);
+        color: white;
+        box-shadow: 0 4px 16px var(--accent-glow);
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 24px var(--accent-glow);
+      }
+      .btn-primary:active {
+        transform: translateY(0);
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .btn-secondary {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+      }
+      .btn-secondary:hover {
+        border-color: var(--border-hover);
+        color: var(--text-primary);
+      }
+      .btn-success {
+        background: linear-gradient(135deg, var(--success), #22c55e);
+        color: #0f0f1a;
+        box-shadow: 0 4px 16px var(--success-glow);
+      }
+      .btn-success:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 24px var(--success-glow);
+      }
+
+      /* ===== СКРОЛЛ ===== */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--border-hover);
+      }
+
+      /* ===== АНИМАЦИИ ===== */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .page.active {
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .installing .progress-percent {
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Заголовок окна -->
+      <div class="titlebar">
+        <button
+          class="titlebar-btn titlebar-minimize"
+          onclick="window.electronAPI?.minimize()"
+          title="Свернуть"
+        >
+          ─
+        </button>
+        <button
+          class="titlebar-btn titlebar-close"
+          onclick="window.electronAPI?.close()"
+          title="Закрыть"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Шапка -->
+      <div class="header">
+        <div class="logo">💰</div>
+        <h1>FinanceTracker</h1>
+        <p>Управление личными финансами</p>
+      </div>
+
+      <!-- Контент -->
+      <div class="content" id="content">
+        <!-- Страница 1: Приветствие -->
+        <div class="page active" id="page-welcome">
+          <div class="welcome-info">
+            <div class="info-card">
+              <div class="icon">📦</div>
+              <div class="label">Версия</div>
+              <div class="value" id="info-version">1.0.6</div>
+            </div>
+            <div class="info-card">
+              <div class="icon">💾</div>
+              <div class="label">Размер</div>
+              <div class="value" id="info-size">—</div>
+            </div>
+          </div>
+          <div class="features">
+            <h3>Возможности FinanceTracker</h3>
+            <div class="feature-item">
+              <span class="check">✓</span> Учёт доходов и расходов
+            </div>
+            <div class="feature-item">
+              <span class="check">✓</span> Бюджеты и финансовые цели
+            </div>
+            <div class="feature-item">
+              <span class="check">✓</span> Регулярные платежи
+            </div>
+            <div class="feature-item">
+              <span class="check">✓</span> Календарь и напоминания
+            </div>
+            <div class="feature-item">
+              <span class="check">✓</span> Калькуляторы: ипотека, кредиты,
+              вклады
+            </div>
+            <div class="feature-item">
+              <span class="check">✓</span> Полная конфиденциальность — данные
+              хранятся локально
+            </div>
+          </div>
+        </div>
+
+        <!-- Страница 2: Установка -->
+        <div class="page" id="page-install">
+          <div class="install-path">
+            <div class="label">Путь установки</div>
+            <div class="path-row">
+              <input type="text" id="install-path" readonly />
+              <button class="btn-browse" onclick="browseFolder()">Обзор</button>
+            </div>
+          </div>
+          <div class="install-options">
+            <div class="label">Параметры установки</div>
+            <div class="option-row">
+              <input type="checkbox" id="opt-desktop" checked />
+              <label for="opt-desktop">Создать ярлык на рабочем столе</label>
+            </div>
+            <div class="option-row">
+              <input type="checkbox" id="opt-startmenu" checked />
+              <label for="opt-startmenu">Создать ярлык в меню «Пуск»</label>
+            </div>
+            <div class="option-row">
+              <input type="checkbox" id="opt-launch" checked />
+              <label for="opt-launch"
+                >Запустить приложение после установки</label
+              >
+            </div>
+          </div>
+          <div
+            class="progress-section"
+            id="progress-section"
+            style="display: none"
+          >
+            <div class="progress-status" id="progress-status">
+              Подготовка...
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="progress-percent" id="progress-percent">0%</div>
+            <div class="progress-detail" id="progress-detail">
+              Копирование файлов...
+            </div>
+          </div>
+        </div>
+
+        <!-- Страница 3: Завершение -->
+        <div class="page" id="page-complete">
+          <div class="complete-icon">✅</div>
+          <div class="complete-title">Установка завершена!</div>
+          <div class="complete-subtitle">
+            FinanceTracker успешно установлен на ваш компьютер.
+          </div>
+          <div class="complete-path">
+            Приложение установлено в: <strong id="complete-path">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Кнопки -->
+      <div class="actions" id="actions">
+        <button class="btn btn-secondary" id="btn-cancel" onclick="cancel()">
+          Отмена
+        </button>
+        <button class="btn btn-primary" id="btn-next" onclick="nextStep()">
+          Далее →
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const { ipcRenderer } = require("electron");
+      let currentStep = 0;
+      let installInfo = null;
+      let selectedPath = "";
+      let installComplete = false;
+
+      // ===== ЭКСПОРТ ДЛЯ ЗАГОЛОВКА =====
+      window.electronAPI = {
+        minimize: () => ipcRenderer.invoke("close-installer"),
+        close: () => ipcRenderer.invoke("close-installer"),
+      };
+
+      // ===== ЗАГРУЗКА ИНФОРМАЦИИ =====
+      async function loadInstallInfo() {
+        installInfo = await ipcRenderer.invoke("get-install-info");
+        document.getElementById("info-version").textContent =
+          installInfo.version;
+        document.getElementById("info-size").textContent =
+          installInfo.sourceSize;
+        selectedPath = installInfo.defaultPath;
+        document.getElementById("install-path").value = selectedPath;
+      }
+      loadInstallInfo();
+
+      // ===== НАВИГАЦИЯ =====
+      function showPage(index) {
+        const pages = ["page-welcome", "page-install", "page-complete"];
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        document.getElementById(pages[index]).classList.add("active");
+        currentStep = index;
+        updateButtons();
+      }
+
+      function updateButtons() {
+        const btnCancel = document.getElementById("btn-cancel");
+        const btnNext = document.getElementById("btn-next");
+
+        if (currentStep === 0) {
+          btnCancel.textContent = "Отмена";
+          btnNext.textContent = "Далее →";
+          btnNext.disabled = false;
+          btnNext.className = "btn btn-primary";
+        } else if (currentStep === 1) {
+          if (installComplete) {
+            btnCancel.style.display = "none";
+            btnNext.textContent = "Завершить";
+            btnNext.className = "btn btn-primary";
+            btnNext.disabled = false;
+          } else {
+            btnCancel.textContent = "Отмена";
+            btnNext.textContent = "Установить";
+            btnNext.className = "btn btn-primary";
+            btnNext.disabled = false;
+          }
+        } else if (currentStep === 2) {
+          btnCancel.style.display = "none";
+          btnNext.textContent = "Запустить FinanceTracker";
+          btnNext.className = "btn btn-success";
+          btnNext.disabled = false;
+        }
+      }
+
+      // ===== ВЫБОР ПАПКИ =====
+      async function browseFolder() {
+        const folder = await ipcRenderer.invoke("select-folder");
+        if (folder) {
+          selectedPath = folder;
+          document.getElementById("install-path").value = folder;
+        }
+      }
+
+      // ===== УСТАНОВКА =====
+      async function startInstall() {
+        const progressSection = document.getElementById("progress-section");
+        const progressBar = document.getElementById("progress-bar");
+        const progressPercent = document.getElementById("progress-percent");
+        const progressStatus = document.getElementById("progress-status");
+        const progressDetail = document.getElementById("progress-detail");
+        const btnNext = document.getElementById("btn-next");
+        const btnCancel = document.getElementById("btn-cancel");
+
+        progressSection.style.display = "block";
+        btnNext.disabled = true;
+        btnNext.textContent = "Установка...";
+        btnCancel.textContent = "Подождите...";
+        btnCancel.disabled = true;
+
+        // Слушаем прогресс
+        ipcRenderer.on("install-progress", (event, data) => {
+          const percent = Math.round(data.progress * 100);
+          progressBar.style.width = percent + "%";
+          progressPercent.textContent = percent + "%";
+          progressStatus.textContent = data.message;
+
+          if (data.stage === "complete") {
+            progressPercent.textContent = "100%";
+            progressBar.style.width = "100%";
+            installComplete = true;
+            setTimeout(() => {
+              showPage(2);
+              document.getElementById("complete-path").textContent =
+                selectedPath;
+            }, 500);
+          }
+        });
+
+        const result = await ipcRenderer.invoke("start-install", selectedPath);
+
+        if (!result.success) {
+          progressStatus.textContent = "Ошибка: " + result.error;
+          progressStatus.style.color = "var(--error)";
+          btnNext.disabled = false;
+          btnNext.textContent = "Повторить";
+          btnCancel.textContent = "Отмена";
+          btnCancel.disabled = false;
+        }
+      }
+
+      // ===== ЗАВЕРШЕНИЕ =====
+      async function launchApp() {
+        await ipcRenderer.invoke("launch-app", selectedPath);
+        await ipcRenderer.invoke("close-installer");
+      }
+
+      // ===== НАВИГАЦИЯ ПО ШАГАМ =====
+      function nextStep() {
+        if (currentStep === 0) {
+          showPage(1);
+        } else if (currentStep === 1) {
+          if (installComplete) {
+            launchApp();
+          } else {
+            startInstall();
+          }
+        } else if (currentStep === 2) {
+          launchApp();
+        }
+      }
+
+      function cancel() {
+        ipcRenderer.invoke("close-installer");
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "name": "financetracker-installer",
+  "version": "1.0.0",
+  "description": "Установщик FinanceTracker Desktop",
+  "main": "installer.js",
+  "scripts": {
+    "start": "electron installer.js",
+    "build": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.financetracker.installer",
+    "productName": "FinanceTracker Installer",
+    "directories": {
+      "output": "dist-installer"
+    },
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico"
+    },
+    "extraResources": [
+      {
+        "from": "../dist-electron/win-unpacked",
+        "to": "app",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^28.3.3"
+  }
+}

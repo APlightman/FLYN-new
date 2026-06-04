@@ -1,23 +1,26 @@
-import React from 'react';
-import { CollapsibleSection } from './CollapsibleSection';
-import { GeneralSettings } from './GeneralSettings';
-import { NotificationSettings } from './NotificationSettings';
-import { ExportSettings } from './ExportSettings';
-import { PrivacySettings } from './PrivacySettings';
-import { DataManagement } from './DataManagement';
-import { AppInfo } from './AppInfo';
-import { SidebarSettings } from './SidebarSettings';
-import { MobileMenuSettings } from './MobileMenuSettings';
-import { SettingsState, DataStats } from './settingsTypes';
-import { 
-  Globe, 
-  Bell, 
-  Download, 
-  Shield, 
+import React from "react";
+import { CollapsibleSection } from "./CollapsibleSection";
+import { GeneralSettings } from "./GeneralSettings";
+import { NotificationSettings } from "./NotificationSettings";
+import { ExportSettings } from "./ExportSettings";
+import { PrivacySettings } from "./PrivacySettings";
+import { DataManagement } from "./DataManagement";
+import { AppInfo } from "./AppInfo";
+import { SidebarSettings } from "./SidebarSettings";
+import { MobileMenuSettings } from "./MobileMenuSettings";
+import { ExternalDataImport } from "./ExternalDataImport";
+import { SettingsState, DataStats } from "./settingsTypes";
+import { isElectronApp } from "../../hooks/useElectronIntegration";
+import {
+  Globe,
+  Bell,
+  Download,
+  Shield,
   Info,
   Eye,
-  Smartphone
-} from 'lucide-react';
+  Smartphone,
+  Database,
+} from "lucide-react";
 
 interface SettingsSectionsProps {
   settings: SettingsState;
@@ -36,7 +39,7 @@ export function SettingsSections({
   onUpdateSettings,
   onToggleDarkMode,
   onShowExportModal,
-  onShowResetModal
+  onShowResetModal,
 }: SettingsSectionsProps) {
   return (
     <>
@@ -53,8 +56,12 @@ export function SettingsSections({
           }}
           darkMode={darkMode}
           onUpdateSettings={(updates) => {
-            const key = 'language' in updates ? 'language' : 
-                      'currency' in updates ? 'currency' : 'dateFormat';
+            const key =
+              "language" in updates
+                ? "language"
+                : "currency" in updates
+                  ? "currency"
+                  : "dateFormat";
             onUpdateSettings(key, updates);
           }}
           onToggleDarkMode={onToggleDarkMode}
@@ -63,23 +70,29 @@ export function SettingsSections({
 
       <CollapsibleSection
         title="Настройки мобильного меню"
-        icon={<Smartphone className="text-blue-600 dark:text-blue-400" size={20} />}
+        icon={
+          <Smartphone className="text-blue-600 dark:text-blue-400" size={20} />
+        }
         defaultExpanded={false}
       >
         <MobileMenuSettings
           mobileMenuItems={settings.mobileMenuItems}
-          onUpdateItems={(updates) => onUpdateSettings('mobileMenuItems', updates)}
+          onUpdateItems={(updates) =>
+            onUpdateSettings("mobileMenuItems", updates)
+          }
         />
       </CollapsibleSection>
 
       <CollapsibleSection
         title="Настройки боковой панели"
-        icon={<Eye className="text-indigo-600 dark:text-indigo-400" size={20} />}
+        icon={
+          <Eye className="text-indigo-600 dark:text-indigo-400" size={20} />
+        }
         defaultExpanded={false}
       >
         <SidebarSettings
           sidebarTabs={settings.sidebarTabs}
-          onUpdateTabs={(updates) => onUpdateSettings('sidebarTabs', updates)}
+          onUpdateTabs={(updates) => onUpdateSettings("sidebarTabs", updates)}
         />
       </CollapsibleSection>
 
@@ -90,35 +103,51 @@ export function SettingsSections({
       >
         <NotificationSettings
           notifications={settings.notifications}
-          onUpdateNotifications={(updates) => onUpdateSettings('notifications', updates)}
+          onUpdateNotifications={(updates) =>
+            onUpdateSettings("notifications", updates)
+          }
         />
       </CollapsibleSection>
 
       <CollapsibleSection
         title="Настройки экспорта"
-        icon={<Download className="text-purple-600 dark:text-purple-400" size={20} />}
+        icon={
+          <Download
+            className="text-purple-600 dark:text-purple-400"
+            size={20}
+          />
+        }
         defaultExpanded={false}
       >
         <ExportSettings
           exportSettings={settings.export}
-          onUpdateExportSettings={(updates) => onUpdateSettings('export', updates)}
+          onUpdateExportSettings={(updates) =>
+            onUpdateSettings("export", updates)
+          }
         />
       </CollapsibleSection>
 
       <CollapsibleSection
         title="Приватность и безопасность"
-        icon={<Shield className="text-orange-600 dark:text-orange-400" size={20} />}
+        icon={
+          <Shield className="text-orange-600 dark:text-orange-400" size={20} />
+        }
         defaultExpanded={false}
       >
         <PrivacySettings
           privacy={settings.privacy}
-          onUpdatePrivacy={(updates) => onUpdateSettings('privacy', updates)}
+          onUpdatePrivacy={(updates) => onUpdateSettings("privacy", updates)}
         />
       </CollapsibleSection>
 
       <CollapsibleSection
         title="Управление данными"
-        icon={<Download className="text-indigo-600 dark:text-indigo-400" size={20} />}
+        icon={
+          <Download
+            className="text-indigo-600 dark:text-indigo-400"
+            size={20}
+          />
+        }
         defaultExpanded={false}
       >
         <DataManagement
@@ -127,6 +156,21 @@ export function SettingsSections({
           onShowResetModal={onShowResetModal}
         />
       </CollapsibleSection>
+
+      {isElectronApp() && (
+        <CollapsibleSection
+          title="Импорт из прошлой установки"
+          icon={
+            <Database
+              className="text-emerald-600 dark:text-emerald-400"
+              size={20}
+            />
+          }
+          defaultExpanded={false}
+        >
+          <ExternalDataImport />
+        </CollapsibleSection>
+      )}
 
       <CollapsibleSection
         title="О приложении"

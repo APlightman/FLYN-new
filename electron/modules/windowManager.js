@@ -1,17 +1,21 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { BrowserWindow, shell, Notification, app } from './electronRuntime.js';
+import path from "path";
+import { fileURLToPath } from "url";
+import { BrowserWindow, shell, Notification, app } from "./electronRuntime.js";
 
 // В ES модулях __dirname не определен, создаем его вручную
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const isMac = process.platform === 'darwin';
+const isMac = process.platform === "darwin";
 
 const getIconPath = () => {
-  const iconName = process.platform === 'win32' ? 'icon.ico' :
-                   isMac ? 'icon.icns' : 'icon.png';
-  return path.join(__dirname, '../assets', iconName);
+  const iconName =
+    process.platform === "win32"
+      ? "icon.ico"
+      : isMac
+        ? "icon.icns"
+        : "icon.png";
+  return path.join(__dirname, "../assets", iconName);
 };
 
 const createMainWindow = (isDev) => {
@@ -25,47 +29,63 @@ const createMainWindow = (isDev) => {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
-      preload: path.join(__dirname, '../preload.js')
+      preload: path.join(__dirname, "../preload.js"),
     },
-    titleBarStyle: isMac ? 'hiddenInset' : 'default',
+    titleBarStyle: isMac ? "hiddenInset" : "default",
     frame: !isMac,
     icon: getIconPath(),
-    backgroundColor: '#f8fafc',
-    vibrancy: isMac ? 'under-window' : undefined,
-    trafficLightPosition: isMac ? { x: 20, y: 20 } : undefined
+    backgroundColor: "#f8fafc",
+    vibrancy: isMac ? "under-window" : undefined,
+    trafficLightPosition: isMac ? { x: 20, y: 20 } : undefined,
   };
 
   const mainWindow = new BrowserWindow(windowOptions);
 
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5179');
+    mainWindow.loadURL("http://localhost:5179");
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'));
+    mainWindow.loadFile(path.join(__dirname, "../../dist/index.html"));
   }
 
-  mainWindow.once('ready-to-show', () => {
+  mainWindow.once("ready-to-show", () => {
     mainWindow.show();
-    mainWindow.webContents.openDevTools();
+    if (isDev) {
+      mainWindow.webContents.openDevTools();
+    }
   });
 
-  mainWindow.on('close', (event) => {
+  // Fallback: show window after 3 seconds if ready-to-show didn't fire
+  const showFallback = setTimeout(() => {
+    if (!mainWindow.isVisible() && !mainWindow.isDestroyed()) {
+      console.warn("Fallback: showing window after timeout");
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  }, 3000);
+
+  // Clean up timer when window is shown
+  mainWindow.once("show", () => {
+    clearTimeout(showFallback);
+  });
+
+  mainWindow.on("close", (event) => {
     // We'll handle the isQuitting flag through the main process
     // For now, we'll just hide the window
     event.preventDefault();
     mainWindow.hide();
-    
+
     if (Notification.isSupported()) {
       new Notification({
-        title: 'FinanceTracker',
-        body: 'Приложение свернуто в системный трей',
-        icon: getIconPath()
+        title: "FinanceTracker",
+        body: "Приложение свернуто в системный трей",
+        icon: getIconPath(),
       }).show();
     }
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
-    return { action: 'deny' };
+    return { action: "deny" };
   });
 
   return mainWindow;

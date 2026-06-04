@@ -1,241 +1,115 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Transaction, Category, Budget, FinancialGoal, RecurringPayment } from '../types';
 
-// Базовый URL для API TimeWebCloud
-// TODO: Заменить на реальный URL вашего TimeWebCloud API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_TIMEWEB_API_URL || 'http://localhost:3001/api';
+// =================================================================
+// DESKTOP (SQLite) IMPLEMENTATION
+// This implementation uses the electronAPI exposed from the main process
+// to interact with the local SQLite database.
+// =================================================================
 
-// Типы для API
-export interface TimeWebTransaction extends Transaction {
-  userId: string;
-}
-
-export interface TimeWebCategory extends Category {
-  userId: string;
-}
-
-export interface TimeWebBudget extends Budget {
-  userId: string;
-}
-
-export interface TimeWebGoal extends FinancialGoal {
-  userId: string;
-}
-
-export interface TimeWebRecurringPayment extends RecurringPayment {
-  userId: string;
-}
-
-// Установка токена аутентификации
-let authToken: string | null = null;
-
-export const setAuthToken = (token: string | null) => {
-  authToken = token;
-  console.log('Auth token set:', token ? 'token present' : 'null');
-};
-
-// Утилита для выполнения API запросов
-const apiRequest = async <T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> => {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const config: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
-      ...options.headers,
-    },
-    ...options,
-  };
-
-  try {
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+// Helper to call Electron's IPC functions and handle potential errors
+const callIPC = async (channel: string, ...args: any[]): Promise<any> => {
+  if (window.electronAPI && typeof window.electronAPI[channel] === 'function') {
+    try {
+      const result = await window.electronAPI[channel](...args);
+      if (result && result.success) {
+        return result.item || result;
+      }
+      if (result && !result.success) {
+        throw new Error(result.error || `IPC call to ${channel} failed.`);
+      }
+      return result;
+    } catch (error) {
+      console.error(`Error in IPC call ${channel}:`, error);
+      throw error;
     }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`API request failed for ${url}:`, error);
-    throw error;
   }
+  // This fallback will be used if the app is somehow not in Electron, preventing crashes.
+  console.warn(`Electron API or channel "${channel}" not found. Using mock data.`);
+  return Promise.resolve([]); // Return empty array to avoid breaking UI
 };
+
+// Generic function to get all items of a certain type
+const getAllFactory = <T>(entityType: keyof Awaited<ReturnType<typeof listDomainData>>) => 
+  async (): Promise<T[]> => {
+    const data = await listDomainData();
+    return (data[entityType] as T[]) || [];
+};
+
+const listDomainData = async (): Promise<{
+  transactions: Transaction[];
+  categories: Category[];
+  budgets: Budget[];
+  goals: FinancialGoal[];
+  recurringPayments: RecurringPayment[];
+}> => {
+  if (window.electronAPI && typeof window.electronAPI['storage:list-domain-data'] === 'function') {
+    const result = await window.electronAPI['storage:list-domain-data']();
+    if (result.success) {
+      return {
+        transactions: result.transactions || [],
+        categories: result.categories || [],
+        budgets: result.budgets || [],
+        goals: result.goals || [],
+        recurringPayments: result.recurringPayments || [],
+      };
+    } else {
+      console.error('Failed to list domain data:', result.error);
+    }
+  }
+  return { transactions: [], categories: [], budgets: [], goals: [], recurringPayments: [] };
+};
+
 
 // API для транзакций
 export const transactionsApi = {
-  getAll: async (): Promise<Transaction[]> => {
-    return apiRequest(`/transactions`);
-  },
-  
-  create: async (transaction: Omit<Transaction, 'id'>): Promise<Transaction> => {
-    return apiRequest('/transactions', {
-      method: 'POST',
-      body: JSON.stringify(transaction),
-    });
-  },
-  
-  update: async (id: string, updates: Partial<Transaction>): Promise<Transaction> => {
-    return apiRequest(`/transactions/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
-  },
-  
-  delete: async (id: string): Promise<void> => {
-    await apiRequest(`/transactions/${id}`, {
-      method: 'DELETE',
-    });
-  },
+  getAll: getAllFactory<Transaction>('transactions'),
+  create: (transaction: Omit<Transaction, 'id'>): Promise<Transaction> => callIPC('storage:create-entity', 'transaction', transaction),
+  update: (id: string, updates: Partial<Transaction>): Promise<Transaction> => callIPC('storage:update-entity', 'transaction', id, updates),
+  delete: (id: string): Promise<void> => callIPC('storage:delete-entity', 'transaction', id),
 };
 
 // API для категорий
 export const categoriesApi = {
-  getAll: async (): Promise<Category[]> => {
-    return apiRequest(`/categories`);
-  },
-  
-  create: async (category: Omit<Category, 'id'>): Promise<Category> => {
-    return apiRequest('/categories', {
-      method: 'POST',
-      body: JSON.stringify(category),
-    });
-  },
-  
-  update: async (id: string, updates: Partial<Category>): Promise<Category> => {
-    return apiRequest(`/categories/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
-  },
-  
-  delete: async (id: string): Promise<void> => {
-    await apiRequest(`/categories/${id}`, {
-      method: 'DELETE',
-    });
-  },
+  getAll: getAllFactory<Category>('categories'),
+  create: (category: Omit<Category, 'id'>): Promise<Category> => callIPC('storage:create-entity', 'category', category),
+  update: (id: string, updates: Partial<Category>): Promise<Category> => callIPC('storage:update-entity', 'category', id, updates),
+  delete: (id: string): Promise<void> => callIPC('storage:delete-entity', 'category', id),
 };
 
 // API для бюджетов
 export const budgetsApi = {
-  getAll: async (): Promise<Budget[]> => {
-    return apiRequest(`/budgets`);
-  },
-  
-  create: async (budget: Omit<Budget, 'id'>): Promise<Budget> => {
-    return apiRequest('/budgets', {
-      method: 'POST',
-      body: JSON.stringify(budget),
-    });
-  },
-  
-  update: async (id: string, updates: Partial<Budget>): Promise<Budget> => {
-    return apiRequest(`/budgets/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
-  },
-  
-  delete: async (id: string): Promise<void> => {
-    await apiRequest(`/budgets/${id}`, {
-      method: 'DELETE',
-    });
-  },
+  getAll: getAllFactory<Budget>('budgets'),
+  create: (budget: Omit<Budget, 'id'>): Promise<Budget> => callIPC('storage:create-entity', 'budget', budget),
+  update: (id: string, updates: Partial<Budget>): Promise<Budget> => callIPC('storage:update-entity', 'budget', id, updates),
+  delete: (id: string): Promise<void> => callIPC('storage:delete-entity', 'budget', id),
 };
 
 // API для финансовых целей
 export const goalsApi = {
-  getAll: async (): Promise<FinancialGoal[]> => {
-    return apiRequest(`/goals`);
-  },
-  
-  create: async (goal: Omit<FinancialGoal, 'id'>): Promise<FinancialGoal> => {
-    return apiRequest('/goals', {
-      method: 'POST',
-      body: JSON.stringify(goal),
-    });
-  },
-  
-  update: async (id: string, updates: Partial<FinancialGoal>): Promise<FinancialGoal> => {
-    return apiRequest(`/goals/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
-  },
-  
-  delete: async (id: string): Promise<void> => {
-    await apiRequest(`/goals/${id}`, {
-      method: 'DELETE',
-    });
-  },
+  getAll: getAllFactory<FinancialGoal>('goals'),
+  create: (goal: Omit<FinancialGoal, 'id'>): Promise<FinancialGoal> => callIPC('storage:create-entity', 'goal', goal),
+  update: (id: string, updates: Partial<FinancialGoal>): Promise<FinancialGoal> => callIPC('storage:update-entity', 'goal', id, updates),
+  delete: (id: string): Promise<void> => callIPC('storage:delete-entity', 'goal', id),
 };
 
 // API для регулярных платежей
 export const recurringPaymentsApi = {
-  getAll: async (): Promise<RecurringPayment[]> => {
-    return apiRequest(`/recurring-payments`);
-  },
-  
-  create: async (payment: Omit<RecurringPayment, 'id'>): Promise<RecurringPayment> => {
-    return apiRequest('/recurring-payments', {
-      method: 'POST',
-      body: JSON.stringify(payment),
-    });
-  },
-  
-  update: async (id: string, updates: Partial<RecurringPayment>): Promise<RecurringPayment> => {
-    return apiRequest(`/recurring-payments/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
-  },
-  
-  delete: async (id: string): Promise<void> => {
-    await apiRequest(`/recurring-payments/${id}`, {
-      method: 'DELETE',
-    });
-  },
+  getAll: getAllFactory<RecurringPayment>('recurringPayments'),
+  create: (payment: Omit<RecurringPayment, 'id'>): Promise<RecurringPayment> => callIPC('storage:create-entity', 'recurringPayment', payment),
+  update: (id: string, updates: Partial<RecurringPayment>): Promise<RecurringPayment> => callIPC('storage:update-entity', 'recurringPayment', id, updates),
+  delete: (id: string): Promise<void> => callIPC('storage:delete-entity', 'recurringPayment', id),
 };
 
-// Функция для инициализации API с токеном аутентификации
+// Dummy auth functions, not used in desktop mode but kept for API compatibility
+export const setAuthToken = (token: string | null) => {
+  // In desktop mode, auth is not handled via tokens.
+  console.log('setAuthToken called, but not used in desktop SQLite mode. Token:', token ? 'present' : 'null');
+};
+
 export const initApiWithAuth = (token: string) => {
-  // Переопределяем apiRequest для добавления токена
-  const authenticatedApiRequest = async <T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> => {
-    const url = `${API_BASE_URL}${endpoint}`;
-    
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error(`API request failed for ${url}:`, error);
-      throw error;
-    }
-  };
-
-  // Обновляем все API функции для использования аутентифицированных запросов
-  const updateApiWithAuth = () => {
-    // Реализация будет добавлена позже при интеграции с контекстом
-  };
-
-  return { authenticatedApiRequest, updateApiWithAuth };
+  console.log('initApiWithAuth called, but not used in desktop SQLite mode.');
+  return {};
 };
 
 export default {
@@ -247,3 +121,12 @@ export default {
   setAuthToken,
   initApiWithAuth,
 };
+
+// Extend the Window interface to include the electronAPI
+declare global {
+  interface Window {
+    electronAPI?: {
+      [key: string]: (...args: any[]) => Promise<any>;
+    };
+  }
+}
