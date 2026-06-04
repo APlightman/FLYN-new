@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useApp } from '../../contexts/AppContext';
-import { SettingsHeader } from './SettingsHeader';
-import { SettingsSections } from './SettingsSections';
-import { SettingsModals } from './SettingsModals';
-import { SettingsState, getDefaultSettings, SETTINGS_STORAGE_KEY } from './settingsTypes';
+import React, { useState, useEffect } from "react";
+import { useApp } from "../../contexts/AppContext";
+import { SettingsHeader } from "./SettingsHeader";
+import { SettingsSections } from "./SettingsSections";
+import { SettingsModals } from "./SettingsModals";
+import {
+  SettingsState,
+  getDefaultSettings,
+  SETTINGS_STORAGE_KEY,
+} from "./settingsTypes";
+import { isElectronApp } from "../../hooks/useElectronIntegration";
 
 export function SettingsContainer() {
   const { state, toggleDarkMode } = useApp();
@@ -16,40 +21,72 @@ export function SettingsContainer() {
     loadSettings();
   }, []);
 
+  // Загружаем closeBehavior из main process при первом рендере
+  useEffect(() => {
+    if (!isElectronApp()) return;
+
+    const loadCloseBehavior = async () => {
+      try {
+        const behavior = await window.electronAPI?.getCloseBehavior();
+        if (behavior) {
+          setSettings((prev) => ({ ...prev, closeBehavior: behavior }));
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки closeBehavior:", error);
+      }
+    };
+
+    loadCloseBehavior();
+  }, []);
+
   const loadSettings = () => {
     const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
-        setSettings(prev => ({ ...prev, ...parsed }));
+        setSettings((prev) => ({ ...prev, ...parsed }));
       } catch (error) {
-        console.error('Ошибка загрузки настроек:', error);
+        console.error("Ошибка загрузки настроек:", error);
       }
     }
   };
 
   const updateSettings = (section: keyof SettingsState, updates: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      [section]: typeof prev[section] === 'object' 
-        ? { ...prev[section], ...updates }
-        : updates
+      [section]:
+        typeof prev[section] === "object"
+          ? { ...prev[section], ...updates }
+          : updates,
     }));
     setHasUnsavedChanges(true);
+  };
+
+  const handleUpdateCloseBehavior = async (
+    behavior: "exit" | "minimize-to-tray",
+  ) => {
+    // Синхронизируем с main process через IPC
+    if (window.electronAPI?.setCloseBehavior) {
+      try {
+        await window.electronAPI.setCloseBehavior(behavior);
+      } catch (error) {
+        console.error("Ошибка сохранения closeBehavior:", error);
+      }
+    }
   };
 
   const saveSettings = () => {
     try {
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
       setHasUnsavedChanges(false);
-      
-      const event = new CustomEvent('settingsSaved', { detail: settings });
+
+      const event = new CustomEvent("settingsSaved", { detail: settings });
       window.dispatchEvent(event);
-      
-      alert('Настройки успешно сохранены!');
+
+      alert("Настройки успешно сохранены!");
     } catch (error) {
-      console.error('Ошибка сохранения настроек:', error);
-      alert('Ошибка при сохранении настроек');
+      console.error("Ошибка сохранения настроек:", error);
+      alert("Ошибка при сохранении настроек");
     }
   };
 
@@ -71,15 +108,18 @@ export function SettingsContainer() {
       budgets: state.budgets.length,
       recurringPayments: state.recurringPayments.length,
     };
-    
-    const totalItems = Object.values(data).reduce((sum, count) => sum + count, 0);
+
+    const totalItems = Object.values(data).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
     const storageSize = JSON.stringify(state).length;
-    
+
     return { ...data, totalItems, storageSize };
   };
 
   const handleExportData = () => {
-    console.log('Экспорт данных в формате:', settings.export.defaultFormat);
+    console.log("Экспорт данных в формате:", settings.export.defaultFormat);
     setShowExportModal(false);
   };
 
@@ -101,6 +141,7 @@ export function SettingsContainer() {
         onToggleDarkMode={toggleDarkMode}
         onShowExportModal={() => setShowExportModal(true)}
         onShowResetModal={() => setShowResetModal(true)}
+        onUpdateCloseBehavior={handleUpdateCloseBehavior}
       />
 
       <SettingsModals
@@ -111,7 +152,9 @@ export function SettingsContainer() {
         onCloseResetModal={() => setShowResetModal(false)}
         onCloseExportModal={() => setShowExportModal(false)}
         onResetData={handleResetData}
-        onExportFormatChange={(format) => updateSettings('export', { defaultFormat: format })}
+        onExportFormatChange={(format) =>
+          updateSettings("export", { defaultFormat: format })
+        }
         onExportData={handleExportData}
       />
     </div>

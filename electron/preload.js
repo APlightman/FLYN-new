@@ -37,6 +37,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
   importFromExternalDatabase: (sourcePath) =>
     ipcRenderer.invoke("storage:import-from-external", sourcePath),
 
+  // Управление поведением при закрытии (сворачивание в трей / выход)
+  getCloseBehavior: () => ipcRenderer.invoke("get-close-behavior"),
+  setCloseBehavior: (behavior) =>
+    ipcRenderer.invoke("set-close-behavior", behavior),
+
   // Подписка на события от main процесса
   onQuickAction: (callback) => {
     ipcRenderer.on("quick-action", (event, action) => callback(action));

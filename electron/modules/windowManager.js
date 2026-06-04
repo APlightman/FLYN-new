@@ -68,20 +68,9 @@ const createMainWindow = (isDev) => {
     clearTimeout(showFallback);
   });
 
-  mainWindow.on("close", (event) => {
-    // We'll handle the isQuitting flag through the main process
-    // For now, we'll just hide the window
-    event.preventDefault();
-    mainWindow.hide();
-
-    if (Notification.isSupported()) {
-      new Notification({
-        title: "FinanceTracker",
-        body: "Приложение свернуто в системный трей",
-        icon: getIconPath(),
-      }).show();
-    }
-  });
+  // Обработка закрытия окна теперь управляется из main.js
+  // через IPC-канал 'set-close-behavior'
+  // main.js подписывается на событие 'close' и решает: скрыть в трей или выйти
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);

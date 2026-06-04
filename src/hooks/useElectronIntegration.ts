@@ -52,6 +52,8 @@ interface ElectronAPI {
   onUpdateDownloaded: (callback: (info: any) => void) => void;
   onDownloadProgress: (callback: (progress: any) => void) => void;
   removeAllListeners: (channel: string) => void;
+  getCloseBehavior: () => Promise<"exit" | "minimize-to-tray">;
+  setCloseBehavior: (behavior: "exit" | "minimize-to-tray") => Promise<void>;
   platform: string;
   isElectron: boolean;
   versions: {

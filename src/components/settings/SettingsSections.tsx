@@ -9,6 +9,7 @@ import { AppInfo } from "./AppInfo";
 import { SidebarSettings } from "./SidebarSettings";
 import { MobileMenuSettings } from "./MobileMenuSettings";
 import { ExternalDataImport } from "./ExternalDataImport";
+import { TraySettings } from "./TraySettings";
 import { SettingsState, DataStats } from "./settingsTypes";
 import { isElectronApp } from "../../hooks/useElectronIntegration";
 import {
@@ -20,6 +21,7 @@ import {
   Eye,
   Smartphone,
   Database,
+  Minimize2,
 } from "lucide-react";
 
 interface SettingsSectionsProps {
@@ -30,6 +32,7 @@ interface SettingsSectionsProps {
   onToggleDarkMode: () => void;
   onShowExportModal: () => void;
   onShowResetModal: () => void;
+  onUpdateCloseBehavior?: (behavior: "exit" | "minimize-to-tray") => void;
 }
 
 export function SettingsSections({
@@ -40,6 +43,7 @@ export function SettingsSections({
   onToggleDarkMode,
   onShowExportModal,
   onShowResetModal,
+  onUpdateCloseBehavior,
 }: SettingsSectionsProps) {
   return (
     <>
@@ -158,18 +162,39 @@ export function SettingsSections({
       </CollapsibleSection>
 
       {isElectronApp() && (
-        <CollapsibleSection
-          title="Импорт из прошлой установки"
-          icon={
-            <Database
-              className="text-emerald-600 dark:text-emerald-400"
-              size={20}
+        <>
+          <CollapsibleSection
+            title="Поведение при закрытии"
+            icon={
+              <Minimize2
+                className="text-cyan-600 dark:text-cyan-400"
+                size={20}
+              />
+            }
+            defaultExpanded={false}
+          >
+            <TraySettings
+              closeBehavior={settings.closeBehavior}
+              onUpdateCloseBehavior={(behavior) => {
+                onUpdateSettings("closeBehavior", behavior);
+                onUpdateCloseBehavior?.(behavior);
+              }}
             />
-          }
-          defaultExpanded={false}
-        >
-          <ExternalDataImport />
-        </CollapsibleSection>
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="Импорт из прошлой установки"
+            icon={
+              <Database
+                className="text-emerald-600 dark:text-emerald-400"
+                size={20}
+              />
+            }
+            defaultExpanded={false}
+          >
+            <ExternalDataImport />
+          </CollapsibleSection>
+        </>
       )}
 
       <CollapsibleSection

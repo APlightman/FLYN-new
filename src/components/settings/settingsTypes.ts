@@ -2,6 +2,7 @@ export interface SettingsState {
   language: string;
   currency: string;
   dateFormat: string;
+  closeBehavior: 'exit' | 'minimize-to-tray';
   notifications: {
     budgetAlerts: boolean;
     goalReminders: boolean;
@@ -65,6 +66,7 @@ export const getDefaultSettings = (): SettingsState => ({
   language: 'ru',
   currency: 'RUB',
   dateFormat: 'DD.MM.YYYY',
+  closeBehavior: 'minimize-to-tray',
   notifications: {
     budgetAlerts: true,
     goalReminders: true,

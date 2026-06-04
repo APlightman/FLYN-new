@@ -1,6 +1,7 @@
 import { Moon, Sun, Menu, Wallet } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { Button } from '../ui/Button';
+import { SystemStatusBar } from './SystemStatusBar';
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -10,13 +11,13 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const { state, toggleDarkMode } = useApp();
 
   return (
-    <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-700/60 px-4 sm:px-6 py-4 sticky top-0 z-40 transition-all duration-300">
-      <div className="flex items-center justify-between">
+    <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-700/60 sticky top-0 z-40 transition-all duration-300">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-4">
         <div className="flex items-center gap-3 sm:gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onMenuToggle} 
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMenuToggle}
             className="lg:hidden rounded-xl p-2 sm:p-3"
           >
             <Menu size={20} />
@@ -36,9 +37,9 @@ export function Header({ onMenuToggle }: HeaderProps) {
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={toggleDarkMode}
             className="rounded-xl p-2 sm:p-3"
           >
@@ -50,6 +51,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
           </Button>
         </div>
       </div>
+      <SystemStatusBar />
     </header>
   );
 }

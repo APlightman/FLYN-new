@@ -1,6 +1,12 @@
 import path from "path";
-import { app, BrowserWindow, session } from "./modules/electronRuntime.js";
-import { createMainWindow } from "./modules/windowManager.js";
+import {
+  app,
+  BrowserWindow,
+  session,
+  ipcMain,
+  Notification,
+} from "./modules/electronRuntime.js";
+import { createMainWindow, getIconPath } from "./modules/windowManager.js";
 import { createTray } from "./modules/trayManager.js";
 import { createApplicationMenu } from "./modules/menuManager.js";
 import { setupIPC } from "./modules/ipcHandlers.js";
@@ -11,6 +17,8 @@ import {
   ensureDatabaseReady,
   flushDatabaseToDiskSync,
   getStorageStatus,
+  loadPersistedAppState,
+  savePersistedAppState,
 } from "./modules/db/index.js";
 
 const isDev = process.env.NODE_ENV === "development";
@@ -19,6 +27,39 @@ const isMac = process.platform === "darwin";
 let mainWindow;
 let tray;
 let isQuitting = false;
+
+// Настройка поведения при закрытии окна
+// 'exit' — полный выход из приложения
+// 'minimize-to-tray' — сворачивание в системный трей
+let closeBehavior = "minimize-to-tray"; // значение по умолчанию
+
+// ===== Single Instance Lock =====
+// Предотвращает запуск второго экземпляра приложения.
+// Если второй экземпляр пытается запуститься — показываем существующее окно.
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  console.log("[main] Second instance detected, quitting...");
+  app.quit();
+} else {
+  app.on("second-instance", (_event, _commandLine, _workingDirectory) => {
+    console.log(
+      "[main] Second instance attempt detected, focusing existing window...",
+    );
+    // Кто-то пытается запустить второй экземпляр — показываем наше окно
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      if (mainWindow.isVisible()) {
+        mainWindow.focus();
+      } else {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    }
+  });
+}
 
 // Update tray badge function
 const updateTrayBadge = (count) => {
@@ -31,8 +72,46 @@ const updateTrayBadge = (count) => {
   }
 };
 
+const loadCloseBehavior = async () => {
+  try {
+    const result = await loadPersistedAppState();
+    if (result?.success && result?.state?.closeBehavior) {
+      closeBehavior = result.state.closeBehavior;
+      console.log(`[main] Close behavior loaded: ${closeBehavior}`);
+    }
+  } catch (e) {
+    console.warn(
+      "[main] Could not load close behavior, using default:",
+      e.message,
+    );
+  }
+};
+
+const handleWindowClose = (event) => {
+  if (isQuitting) return; // если уже выходим — не вмешиваемся
+
+  if (closeBehavior === "minimize-to-tray") {
+    event.preventDefault();
+    mainWindow.hide();
+
+    if (Notification.isSupported()) {
+      new Notification({
+        title: "FinanceTracker",
+        body: "Приложение свёрнуто в системный трей",
+        icon: getIconPath(),
+      }).show();
+    }
+  }
+  // Если closeBehavior === 'exit' — окно закрывается стандартно,
+  // и срабатывает 'window-all-closed' -> app.quit()
+};
+
 const initializeApp = () => {
   mainWindow = createMainWindow(isDev);
+
+  // Навешиваем обработчик закрытия окна
+  mainWindow.on("close", handleWindowClose);
+
   tray = createTray(mainWindow);
   createApplicationMenu(mainWindow);
 
@@ -75,6 +154,9 @@ app.whenReady().then(async () => {
     );
   }
 
+  // Загружаем настройку поведения при закрытии из БД
+  await loadCloseBehavior();
+
   // Set Content Security Policy
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -90,6 +172,33 @@ app.whenReady().then(async () => {
         ],
       },
     });
+  });
+
+  // IPC-каналы для управления поведением при закрытии
+  ipcMain.handle("get-close-behavior", () => {
+    return closeBehavior;
+  });
+
+  ipcMain.handle("set-close-behavior", async (event, behavior) => {
+    if (behavior !== "exit" && behavior !== "minimize-to-tray") {
+      return { success: false, error: "Invalid close behavior" };
+    }
+    closeBehavior = behavior;
+    console.log(`[main] Close behavior set to: ${behavior}`);
+
+    // Сохраняем в persisted app state для сохранения между перезапусками
+    try {
+      const currentState = await loadPersistedAppState();
+      const state =
+        currentState?.success && currentState?.state
+          ? { ...currentState.state, closeBehavior: behavior }
+          : { closeBehavior: behavior };
+      await savePersistedAppState(state);
+    } catch (e) {
+      console.warn("[main] Could not persist close behavior:", e.message);
+    }
+
+    return { success: true };
   });
 
   initializeApp();
