@@ -309,3 +309,6 @@ public/mockServiceWorker.js
 
 # Electron build output
 dist-electron/
+
+# Temporary files
+.tmp-*
