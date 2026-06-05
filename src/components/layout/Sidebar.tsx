@@ -216,92 +216,92 @@ export function Sidebar({
         `}
       >
         <div
-          className={`p-4 lg:p-6 space-y-2 h-full overflow-y-auto ${!isExpanded && !isMobile && isCollapsible ? "overflow-hidden" : ""}`}
+          className={`p-4 lg:p-6 pt-5 lg:pt-7 space-y-2 h-full overflow-y-auto ${!isExpanded && !isMobile && isCollapsible ? "overflow-hidden" : ""}`}
         >
           {/* Заголовок — быстрые иконки переключения режимов */}
           <div
-            className={`flex items-center mb-4 pb-2 border-b border-slate-200/60 dark:border-slate-700/60 gap-0.5 ${!isExpanded && !isMobile && isCollapsible ? "justify-center flex-col gap-1" : "justify-between"}`}
+            className={`flex items-center mb-4 pb-3 border-b border-slate-200/60 dark:border-slate-700/60 gap-1 ${!isExpanded && !isMobile && isCollapsible ? "justify-center flex-col gap-1.5" : "justify-between"}`}
           >
             {isExpanded && (
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => onBehaviorChange?.("fixed")}
-                  className={`p-1.5 rounded-lg transition-colors ${
+                  className={`p-2 rounded-lg transition-colors ${
                     behavior === "fixed"
-                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 shadow-sm"
                       : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
                   }`}
-                  title="Фиксированная панель"
+                  title="Фиксированная — панель всегда открыта"
                 >
-                  <PanelLeft size={15} />
+                  <PanelLeft size={18} />
                 </button>
                 <button
                   onClick={() => onBehaviorChange?.("collapse-hover")}
-                  className={`p-1.5 rounded-lg transition-colors ${
+                  className={`p-2 rounded-lg transition-colors ${
                     behavior === "collapse-hover"
-                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 shadow-sm"
                       : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
                   }`}
-                  title="Сворачивание по наведению"
+                  title="По наведению — панель раскрывается при наведении"
                 >
-                  <PanelLeftOpen size={15} />
+                  <PanelLeftOpen size={18} />
                 </button>
                 <button
                   onClick={() => onBehaviorChange?.("collapse-click")}
-                  className={`p-1.5 rounded-lg transition-colors ${
+                  className={`p-2 rounded-lg transition-colors ${
                     behavior === "collapse-click"
-                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 shadow-sm"
                       : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
                   }`}
-                  title="Сворачивание по клику"
+                  title="По клику — панель переключается по кнопке"
                 >
-                  <PanelLeftClose size={15} />
+                  <PanelLeftClose size={18} />
                 </button>
               </div>
             )}
             {!isExpanded && !isMobile && isCollapsible && (
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-col items-center gap-1.5">
                 <button
                   onClick={() => onBehaviorChange?.("fixed")}
-                  className="p-1.5 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
-                  title="Фиксированная панель"
+                  className="p-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
+                  title="Фиксированная — панель всегда открыта"
                 >
-                  <PanelLeft size={15} />
+                  <PanelLeft size={18} />
                 </button>
                 <button
                   onClick={() => onBehaviorChange?.("collapse-hover")}
-                  className={`p-1.5 rounded-lg transition-colors ${
+                  className={`p-2 rounded-lg transition-colors ${
                     behavior === "collapse-hover"
-                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 shadow-sm"
                       : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
                   }`}
-                  title="Сворачивание по наведению"
+                  title="По наведению — панель раскрывается при наведении"
                 >
-                  <PanelLeftOpen size={15} />
+                  <PanelLeftOpen size={18} />
                 </button>
                 <button
                   onClick={() => onBehaviorChange?.("collapse-click")}
-                  className={`p-1.5 rounded-lg transition-colors ${
+                  className={`p-2 rounded-lg transition-colors ${
                     behavior === "collapse-click"
-                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 shadow-sm"
                       : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
                   }`}
-                  title="Сворачивание по клику"
+                  title="По клику — панель переключается по кнопке"
                 >
-                  <PanelLeftClose size={15} />
+                  <PanelLeftClose size={18} />
                 </button>
               </div>
             )}
             {!isMobile && isCollapsible && behavior === "collapse-click" && (
               <button
                 onClick={handleTogglePin}
-                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                 title={pinned ? "Открепить" : "Закрепить"}
               >
                 {pinned ? (
-                  <PinOff size={14} className="text-slate-400" />
+                  <PinOff size={16} className="text-slate-400" />
                 ) : (
-                  <Pin size={14} className="text-slate-400" />
+                  <Pin size={16} className="text-slate-400" />
                 )}
               </button>
             )}
