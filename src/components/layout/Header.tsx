@@ -1,15 +1,30 @@
-import { Moon, Sun, Menu, Wallet } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
-import { Button } from '../ui/Button';
-import { SystemStatusBar } from './SystemStatusBar';
-import { NotificationBell } from './NotificationBell';
+import {
+  Moon,
+  Sun,
+  Menu,
+  Wallet,
+  Monitor,
+  Database,
+  HardDrive,
+  WifiOff,
+} from "lucide-react";
+import { useApp } from "../../contexts/AppContext";
+import { Button } from "../ui/Button";
+import { NotificationBell } from "./NotificationBell";
+import {
+  isElectronApp,
+  useElectronIntegration,
+} from "../../hooks/useElectronIntegration";
 
 interface HeaderProps {
   onMenuToggle: () => void;
 }
 
 export function Header({ onMenuToggle }: HeaderProps) {
-  const { state, toggleDarkMode } = useApp();
+  const { state, toggleDarkMode, isOnline } = useApp();
+  const { storageInfo } = useElectronIntegration();
+  const isElectron = isElectronApp();
+  const isSqlite = storageInfo?.storage === "sqlite";
 
   return (
     <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-700/60 sticky top-0 z-40 transition-all duration-300">
@@ -38,6 +53,35 @@ export function Header({ onMenuToggle }: HeaderProps) {
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Десктопный режим + SQLite */}
+          {isElectron && (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
+              <Monitor size={14} className="text-blue-500" />
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Десктоп
+              </span>
+              <span className="text-slate-300 dark:text-slate-600 mx-0.5">
+                •
+              </span>
+              {isSqlite ? (
+                <Database size={14} className="text-emerald-500" />
+              ) : (
+                <HardDrive size={14} className="text-amber-500" />
+              )}
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                {isSqlite ? "SQLite" : "Локально"}
+              </span>
+            </div>
+          )}
+
+          {/* Офлайн-статус */}
+          {!isOnline && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded-full">
+              <WifiOff size={11} />
+              <span className="hidden sm:inline">Офлайн</span>
+            </span>
+          )}
+
           <NotificationBell />
           <Button
             variant="ghost"
@@ -53,7 +97,6 @@ export function Header({ onMenuToggle }: HeaderProps) {
           </Button>
         </div>
       </div>
-      <SystemStatusBar />
     </header>
   );
 }
