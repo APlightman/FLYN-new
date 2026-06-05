@@ -18,12 +18,41 @@ import { Settings } from '../settings/Settings';
 import { FAQ } from '../faq/FAQ';
 import { DesktopIntegration } from '../desktop/DesktopIntegration';
 import { SystemIntegration } from '../desktop/SystemIntegration';
+import { SETTINGS_STORAGE_KEY } from '../settings/settingsTypes';
+import type { SettingsState } from '../settings/settingsTypes';
 
 export function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [sidebarBehavior, setSidebarBehavior] = useState<'fixed' | 'collapse-hover' | 'collapse-click'>('fixed');
   const { state } = useApp();
+
+  // Загружаем sidebarBehavior из настроек
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as Partial<SettingsState>;
+        if (parsed.sidebarBehavior) {
+          setSidebarBehavior(parsed.sidebarBehavior);
+        }
+      }
+    } catch {
+      // используем значение по умолчанию
+    }
+  }, []);
+
+  // Слушаем событие сохранения настроек
+  useEffect(() => {
+    const handleSettingsSaved = (e: CustomEvent<SettingsState>) => {
+      if (e.detail?.sidebarBehavior) {
+        setSidebarBehavior(e.detail.sidebarBehavior);
+      }
+    };
+    window.addEventListener('settingsSaved', handleSettingsSaved as EventListener);
+    return () => window.removeEventListener('settingsSaved', handleSettingsSaved as EventListener);
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -106,6 +135,7 @@ export function AppContent() {
               onTabChange={setActiveTab}
               isOpen={sidebarOpen}
               onClose={() => setSidebarOpen(false)}
+              behavior={sidebarBehavior}
             />
           )}
           

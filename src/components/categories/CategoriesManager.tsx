@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Folder, FolderOpen, Tag } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
-import { Category } from '../../types';
-import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { Modal } from '../ui/Modal';
-import { CategoryForm } from './CategoryForm';
+import React, { useState } from "react";
+import { Plus, Edit, Trash2, Folder, FolderOpen, Tag } from "lucide-react";
+import { useApp } from "../../contexts/AppContext";
+import { Category } from "../../types";
+import { Card } from "../ui/Card";
+import { Button } from "../ui/Button";
+import { Modal } from "../ui/Modal";
+import { CategoryForm } from "./CategoryForm";
 
 export function CategoriesManager() {
   const { state, deleteCategory } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(),
+  );
 
   const toggleExpanded = (categoryId: string) => {
     const newExpanded = new Set(expandedCategories);
@@ -24,27 +26,27 @@ export function CategoriesManager() {
   };
 
   const getSubcategories = (parentId: string) => {
-    return state.categories.filter(cat => cat.parent === parentId);
+    return state.categories.filter((cat) => cat.parent === parentId);
   };
 
   const getRootCategories = () => {
-    return state.categories.filter(cat => !cat.parent);
+    return state.categories.filter((cat) => !cat.parent);
   };
 
   const getCategoryUsage = (categoryName: string) => {
-    return state.transactions.filter(t => t.category === categoryName).length;
+    return state.transactions.filter((t) => t.category === categoryName).length;
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
+    return new Intl.NumberFormat("ru-RU", {
+      style: "currency",
+      currency: "RUB",
     }).format(amount);
   };
 
   const getCategoryTotal = (categoryName: string) => {
     return state.transactions
-      .filter(t => t.category === categoryName)
+      .filter((t) => t.category === categoryName)
       .reduce((sum, t) => sum + t.amount, 0);
   };
 
@@ -57,7 +59,7 @@ export function CategoriesManager() {
 
     return (
       <div key={category.id} className="space-y-2">
-        <div 
+        <div
           className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
           style={{ marginLeft: `${level * 20}px` }}
         >
@@ -68,40 +70,51 @@ export function CategoriesManager() {
                 className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"
               >
                 {isExpanded ? (
-                  <FolderOpen size={16} className="text-slate-600 dark:text-slate-400" />
+                  <FolderOpen
+                    size={16}
+                    className="text-slate-600 dark:text-slate-400"
+                  />
                 ) : (
-                  <Folder size={16} className="text-slate-600 dark:text-slate-400" />
+                  <Folder
+                    size={16}
+                    className="text-slate-600 dark:text-slate-400"
+                  />
                 )}
               </button>
             ) : (
-              <Tag size={16} className="text-slate-600 dark:text-slate-400 ml-6" />
+              <Tag
+                size={16}
+                className="text-slate-600 dark:text-slate-400 ml-6"
+              />
             )}
-            
+
             <div
               className="w-4 h-4 rounded-full border-2 border-white dark:border-slate-800"
               style={{ backgroundColor: category.color }}
             />
-            
+
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-slate-900 dark:text-slate-100">
                   {category.name}
                 </span>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  category.type === 'income' 
-                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                }`}>
-                  {category.type === 'income' ? 'Доход' : 'Расход'}
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    category.type === "income"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                  }`}
+                >
+                  {category.type === "income" ? "Доход" : "Расход"}
                 </span>
               </div>
-              
+
               <div className="text-sm text-slate-500 dark:text-slate-400">
                 {usage} транзакций • {formatCurrency(total)}
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -115,24 +128,32 @@ export function CategoriesManager() {
               size="sm"
               onClick={() => deleteCategory(category.id)}
               disabled={usage > 0}
-              title={usage > 0 ? 'Нельзя удалить категорию с транзакциями' : 'Удалить категорию'}
+              title={
+                usage > 0
+                  ? "Нельзя удалить категорию с транзакциями"
+                  : "Удалить категорию"
+              }
             >
               <Trash2 size={16} />
             </Button>
           </div>
         </div>
-        
+
         {hasSubcategories && isExpanded && (
           <div className="space-y-2">
-            {subcategories.map(subcat => renderCategory(subcat, level + 1))}
+            {subcategories.map((subcat) => renderCategory(subcat, level + 1))}
           </div>
         )}
       </div>
     );
   };
 
-  const incomeCategories = getRootCategories().filter(cat => cat.type === 'income');
-  const expenseCategories = getRootCategories().filter(cat => cat.type === 'expense');
+  const incomeCategories = getRootCategories().filter(
+    (cat) => cat.type === "income",
+  );
+  const expenseCategories = getRootCategories().filter(
+    (cat) => cat.type === "expense",
+  );
 
   return (
     <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
@@ -151,7 +172,7 @@ export function CategoriesManager() {
           </div>
         </div>
         <Button onClick={() => setShowForm(true)}>
-          <Plus size={16} className="mr-2" />
+          <Plus size={16} />
           Добавить категорию
         </Button>
       </div>
@@ -166,14 +187,14 @@ export function CategoriesManager() {
               {incomeCategories.length} категорий
             </span>
           </div>
-          
+
           <div className="space-y-2">
             {incomeCategories.length === 0 ? (
               <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                 Нет категорий доходов
               </div>
             ) : (
-              incomeCategories.map(category => renderCategory(category))
+              incomeCategories.map((category) => renderCategory(category))
             )}
           </div>
         </Card>
@@ -187,14 +208,14 @@ export function CategoriesManager() {
               {expenseCategories.length} категорий
             </span>
           </div>
-          
+
           <div className="space-y-2">
             {expenseCategories.length === 0 ? (
               <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                 Нет категорий расходов
               </div>
             ) : (
-              expenseCategories.map(category => renderCategory(category))
+              expenseCategories.map((category) => renderCategory(category))
             )}
           </div>
         </Card>
@@ -204,18 +225,21 @@ export function CategoriesManager() {
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
           Статистика использования
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {state.categories
-            .filter(cat => getCategoryUsage(cat.name) > 0)
+            .filter((cat) => getCategoryUsage(cat.name) > 0)
             .sort((a, b) => getCategoryUsage(b.name) - getCategoryUsage(a.name))
             .slice(0, 6)
-            .map(category => {
+            .map((category) => {
               const usage = getCategoryUsage(category.name);
               const total = getCategoryTotal(category.name);
-              
+
               return (
-                <div key={category.id} className="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                <div
+                  key={category.id}
+                  className="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg"
+                >
                   <div className="flex items-center gap-2 mb-2">
                     <div
                       className="w-3 h-3 rounded-full"

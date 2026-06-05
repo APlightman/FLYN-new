@@ -312,3 +312,9 @@ dist-electron/
 
 # Temporary files
 .tmp-*
+
+# Build output directories
+dist-electron*/
+FinanceTracker-PC-Package/
+dist-electron/
+

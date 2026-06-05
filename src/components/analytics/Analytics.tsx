@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, PieChart } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
-import { Card } from '../ui/Card';
-import { BarChart } from './BarChart';
-import { PieChartComponent } from './PieChartComponent';
-import { LineChart } from './LineChart';
+import React, { useMemo } from "react";
+import { TrendingUp, TrendingDown, DollarSign, PieChart } from "lucide-react";
+import { useApp } from "../../contexts/AppContext";
+import { Card } from "../ui/Card";
+import { BarChart } from "./BarChart";
+import { PieChartComponent } from "./PieChartComponent";
+import { LineChart } from "./LineChart";
 
 export function Analytics() {
   const { state } = useApp();
@@ -12,57 +12,65 @@ export function Analytics() {
   const analyticsData = useMemo(() => {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    
-    const currentMonthTransactions = state.transactions.filter(t => {
+
+    const currentMonthTransactions = state.transactions.filter((t) => {
       const date = new Date(t.date);
-      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      return (
+        date.getMonth() === currentMonth && date.getFullYear() === currentYear
+      );
     });
 
     const totalIncome = currentMonthTransactions
-      .filter(t => t.type === 'income')
+      .filter((t) => t.type === "income")
       .reduce((sum, t) => sum + t.amount, 0);
 
     const totalExpenses = currentMonthTransactions
-      .filter(t => t.type === 'expense')
+      .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + t.amount, 0);
 
     const netIncome = totalIncome - totalExpenses;
 
     // Группировка по категориям
-    const categoryData = state.categories.map(category => {
-      const amount = currentMonthTransactions
-        .filter(t => t.category === category.name)
-        .reduce((sum, t) => sum + t.amount, 0);
-      
-      return {
-        name: category.name,
-        amount,
-        color: category.color,
-        percentage: totalExpenses > 0 && category.type === 'expense' 
-          ? (amount / totalExpenses) * 100 
-          : 0,
-      };
-    }).filter(item => item.amount > 0);
+    const categoryData = state.categories
+      .map((category) => {
+        const amount = currentMonthTransactions
+          .filter((t) => t.category === category.name)
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        return {
+          name: category.name,
+          amount,
+          color: category.color,
+          percentage:
+            totalExpenses > 0 && category.type === "expense"
+              ? (amount / totalExpenses) * 100
+              : 0,
+        };
+      })
+      .filter((item) => item.amount > 0);
 
     // Данные по месяцам (последние 6 месяцев)
     const monthlyData = [];
     for (let i = 5; i >= 0; i--) {
       const date = new Date(currentYear, currentMonth - i, 1);
-      const monthTransactions = state.transactions.filter(t => {
+      const monthTransactions = state.transactions.filter((t) => {
         const tDate = new Date(t.date);
-        return tDate.getMonth() === date.getMonth() && tDate.getFullYear() === date.getFullYear();
+        return (
+          tDate.getMonth() === date.getMonth() &&
+          tDate.getFullYear() === date.getFullYear()
+        );
       });
 
       const income = monthTransactions
-        .filter(t => t.type === 'income')
+        .filter((t) => t.type === "income")
         .reduce((sum, t) => sum + t.amount, 0);
 
       const expenses = monthTransactions
-        .filter(t => t.type === 'expense')
+        .filter((t) => t.type === "expense")
         .reduce((sum, t) => sum + t.amount, 0);
 
       monthlyData.push({
-        month: date.toLocaleDateString('ru-RU', { month: 'short' }),
+        month: date.toLocaleDateString("ru-RU", { month: "short" }),
         income,
         expenses,
         net: income - expenses,
@@ -79,9 +87,9 @@ export function Analytics() {
   }, [state.transactions, state.categories]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
+    return new Intl.NumberFormat("ru-RU", {
+      style: "currency",
+      currency: "RUB",
     }).format(amount);
   };
 
@@ -105,11 +113,13 @@ export function Analytics() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
-              <TrendingUp className="text-green-600 dark:text-green-400" size={20} />
+            <div className="p-2 lg:p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl lg:rounded-2xl shadow-lg shadow-green-500/25">
+              <TrendingUp className="text-white" size={20} />
             </div>
             <div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">Доходы</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Доходы
+              </div>
               <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
                 {formatCurrency(analyticsData.totalIncome)}
               </div>
@@ -119,11 +129,13 @@ export function Analytics() {
 
         <Card>
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900">
-              <TrendingDown className="text-red-600 dark:text-red-400" size={20} />
+            <div className="p-2 lg:p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl lg:rounded-2xl shadow-lg shadow-red-500/25">
+              <TrendingDown className="text-white" size={20} />
             </div>
             <div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">Расходы</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Расходы
+              </div>
               <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
                 {formatCurrency(analyticsData.totalExpenses)}
               </div>
@@ -133,24 +145,26 @@ export function Analytics() {
 
         <Card>
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${
-              analyticsData.netIncome >= 0 
-                ? 'bg-blue-100 dark:bg-blue-900' 
-                : 'bg-orange-100 dark:bg-orange-900'
-            }`}>
-              <DollarSign className={`${
-                analyticsData.netIncome >= 0 
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : 'text-orange-600 dark:text-orange-400'
-              }`} size={20} />
+            <div
+              className={`p-2 lg:p-3 rounded-xl lg:rounded-2xl shadow-lg ${
+                analyticsData.netIncome >= 0
+                  ? "bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/25"
+                  : "bg-gradient-to-br from-orange-500 to-orange-600 shadow-orange-500/25"
+              }`}
+            >
+              <DollarSign className="text-white" size={20} />
             </div>
             <div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">Баланс</div>
-              <div className={`text-xl font-bold ${
-                analyticsData.netIncome >= 0 
-                  ? 'text-green-600 dark:text-green-400' 
-                  : 'text-red-600 dark:text-red-400'
-              }`}>
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Баланс
+              </div>
+              <div
+                className={`text-xl font-bold ${
+                  analyticsData.netIncome >= 0
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
+              >
                 {formatCurrency(analyticsData.netIncome)}
               </div>
             </div>
@@ -159,11 +173,13 @@ export function Analytics() {
 
         <Card>
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900">
-              <PieChart className="text-purple-600 dark:text-purple-400" size={20} />
+            <div className="p-2 lg:p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl lg:rounded-2xl shadow-lg shadow-purple-500/25">
+              <PieChart className="text-white" size={20} />
             </div>
             <div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">Категорий</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Категорий
+              </div>
               <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
                 {analyticsData.categoryData.length}
               </div>
@@ -185,7 +201,9 @@ export function Analytics() {
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
             Расходы по категориям
           </h3>
-          <PieChartComponent data={analyticsData.categoryData.filter(d => d.amount > 0)} />
+          <PieChartComponent
+            data={analyticsData.categoryData.filter((d) => d.amount > 0)}
+          />
         </Card>
       </div>
 
@@ -203,7 +221,10 @@ export function Analytics() {
         </h3>
         <div className="space-y-3">
           {analyticsData.categoryData.map((item) => (
-            <div key={item.name} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700">
+            <div
+              key={item.name}
+              className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700"
+            >
               <div className="flex items-center gap-3">
                 <div
                   className="w-4 h-4 rounded-full"

@@ -142,6 +142,9 @@ export function SettingsContainer() {
         onShowExportModal={() => setShowExportModal(true)}
         onShowResetModal={() => setShowResetModal(true)}
         onUpdateCloseBehavior={handleUpdateCloseBehavior}
+        onUpdateSidebarBehavior={(behavior) => {
+          updateSettings("sidebarBehavior", behavior);
+        }}
       />
 
       <SettingsModals

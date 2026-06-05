@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { Target, Edit, Trash2, Plus } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
-import { FinancialGoal } from '../../types';
-import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { Modal } from '../ui/Modal';
-import { GoalForm } from './GoalForm';
+import React, { useState } from "react";
+import { Target, Edit, Trash2, Plus } from "lucide-react";
+import { useApp } from "../../contexts/AppContext";
+import { FinancialGoal } from "../../types";
+import { Card } from "../ui/Card";
+import { Button } from "../ui/Button";
+import { Modal } from "../ui/Modal";
+import { GoalForm } from "./GoalForm";
 
 export function GoalsManager() {
   const { state, deleteGoal } = useApp();
@@ -13,9 +13,9 @@ export function GoalsManager() {
   const [editingGoal, setEditingGoal] = useState<FinancialGoal | null>(null);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
+    return new Intl.NumberFormat("ru-RU", {
+      style: "currency",
+      currency: "RUB",
     }).format(amount);
   };
 
@@ -26,7 +26,12 @@ export function GoalsManager() {
   const calculateMonthsRemaining = (goal: FinancialGoal) => {
     const deadline = new Date(goal.deadline);
     const now = new Date();
-    const monthsRemaining = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30)));
+    const monthsRemaining = Math.max(
+      0,
+      Math.ceil(
+        (deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30),
+      ),
+    );
     return monthsRemaining;
   };
 
@@ -38,19 +43,27 @@ export function GoalsManager() {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      case "high":
+        return "bg-red-500";
+      case "medium":
+        return "bg-yellow-500";
+      case "low":
+        return "bg-green-500";
+      default:
+        return "bg-gray-500";
     }
   };
 
   const getPriorityText = (priority: string) => {
     switch (priority) {
-      case 'high': return 'Высокий';
-      case 'medium': return 'Средний';
-      case 'low': return 'Низкий';
-      default: return 'Не указан';
+      case "high":
+        return "Высокий";
+      case "medium":
+        return "Средний";
+      case "low":
+        return "Низкий";
+      default:
+        return "Не указан";
     }
   };
 
@@ -71,7 +84,7 @@ export function GoalsManager() {
           </div>
         </div>
         <Button onClick={() => setShowForm(true)}>
-          <Plus size={16} className="mr-2" />
+          <Plus size={16} />
           Добавить цель
         </Button>
       </div>
@@ -86,9 +99,7 @@ export function GoalsManager() {
             <p className="text-slate-500 dark:text-slate-400 mb-4">
               Создайте свою первую финансовую цель и начните планировать будущее
             </p>
-            <Button onClick={() => setShowForm(true)}>
-              Создать цель
-            </Button>
+            <Button onClick={() => setShowForm(true)}>Создать цель</Button>
           </div>
         </Card>
       ) : (
@@ -106,13 +117,15 @@ export function GoalsManager() {
                       {goal.name}
                     </h3>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${getPriorityColor(goal.priority)}`} />
+                      <div
+                        className={`w-2 h-2 rounded-full ${getPriorityColor(goal.priority)}`}
+                      />
                       <span className="text-xs text-slate-500 dark:text-slate-400">
                         {getPriorityText(goal.priority)}
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-1">
                     <Button
                       variant="ghost"
@@ -134,7 +147,9 @@ export function GoalsManager() {
                 <div className="space-y-3">
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-slate-500 dark:text-slate-400">Прогресс</span>
+                      <span className="text-slate-500 dark:text-slate-400">
+                        Прогресс
+                      </span>
                       <span className="font-medium text-slate-900 dark:text-slate-100">
                         {progress.toFixed(1)}%
                       </span>
@@ -148,21 +163,27 @@ export function GoalsManager() {
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500 dark:text-slate-400">Накоплено</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Накоплено
+                    </span>
                     <span className="font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(goal.currentAmount)}
                     </span>
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500 dark:text-slate-400">Цель</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Цель
+                    </span>
                     <span className="font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(goal.targetAmount)}
                     </span>
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500 dark:text-slate-400">Осталось</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Осталось
+                    </span>
                     <span className="font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(goal.targetAmount - goal.currentAmount)}
                     </span>
@@ -170,14 +191,18 @@ export function GoalsManager() {
 
                   <div className="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-500 dark:text-slate-400">До дедлайна</span>
+                      <span className="text-slate-500 dark:text-slate-400">
+                        До дедлайна
+                      </span>
                       <span className="font-medium text-slate-900 dark:text-slate-100">
                         {monthsRemaining} мес.
                       </span>
                     </div>
-                    
+
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-500 dark:text-slate-400">Нужно в месяц</span>
+                      <span className="text-slate-500 dark:text-slate-400">
+                        Нужно в месяц
+                      </span>
                       <span className="font-medium text-slate-900 dark:text-slate-100">
                         {formatCurrency(requiredMonthly)}
                       </span>

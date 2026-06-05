@@ -114,7 +114,7 @@ export function BudgetManager() {
             </div>
             
             <Button onClick={() => setShowWizard(true)} size="lg">
-              <Wand2 size={20} className="mr-2" />
+              <Wand2 size={20} />
               Запустить мастер настройки
             </Button>
           </div>

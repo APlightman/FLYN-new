@@ -33,6 +33,9 @@ interface SettingsSectionsProps {
   onShowExportModal: () => void;
   onShowResetModal: () => void;
   onUpdateCloseBehavior?: (behavior: "exit" | "minimize-to-tray") => void;
+  onUpdateSidebarBehavior?: (
+    behavior: "fixed" | "collapse-hover" | "collapse-click",
+  ) => void;
 }
 
 export function SettingsSections({
@@ -44,6 +47,7 @@ export function SettingsSections({
   onShowExportModal,
   onShowResetModal,
   onUpdateCloseBehavior,
+  onUpdateSidebarBehavior,
 }: SettingsSectionsProps) {
   return (
     <>
@@ -96,7 +100,12 @@ export function SettingsSections({
       >
         <SidebarSettings
           sidebarTabs={settings.sidebarTabs}
+          sidebarBehavior={settings.sidebarBehavior}
           onUpdateTabs={(updates) => onUpdateSettings("sidebarTabs", updates)}
+          onUpdateBehavior={(behavior) => {
+            onUpdateSettings("sidebarBehavior", behavior);
+            onUpdateSidebarBehavior?.(behavior);
+          }}
         />
       </CollapsibleSection>
 

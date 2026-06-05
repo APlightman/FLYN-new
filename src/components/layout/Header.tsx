@@ -2,6 +2,7 @@ import { Moon, Sun, Menu, Wallet } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { Button } from '../ui/Button';
 import { SystemStatusBar } from './SystemStatusBar';
+import { NotificationBell } from './NotificationBell';
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -37,6 +38,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
+          <NotificationBell />
           <Button
             variant="ghost"
             size="sm"

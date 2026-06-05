@@ -2,7 +2,8 @@ export interface SettingsState {
   language: string;
   currency: string;
   dateFormat: string;
-  closeBehavior: 'exit' | 'minimize-to-tray';
+  closeBehavior: "exit" | "minimize-to-tray";
+  sidebarBehavior: "fixed" | "collapse-hover" | "collapse-click";
   notifications: {
     budgetAlerts: boolean;
     goalReminders: boolean;
@@ -29,7 +30,7 @@ export interface SettingsState {
     calendar: boolean;
     categories: boolean;
     calculator: boolean;
-    'import-export': boolean;
+    "import-export": boolean;
     faq: boolean;
     settings: boolean;
   };
@@ -44,7 +45,7 @@ export interface SettingsState {
     filters: boolean;
     recurring: boolean;
     calculator: boolean;
-    'import-export': boolean;
+    "import-export": boolean;
     faq: boolean;
     settings: boolean;
   };
@@ -60,13 +61,14 @@ export interface DataStats {
   storageSize: number;
 }
 
-export const SETTINGS_STORAGE_KEY = 'financeApp_settings';
+export const SETTINGS_STORAGE_KEY = "financeApp_settings";
 
 export const getDefaultSettings = (): SettingsState => ({
-  language: 'ru',
-  currency: 'RUB',
-  dateFormat: 'DD.MM.YYYY',
-  closeBehavior: 'minimize-to-tray',
+  language: "ru",
+  currency: "RUB",
+  dateFormat: "DD.MM.YYYY",
+  closeBehavior: "minimize-to-tray",
+  sidebarBehavior: "fixed",
   notifications: {
     budgetAlerts: true,
     goalReminders: true,
@@ -78,7 +80,7 @@ export const getDefaultSettings = (): SettingsState => ({
     analytics: false,
   },
   export: {
-    defaultFormat: 'csv',
+    defaultFormat: "csv",
     includeCategories: true,
     includeGoals: true,
   },
@@ -93,7 +95,7 @@ export const getDefaultSettings = (): SettingsState => ({
     calendar: true,
     categories: true,
     calculator: true,
-    'import-export': true,
+    "import-export": true,
     faq: true,
     settings: true,
   },
@@ -109,7 +111,7 @@ export const getDefaultSettings = (): SettingsState => ({
     filters: false,
     recurring: false,
     calculator: false,
-    'import-export': false,
+    "import-export": false,
     faq: false,
   },
 });

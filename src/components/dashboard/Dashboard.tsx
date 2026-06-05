@@ -1,5 +1,5 @@
 import { useApp } from "../../contexts/AppContext";
-import { TrendingUp, TrendingDown, Wallet, Target } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, Target, LayoutDashboard } from "lucide-react";
 import { isElectronApp } from "../../hooks/useElectronIntegration";
 
 export function Dashboard() {
@@ -28,13 +28,18 @@ export function Dashboard() {
 
   return (
     <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
-      <div>
-        <h2 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent mb-2">
-          Главная панель
-        </h2>
-        <p className="text-slate-600 dark:text-slate-400 text-sm lg:text-base">
-          Обзор ваших финансов
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="p-3 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-lg shadow-blue-500/25">
+          <LayoutDashboard className="text-white" size={24} />
+        </div>
+        <div>
+          <h2 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+            Главная панель
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Обзор ваших финансов
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
