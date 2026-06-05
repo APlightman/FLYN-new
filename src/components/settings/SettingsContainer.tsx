@@ -144,6 +144,15 @@ export function SettingsContainer() {
         onUpdateCloseBehavior={handleUpdateCloseBehavior}
         onUpdateSidebarBehavior={(behavior) => {
           updateSettings("sidebarBehavior", behavior);
+          // Немедленно сохраняем в localStorage и оповещаем AppContent
+          try {
+            const updatedSettings = { ...settings, sidebarBehavior: behavior };
+            localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updatedSettings));
+            const event = new CustomEvent("settingsSaved", { detail: updatedSettings });
+            window.dispatchEvent(event);
+          } catch (error) {
+            console.error("Ошибка сохранения sidebarBehavior:", error);
+          }
         }}
       />
 
