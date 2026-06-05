@@ -15,6 +15,9 @@ import {
   PinOff,
   ChevronLeft,
   ChevronRight,
+  PanelLeft,
+  PanelLeftOpen,
+  PanelLeftClose,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -23,6 +26,7 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   behavior?: "fixed" | "collapse-hover" | "collapse-click";
+  onBehaviorChange?: (behavior: "fixed" | "collapse-hover" | "collapse-click") => void;
 }
 
 const menuItems = [
@@ -106,6 +110,7 @@ export function Sidebar({
   isOpen,
   onClose,
   behavior = "fixed",
+  onBehaviorChange,
 }: SidebarProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(behavior !== "fixed");
@@ -213,14 +218,79 @@ export function Sidebar({
         <div
           className={`p-4 lg:p-6 space-y-2 h-full overflow-y-auto ${!isExpanded && !isMobile && isCollapsible ? "overflow-hidden" : ""}`}
         >
-          {/* Заголовок */}
+          {/* Заголовок — быстрые иконки переключения режимов */}
           <div
-            className={`flex items-center justify-between mb-4 pb-2 border-b border-slate-200/60 dark:border-slate-700/60 ${!isExpanded && !isMobile && isCollapsible ? "justify-center" : ""}`}
+            className={`flex items-center mb-4 pb-2 border-b border-slate-200/60 dark:border-slate-700/60 gap-0.5 ${!isExpanded && !isMobile && isCollapsible ? "justify-center flex-col gap-1" : "justify-between"}`}
           >
             {isExpanded && (
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Навигация
-              </span>
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={() => onBehaviorChange?.("fixed")}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    behavior === "fixed"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
+                  }`}
+                  title="Фиксированная панель"
+                >
+                  <PanelLeft size={15} />
+                </button>
+                <button
+                  onClick={() => onBehaviorChange?.("collapse-hover")}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    behavior === "collapse-hover"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
+                  }`}
+                  title="Сворачивание по наведению"
+                >
+                  <PanelLeftOpen size={15} />
+                </button>
+                <button
+                  onClick={() => onBehaviorChange?.("collapse-click")}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    behavior === "collapse-click"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
+                  }`}
+                  title="Сворачивание по клику"
+                >
+                  <PanelLeftClose size={15} />
+                </button>
+              </div>
+            )}
+            {!isExpanded && !isMobile && isCollapsible && (
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  onClick={() => onBehaviorChange?.("fixed")}
+                  className="p-1.5 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
+                  title="Фиксированная панель"
+                >
+                  <PanelLeft size={15} />
+                </button>
+                <button
+                  onClick={() => onBehaviorChange?.("collapse-hover")}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    behavior === "collapse-hover"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
+                  }`}
+                  title="Сворачивание по наведению"
+                >
+                  <PanelLeftOpen size={15} />
+                </button>
+                <button
+                  onClick={() => onBehaviorChange?.("collapse-click")}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    behavior === "collapse-click"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500"
+                  }`}
+                  title="Сворачивание по клику"
+                >
+                  <PanelLeftClose size={15} />
+                </button>
+              </div>
             )}
             {!isMobile && isCollapsible && behavior === "collapse-click" && (
               <button

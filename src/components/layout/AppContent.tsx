@@ -54,6 +54,20 @@ export function AppContent() {
     return () => window.removeEventListener('settingsSaved', handleSettingsSaved as EventListener);
   }, []);
 
+  // Обработчик быстрого переключения режима сайдбара из хедера
+  const handleSidebarBehaviorChange = (behavior: 'fixed' | 'collapse-hover' | 'collapse-click') => {
+    setSidebarBehavior(behavior);
+    try {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      const parsed = saved ? JSON.parse(saved) as Partial<SettingsState> : {};
+      parsed.sidebarBehavior = behavior;
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(parsed));
+      window.dispatchEvent(new CustomEvent('settingsSaved', { detail: parsed }));
+    } catch {
+      // игнорируем ошибки localStorage
+    }
+  };
+
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024;
@@ -136,6 +150,7 @@ export function AppContent() {
               isOpen={sidebarOpen}
               onClose={() => setSidebarOpen(false)}
               behavior={sidebarBehavior}
+              onBehaviorChange={handleSidebarBehaviorChange}
             />
           )}
           
