@@ -216,11 +216,15 @@ export function Sidebar({
         `}
       >
         <div
-          className={`p-4 lg:p-6 pt-5 lg:pt-7 space-y-2 h-full overflow-y-auto ${!isExpanded && !isMobile && isCollapsible ? "overflow-hidden" : ""}`}
+          className={`flex flex-col h-full ${!isExpanded && !isMobile && isCollapsible ? "" : ""}`}
         >
-          {/* Заголовок — быстрые иконки переключения режимов */}
+          {/* Заголовок — быстрые иконки переключения режимов (sticky, не скроллится) */}
           <div
-            className={`flex items-center mb-4 pb-3 border-b border-slate-200/60 dark:border-slate-700/60 gap-1 ${!isExpanded && !isMobile && isCollapsible ? "justify-center flex-col gap-1.5" : "justify-between"}`}
+            className={`flex-shrink-0 p-4 lg:p-6 pt-5 lg:pt-7 pb-3 border-b border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-10 ${
+              !isExpanded && !isMobile && isCollapsible
+                ? "flex flex-col items-center gap-1.5 px-2"
+                : "flex items-center justify-between gap-1"
+            }`}
           >
             {isExpanded && (
               <div className="flex items-center gap-1">
@@ -292,7 +296,7 @@ export function Sidebar({
                 </button>
               </div>
             )}
-            {!isMobile && isCollapsible && behavior === "collapse-click" && (
+            {isExpanded && !isMobile && isCollapsible && behavior === "collapse-click" && (
               <button
                 onClick={handleTogglePin}
                 className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
@@ -307,7 +311,8 @@ export function Sidebar({
             )}
           </div>
 
-          <nav className="space-y-2">
+          {/* Навигация (скроллится независимо) */}
+          <nav className="flex-1 overflow-y-auto p-4 lg:p-6 pt-3 space-y-2">
             {menuItems.map((item) => {
               const IconComponent = item.icon;
 
@@ -358,9 +363,9 @@ export function Sidebar({
             })}
           </nav>
 
-          {/* Кнопка сворачивания/разворачивания для collapse-click */}
+          {/* Кнопка сворачивания/разворачивания для collapse-click (не скроллится) */}
           {!isMobile && isCollapsible && behavior === "collapse-click" && (
-            <div className="pt-4 mt-4 border-t border-slate-200/60 dark:border-slate-700/60">
+            <div className="flex-shrink-0 px-4 lg:px-6 pb-4 lg:pb-6 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
               <button
                 onClick={handleToggleCollapse}
                 className={`
