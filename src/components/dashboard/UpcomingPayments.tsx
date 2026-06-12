@@ -30,6 +30,7 @@ export function UpcomingPayments({
   };
 
   const getDaysLabel = (days: number) => {
+    if (days < 0) return "Просрочен";
     if (days === 0) return "Сегодня";
     if (days === 1) return "Завтра";
     return `Через ${days} дн.`;
@@ -79,11 +80,13 @@ export function UpcomingPayments({
               </span>
               <span
                 className={`text-xs font-semibold px-2 py-1 rounded-lg ${
-                  payment.daysUntil <= 1
+                  payment.daysUntil < 0
                     ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                    : payment.daysUntil <= 1
+                    ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
                     : payment.daysUntil <= 7
-                      ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                    ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                 }`}
               >
                 {getDaysLabel(payment.daysUntil)}

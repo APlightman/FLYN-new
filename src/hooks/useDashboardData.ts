@@ -130,14 +130,13 @@ export function useDashboardData(): DashboardData {
       .sort((a, b) => b.progress - a.progress)
       .slice(0, 3);
 
-    // 5. Ближайшие 5 регулярных платежей
+    // 5. Ближайшие 5 регулярных платежей (включая просроченные — они в начале списка)
     const upcomingPayments = recurringPayments
       .filter((p) => p.isActive)
       .map((p) => ({
         ...p,
         daysUntil: daysUntil(p.nextDate),
       }))
-      .filter((p) => p.daysUntil >= 0)
       .sort((a, b) => a.daysUntil - b.daysUntil)
       .slice(0, 5);
 

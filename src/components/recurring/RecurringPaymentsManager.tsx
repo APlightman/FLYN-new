@@ -1,37 +1,105 @@
-import React, { useState } from 'react';
-import { Repeat, Edit, Trash2, Plus, Play, Pause, Calendar } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
-import { RecurringPayment } from '../../types';
-import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { Modal } from '../ui/Modal';
-import { RecurringPaymentForm } from './RecurringPaymentForm';
+import React, { useState } from "react";
+import {
+  Repeat,
+  Edit,
+  Trash2,
+  Plus,
+  Play,
+  Pause,
+  Calendar,
+  Check,
+} from "lucide-react";
+import { useApp } from "../../contexts/AppContext";
+import { RecurringPayment } from "../../types";
+import { Card } from "../ui/Card";
+import { Button } from "../ui/Button";
+import { Modal } from "../ui/Modal";
+import { RecurringPaymentForm } from "./RecurringPaymentForm";
 
 export function RecurringPaymentsManager() {
-  const { state, deleteRecurringPayment, updateRecurringPayment } = useApp();
+  const {
+    state,
+    addTransaction,
+    deleteRecurringPayment,
+    updateRecurringPayment,
+  } = useApp();
   const [showForm, setShowForm] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<RecurringPayment | null>(null);
+  const [editingPayment, setEditingPayment] = useState<RecurringPayment | null>(
+    null,
+  );
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
+    return new Intl.NumberFormat("ru-RU", {
+      style: "currency",
+      currency: "RUB",
     }).format(amount);
   };
 
   const getFrequencyText = (frequency: string) => {
     switch (frequency) {
-      case 'daily': return 'Ежедневно';
-      case 'weekly': return 'Еженедельно';
-      case 'monthly': return 'Ежемесячно';
-      case 'yearly': return 'Ежегодно';
-      case 'custom': return 'Настраиваемый';
-      default: return frequency;
+      case "daily":
+        return "Ежедневно";
+      case "weekly":
+        return "Еженедельно";
+      case "monthly":
+        return "Ежемесячно";
+      case "yearly":
+        return "Ежегодно";
+      case "custom":
+        return "Настраиваемый";
+      default:
+        return frequency;
     }
   };
 
   const togglePaymentStatus = (payment: RecurringPayment) => {
     updateRecurringPayment(payment.id, { isActive: !payment.isActive });
+  };
+
+  // Отметить платёж как выполненный: создать транзакцию + сдвинуть nextDate
+  const markAsCompleted = (payment: RecurringPayment) => {
+    // 1. Создаём транзакцию
+    addTransaction({
+      type: "expense",
+      amount: payment.amount,
+      category: payment.category,
+      description:
+        payment.name + (payment.description ? ` (${payment.description})` : ""),
+      date: new Date().toISOString().split("T")[0],
+      tags: ["recurring"],
+      isRecurring: true,
+      recurringId: payment.id,
+    });
+
+    // 2. Сдвигаем nextDate на следующий период
+    const currentDate = new Date(payment.nextDate);
+    let nextDate: Date;
+
+    switch (payment.frequency) {
+      case "daily":
+        nextDate = new Date(currentDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        break;
+      case "weekly":
+        nextDate = new Date(currentDate);
+        nextDate.setDate(nextDate.getDate() + 7);
+        break;
+      case "monthly":
+        nextDate = new Date(currentDate);
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        break;
+      case "yearly":
+        nextDate = new Date(currentDate);
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+        break;
+      default:
+        nextDate = new Date(currentDate);
+        nextDate.setMonth(nextDate.getMonth() + 1);
+    }
+
+    updateRecurringPayment(payment.id, {
+      nextDate: nextDate.toISOString().split("T")[0],
+    });
   };
 
   const getNextPaymentDate = (payment: RecurringPayment) => {
@@ -41,38 +109,38 @@ export function RecurringPaymentsManager() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
-      return 'Просрочен';
+      return "Просрочен";
     } else if (diffDays === 0) {
-      return 'Сегодня';
+      return "Сегодня";
     } else if (diffDays === 1) {
-      return 'Завтра';
+      return "Завтра";
     } else if (diffDays <= 7) {
       return `Через ${diffDays} дн.`;
     } else {
-      return nextDate.toLocaleDateString('ru-RU');
+      return nextDate.toLocaleDateString("ru-RU");
     }
   };
 
   const getStatusColor = (payment: RecurringPayment) => {
-    if (!payment.isActive) return 'text-slate-500 dark:text-slate-400';
-    
+    if (!payment.isActive) return "text-slate-500 dark:text-slate-400";
+
     const nextDate = new Date(payment.nextDate);
     const today = new Date();
     const diffTime = nextDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return 'text-red-600 dark:text-red-400';
-    if (diffDays <= 1) return 'text-orange-600 dark:text-orange-400';
-    return 'text-green-600 dark:text-green-400';
+    if (diffDays < 0) return "text-red-600 dark:text-red-400";
+    if (diffDays <= 1) return "text-orange-600 dark:text-orange-400";
+    return "text-green-600 dark:text-green-400";
   };
 
   const getCategoryColor = (categoryName: string) => {
-    const category = state.categories.find(c => c.name === categoryName);
-    return category?.color || '#6b7280';
+    const category = state.categories.find((c) => c.name === categoryName);
+    return category?.color || "#6b7280";
   };
 
-  const activePayments = state.recurringPayments.filter(p => p.isActive);
-  const inactivePayments = state.recurringPayments.filter(p => !p.isActive);
+  const activePayments = state.recurringPayments.filter((p) => p.isActive);
+  const inactivePayments = state.recurringPayments.filter((p) => !p.isActive);
 
   return (
     <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
@@ -101,10 +169,15 @@ export function RecurringPaymentsManager() {
         <Card>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
-              <Repeat className="text-green-600 dark:text-green-400" size={20} />
+              <Repeat
+                className="text-green-600 dark:text-green-400"
+                size={20}
+              />
             </div>
             <div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">Активных</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Активных
+              </div>
               <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
                 {activePayments.length}
               </div>
@@ -115,12 +188,21 @@ export function RecurringPaymentsManager() {
         <Card>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900">
-              <Calendar className="text-blue-600 dark:text-blue-400" size={20} />
+              <Calendar
+                className="text-blue-600 dark:text-blue-400"
+                size={20}
+              />
             </div>
             <div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">Сегодня</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Сегодня
+              </div>
               <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                {activePayments.filter(p => getNextPaymentDate(p) === 'Сегодня').length}
+                {
+                  activePayments.filter(
+                    (p) => getNextPaymentDate(p) === "Сегодня",
+                  ).length
+                }
               </div>
             </div>
           </div>
@@ -129,15 +211,20 @@ export function RecurringPaymentsManager() {
         <Card>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900">
-              <Calendar className="text-purple-600 dark:text-purple-400" size={20} />
+              <Calendar
+                className="text-purple-600 dark:text-purple-400"
+                size={20}
+              />
             </div>
             <div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">Месячная сумма</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Месячная сумма
+              </div>
               <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
                 {formatCurrency(
                   activePayments
-                    .filter(p => p.frequency === 'monthly')
-                    .reduce((sum, p) => sum + p.amount, 0)
+                    .filter((p) => p.frequency === "monthly")
+                    .reduce((sum, p) => sum + p.amount, 0),
                 )}
               </div>
             </div>
@@ -168,7 +255,7 @@ export function RecurringPaymentsManager() {
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
                 Активные платежи ({activePayments.length})
               </h3>
-              
+
               <div className="space-y-3">
                 {activePayments.map((payment) => (
                   <div
@@ -178,7 +265,9 @@ export function RecurringPaymentsManager() {
                     <div className="flex items-center gap-4">
                       <div
                         className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: getCategoryColor(payment.category) }}
+                        style={{
+                          backgroundColor: getCategoryColor(payment.category),
+                        }}
                       />
                       <div>
                         <div className="font-medium text-slate-900 dark:text-slate-100">
@@ -200,7 +289,7 @@ export function RecurringPaymentsManager() {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <div className="font-semibold text-slate-900 dark:text-slate-100">
@@ -210,15 +299,29 @@ export function RecurringPaymentsManager() {
                           {getFrequencyText(payment.frequency)}
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => togglePaymentStatus(payment)}
-                          title={payment.isActive ? 'Приостановить' : 'Активировать'}
+                          onClick={() => markAsCompleted(payment)}
+                          title="Отметить выполненным"
                         >
-                          {payment.isActive ? <Pause size={16} /> : <Play size={16} />}
+                          <Check size={16} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => togglePaymentStatus(payment)}
+                          title={
+                            payment.isActive ? "Приостановить" : "Активировать"
+                          }
+                        >
+                          {payment.isActive ? (
+                            <Pause size={16} />
+                          ) : (
+                            <Play size={16} />
+                          )}
                         </Button>
                         <Button
                           variant="ghost"
@@ -248,7 +351,7 @@ export function RecurringPaymentsManager() {
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
                 Приостановленные платежи ({inactivePayments.length})
               </h3>
-              
+
               <div className="space-y-3">
                 {inactivePayments.map((payment) => (
                   <div
@@ -258,7 +361,9 @@ export function RecurringPaymentsManager() {
                     <div className="flex items-center gap-4">
                       <div
                         className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: getCategoryColor(payment.category) }}
+                        style={{
+                          backgroundColor: getCategoryColor(payment.category),
+                        }}
                       />
                       <div>
                         <div className="font-medium text-slate-900 dark:text-slate-100">
@@ -273,14 +378,14 @@ export function RecurringPaymentsManager() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <div className="font-semibold text-slate-900 dark:text-slate-100">
                           {formatCurrency(payment.amount)}
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-1">
                         <Button
                           variant="ghost"

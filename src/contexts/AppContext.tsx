@@ -80,14 +80,28 @@ type AppAction =
 
 // --- INITIAL STATE ---
 const getDefaultCategories = (): Category[] => [
+  // Расходы
   { id: "1", name: "Продукты", type: "expense", color: "#ef4444" },
   { id: "2", name: "Транспорт", type: "expense", color: "#f97316" },
   { id: "3", name: "Развлечения", type: "expense", color: "#eab308" },
   { id: "4", name: "Коммунальные услуги", type: "expense", color: "#06b6d4" },
   { id: "5", name: "Здоровье", type: "expense", color: "#8b5cf6" },
+  { id: "9", name: "Кафе и рестораны", type: "expense", color: "#ec4899" },
+  { id: "10", name: "Одежда", type: "expense", color: "#a855f7" },
+  { id: "11", name: "Связь и интернет", type: "expense", color: "#14b8a6" },
+  { id: "12", name: "Жильё (аренда/ипотека)", type: "expense", color: "#0ea5e9" },
+  { id: "13", name: "Страхование", type: "expense", color: "#6366f1" },
+  { id: "14", name: "Образование", type: "expense", color: "#d946ef" },
+  { id: "15", name: "Подарки", type: "expense", color: "#f43f5e" },
+  { id: "16", name: "Дом и ремонт", type: "expense", color: "#78716c" },
+  { id: "17", name: "Дети", type: "expense", color: "#fb923c" },
+  { id: "18", name: "Животные", type: "expense", color: "#a3e635" },
+  // Доходы
   { id: "6", name: "Зарплата", type: "income", color: "#22c55e" },
   { id: "7", name: "Подработка", type: "income", color: "#10b981" },
   { id: "8", name: "Инвестиции", type: "income", color: "#3b82f6" },
+  { id: "19", name: "Кешбэк", type: "income", color: "#2dd4bf" },
+  { id: "20", name: "Аренда", type: "income", color: "#a78bfa" },
 ];
 
 const getDefaultState = (): AppState => ({
