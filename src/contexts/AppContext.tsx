@@ -9,6 +9,7 @@ import {
   FilterOptions,
 } from "../types";
 import {
+  bootstrapDesktopDomainData,
   createDesktopEntity,
   deleteDesktopEntity,
   loadDesktopAppState,
@@ -385,23 +386,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Загружаем domain данные из отдельных таблиц
       const domainResult = await loadDesktopDomainData();
 
+      // Определяем категории: если из БД пришли пустые — используем дефолтные
+      const categoriesFromDb = domainResult?.success
+        ? (domainResult.categories ?? [])
+        : [];
+      const categories =
+        categoriesFromDb.length > 0
+          ? categoriesFromDb
+          : getDefaultCategories();
+
       // Создаём объединённое состояние:
       // - Domain данные берём из domainResult (если есть)
       // - UI состояние (filters, darkMode, selectedDate) берём из uiState
-      // - Если domain данных нет, используем дефолтные значения (пустые массивы)
+      // - Если domain данных нет, используем дефолтные значения
       const mergedState = normalizeState({
         // UI состояние
         filters: uiState.filters,
         darkMode: uiState.darkMode,
         selectedDate: uiState.selectedDate,
 
-        // Domain данные (приоритет: domainResult > дефолтные пустые массивы)
+        // Domain данные (приоритет: domainResult > дефолтные)
         transactions: domainResult?.success
           ? (domainResult.transactions ?? [])
           : [],
-        categories: domainResult?.success
-          ? (domainResult.categories ?? [])
-          : [],
+        categories,
         budgets: domainResult?.success ? (domainResult.budgets ?? []) : [],
         goals: domainResult?.success ? (domainResult.goals ?? []) : [],
         recurringPayments: domainResult?.success
@@ -414,6 +422,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         payload: mergedState,
       });
       setIsHydrated(true);
+
+      // Если категории были дефолтными (БД пуста) — записываем их в SQLite
+      if (categories.length > 0 && categoriesFromDb.length === 0) {
+        void bootstrapDesktopDomainData(mergedState);
+      }
     };
 
     hydrateState();
