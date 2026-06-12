@@ -26,7 +26,9 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   behavior?: "fixed" | "collapse-hover" | "collapse-click";
-  onBehaviorChange?: (behavior: "fixed" | "collapse-hover" | "collapse-click") => void;
+  onBehaviorChange?: (
+    behavior: "fixed" | "collapse-hover" | "collapse-click",
+  ) => void;
 }
 
 const menuItems = [
@@ -215,15 +217,13 @@ export function Sidebar({
           ${!isMobile && isCollapsible ? (isExpanded ? "w-72" : "w-16") : "w-72"}
         `}
       >
-        <div
-          className={`flex flex-col h-full ${!isExpanded && !isMobile && isCollapsible ? "" : ""}`}
-        >
-          {/* Заголовок — быстрые иконки переключения режимов (sticky, не скроллится) */}
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Заголовок — быстрые иконки переключения режимов (не скроллится) */}
           <div
-            className={`flex-shrink-0 p-4 lg:p-6 pt-5 lg:pt-7 pb-3 border-b border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-10 ${
+            className={`flex-shrink-0 border-b border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-10 ${
               !isExpanded && !isMobile && isCollapsible
-                ? "flex flex-col items-center gap-1.5 px-2"
-                : "flex items-center justify-between gap-1"
+                ? "flex flex-col items-center gap-1.5 py-3 px-1"
+                : "flex items-center justify-between gap-1 p-4 lg:p-6 pt-5 lg:pt-7 pb-3"
             }`}
           >
             {isExpanded && (
@@ -296,23 +296,32 @@ export function Sidebar({
                 </button>
               </div>
             )}
-            {isExpanded && !isMobile && isCollapsible && behavior === "collapse-click" && (
-              <button
-                onClick={handleTogglePin}
-                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                title={pinned ? "Открепить" : "Закрепить"}
-              >
-                {pinned ? (
-                  <PinOff size={16} className="text-slate-400" />
-                ) : (
-                  <Pin size={16} className="text-slate-400" />
-                )}
-              </button>
-            )}
+            {isExpanded &&
+              !isMobile &&
+              isCollapsible &&
+              behavior === "collapse-click" && (
+                <button
+                  onClick={handleTogglePin}
+                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                  title={pinned ? "Открепить" : "Закрепить"}
+                >
+                  {pinned ? (
+                    <PinOff size={16} className="text-slate-400" />
+                  ) : (
+                    <Pin size={16} className="text-slate-400" />
+                  )}
+                </button>
+              )}
           </div>
 
           {/* Навигация (скроллится независимо) */}
-          <nav className="flex-1 overflow-y-auto p-4 lg:p-6 pt-3 space-y-2">
+          <nav
+            className={`flex-1 space-y-2 overflow-x-hidden ${
+              !isExpanded && !isMobile && isCollapsible
+                ? "overflow-y-hidden py-2 px-1"
+                : "overflow-y-auto p-4 lg:p-6 pt-3"
+            }`}
+          >
             {menuItems.map((item) => {
               const IconComponent = item.icon;
 
@@ -365,7 +374,11 @@ export function Sidebar({
 
           {/* Кнопка сворачивания/разворачивания для collapse-click (не скроллится) */}
           {!isMobile && isCollapsible && behavior === "collapse-click" && (
-            <div className="flex-shrink-0 px-4 lg:px-6 pb-4 lg:pb-6 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
+            <div
+              className={`flex-shrink-0 border-t border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl ${
+                !isExpanded ? "py-2 px-1" : "px-4 lg:px-6 pb-4 lg:pb-6 pt-3"
+              }`}
+            >
               <button
                 onClick={handleToggleCollapse}
                 className={`
