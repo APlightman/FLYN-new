@@ -2,7 +2,7 @@
 ; Современный установщик с красивым интерфейсом
 
 #define MyAppName "FinanceTracker"
-#define MyAppVersion "1.0.6"
+#define MyAppVersion "1.0.34"
 #define MyAppPublisher "FinanceTracker Team"
 #define MyAppURL "https://github.com/APlightman/FLYN-new"
 #define MyAppExeName "FinanceTracker.exe"

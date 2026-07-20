@@ -80,7 +80,7 @@ export const getDefaultSettings = (): SettingsState => ({
     analytics: false,
   },
   export: {
-    defaultFormat: "csv",
+    defaultFormat: "json",
     includeCategories: true,
     includeGoals: true,
   },

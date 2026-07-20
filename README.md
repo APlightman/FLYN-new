@@ -1,23 +1,44 @@
 # FinanceTracker - Desktop & Web Edition
 
-Современное кроссплатформенное приложение для управления личными финансами с Firebase backend и Electron desktop версией.
+Современное desktop-first приложение для управления личными финансами с локальным хранением данных в Electron + SQLite. Cloud/server синхронизация сохранена в кодовой базе, но отложена и не входит в критический путь текущего desktop-релиза.
+
+## Текущий фокус: desktop-first/local-first
+
+На текущем этапе основной релизный путь — **Electron + SQLite**:
+
+- приложение должно запускаться и работать без server/cloud;
+- доменные данные хранятся локально в SQLite через Electron main process;
+- renderer работает через безопасный preload/IPC API;
+- cloud/TimeWeb/Firebase Sync рассматриваются как будущий отдельный этап.
+
+Проверенный статус на 2026-07-20:
+
+- `tsc -b --noEmit` — проходит;
+- `npm run lint` — проходит с 5 Fast Refresh warning'ами;
+- Electron-тесты — 124 passed;
+- `npm run build:desktop` — проходит;
+- `npx electron-builder --dir` — успешно собирает `win-unpacked`;
+- `npx electron-builder --win` — успешно создаёт NSIS-установщик `dist-electron/FinanceTracker Setup 1.0.42.exe`.
+- установленное приложение проходит smoke-проверку первого GUI-запуска, а SQLite работает в WAL-режиме и сохраняет данные после принудительного завершения процесса.
+- экспорт в desktop UI использует единый файловый диалог: CSV, JSON, TSV и PDF; полный backup доступен только как JSON, чтобы сохранить все сущности и связи.
+- имя экспортируемого файла включает локальные дату, время и миллисекунды; если выбранный файл занят, приложение сообщает, что нужно закрыть его или выбрать другое имя.
+- CSV-импорт принимает только `.csv`, корректно обрабатывает BOM, экранированные и многострочные поля; импортируются транзакции и категории.
 
 ## 🔄 Миграция на TimeWebCloud
 
-В целях экономии ресурсов Firebase, приложение было адаптировано для работы с TimeWebCloud в качестве основного бэкенда.
-Аутентификация по-прежнему осуществляется через Firebase.
+Исторически приложение было адаптировано для работы с TimeWebCloud в качестве облачного бэкенда. Сейчас это направление **отложено** до завершения стабильного desktop-first релиза.
 
 ### Изменения в архитектуре:
 
-- **Firebase Auth** - по-прежнему используется для аутентификации пользователей
-- **TimeWebCloud API** - теперь используется для хранения и синхронизации данных
-- **PostgreSQL** - база данных на стороне сервера TimeWebCloud
+- **Firebase Auth** - сохранён для будущего cloud/web направления и не требуется для local-first desktop-работы.
+- **TimeWebCloud API** - сохранён в кодовой базе как отложенное направление синхронизации; текущий desktop-релиз использует Electron IPC + SQLite.
+- **PostgreSQL** - относится к будущему серверному направлению TimeWebCloud и не входит в архитектуру текущего desktop-релиза.
 
 ## 🚀 Технологический стек
 
 - **Frontend**: React 18 + TypeScript + Vite
 - **UI**: Tailwind CSS + shadcn/ui
-- **Backend**: TimeWebCloud API + Firebase Auth + Firebase Hosting (веб-версия)
+- **Backend**: отложенный TimeWebCloud API + Firebase Auth/Firebase Hosting для будущего cloud/web направления
 - **Database**:
   - **Desktop**: SQLite с миграциями и индексами производительности
   - **Web**: PostgreSQL (TimeWebCloud)
@@ -98,22 +119,20 @@ Ctrl+I - Импорт данных
 1. **001_initial_schema.sql** - таблица `app_state` для обратной совместимости
 2. **002_domain_entities.sql** - таблицы transactions и categories
 3. **003_remaining_entities.sql** - budgets, financial_goals, recurring_payments
-4. **004_migrate_app_state_to_tables.sql** - перенос данных из JSON payload в отдельные таблицы
-5. **005_add_performance_indexes.sql** - добавление 12 составных индексов для ускорения запросов
 
 Миграции применяются автоматически при запуске приложения через `ensureDatabaseReady()`.
 
-## 🔥 Firebase Services
+## 🔥 Firebase Services (отложенное cloud/web направление)
 
-- **Firebase Auth** - аутентификация пользователей (по-прежнему используется)
-- **Firebase Hosting** - хостинг веб-версии
-- **Firebase Analytics** - аналитика использования
+- **Firebase Auth** - сохранён для будущей пользовательской аутентификации в cloud/web версии; desktop-релиз от него не зависит.
+- **Firebase Hosting** - возможный хостинг будущей веб-версии.
+- **Firebase Analytics** - возможная аналитика будущего cloud/web направления.
 
-## ☁️ TimeWebCloud Services
+## ☁️ TimeWebCloud Services (отложенное cloud/server направление)
 
-- **REST API** - основной интерфейс для работы с данными
-- **PostgreSQL** - реляционная база данных
-- **Node.js Server** - серверное приложение для обработки запросов
+- **REST API** - сохранён для будущей синхронизации данных; не используется в local-first desktop-пути.
+- **PostgreSQL** - предполагаемая серверная база данных будущего TimeWebCloud направления.
+- **Node.js Server** - сохранённый серверный компонент для будущей обработки cloud-запросов.
 
 ## 📦 Установка и разработка
 

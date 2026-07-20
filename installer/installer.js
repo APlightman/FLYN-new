@@ -122,7 +122,7 @@ ipcMain.handle("get-install-info", async () => {
 
   return {
     appName: "FinanceTracker",
-    version: "1.0.6",
+    version: "1.0.34",
     sourceSize: formatSize(size),
     sourceSizeBytes: size,
     defaultPath: defaultPath,

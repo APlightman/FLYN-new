@@ -24,11 +24,14 @@ import {
   Minimize2,
 } from "lucide-react";
 
+type SettingsUpdate<K extends keyof SettingsState> =
+  SettingsState[K] extends object ? Partial<SettingsState[K]> : SettingsState[K];
+
 interface SettingsSectionsProps {
   settings: SettingsState;
   darkMode: boolean;
   dataStats: DataStats;
-  onUpdateSettings: (section: keyof SettingsState, updates: any) => void;
+  onUpdateSettings: <K extends keyof SettingsState>(section: K, updates: SettingsUpdate<K>) => void;
   onToggleDarkMode: () => void;
   onShowExportModal: () => void;
   onShowResetModal: () => void;
@@ -64,13 +67,15 @@ export function SettingsSections({
           }}
           darkMode={darkMode}
           onUpdateSettings={(updates) => {
-            const key =
-              "language" in updates
-                ? "language"
-                : "currency" in updates
-                  ? "currency"
-                  : "dateFormat";
-            onUpdateSettings(key, updates);
+            if (updates.language !== undefined) {
+              onUpdateSettings("language", updates.language);
+            }
+            if (updates.currency !== undefined) {
+              onUpdateSettings("currency", updates.currency);
+            }
+            if (updates.dateFormat !== undefined) {
+              onUpdateSettings("dateFormat", updates.dateFormat);
+            }
           }}
           onToggleDarkMode={onToggleDarkMode}
         />

@@ -1,8 +1,8 @@
 import React from 'react';
-import { AlertTriangle, Download, Check, X, Trash2 } from 'lucide-react';
+import { AlertTriangle, X, Trash2 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { Select } from '../ui/Select';
+import { ExportModal } from '../import-export/ExportModal';
 
 interface DataStats {
   transactions: number;
@@ -16,32 +16,19 @@ interface SettingsModalsProps {
   showResetModal: boolean;
   showExportModal: boolean;
   dataStats: DataStats;
-  exportFormat: string;
   onCloseResetModal: () => void;
   onCloseExportModal: () => void;
   onResetData: () => void;
-  onExportFormatChange: (format: string) => void;
-  onExportData: () => void;
 }
 
 export function SettingsModals({
   showResetModal,
   showExportModal,
   dataStats,
-  exportFormat,
   onCloseResetModal,
   onCloseExportModal,
-  onResetData,
-  onExportFormatChange,
-  onExportData
+  onResetData
 }: SettingsModalsProps) {
-  const exportFormatOptions = [
-    { value: 'csv', label: 'CSV файл' },
-    { value: 'excel', label: 'Excel файл' },
-    { value: 'pdf', label: 'PDF отчёт' },
-    { value: 'json', label: 'JSON данные' },
-  ];
-
   return (
     <>
       {/* Модальное окно сброса данных */}
@@ -103,44 +90,11 @@ export function SettingsModals({
         onClose={onCloseExportModal}
         title="Экспорт всех данных"
       >
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-            <Download className="text-blue-600 dark:text-blue-400" size={24} />
-            <div>
-              <div className="font-semibold text-blue-800 dark:text-blue-200">
-                Создание резервной копии
-              </div>
-              <div className="text-sm text-blue-700 dark:text-blue-300">
-                Все данные будут сохранены в выбранном формате
-              </div>
-            </div>
-          </div>
-
-          <Select
-            label="Формат экспорта"
-            value={exportFormat}
-            onChange={(e) => onExportFormatChange(e.target.value)}
-            options={exportFormatOptions}
-            fullWidth
-          />
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              variant="secondary"
-              onClick={onCloseExportModal}
-              fullWidth
-            >
-              Отмена
-            </Button>
-            <Button
-              onClick={onExportData}
-              fullWidth
-            >
-              <Check size={16} className="mr-2" />
-              Экспортировать
-            </Button>
-          </div>
-        </div>
+        <ExportModal
+          onClose={onCloseExportModal}
+          initialDataType="all"
+          initialFormat="json"
+        />
       </Modal>
     </>
   );

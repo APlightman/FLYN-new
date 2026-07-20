@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, LogOut, Settings, ChevronDown, Mail, Calendar, Key } from 'lucide-react';
+import { LogOut, Settings, ChevronDown, Mail, Calendar, Key } from 'lucide-react';
 import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
-import { Button } from '../ui/Button';
 
 export function UserMenu() {
   const { user, signOut } = useFirebaseAuth();

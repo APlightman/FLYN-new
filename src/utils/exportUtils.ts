@@ -1,90 +1,14 @@
-import { Transaction, Category, Budget, FinancialGoal } from '../types';
+import { Transaction, Category, Budget, FinancialGoal, RecurringPayment } from '../types';
 
-export const exportToCSV = (data: any[], filename: string) => {
-  if (data.length === 0) return;
-  
+const escapeHtml = (value: unknown): string => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#039;');
+
+export const generatePrintableHTML = (data: Record<string, unknown>[], title: string): string => {
   const headers = Object.keys(data[0]);
-  const csvContent = [
-    headers.join(','),
-    ...data.map(row => 
-      headers.map(header => {
-        const value = row[header];
-        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-          return `"${value.replace(/"/g, '""')}"`;
-        }
-        return value;
-      }).join(',')
-    )
-  ].join('\n');
-
-  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', `${filename}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
-
-export const exportToExcel = async (data: any[], filename: string) => {
-  if (data.length === 0) return;
-
-  const headers = Object.keys(data[0]);
-  const csvContent = [
-    headers.join('\t'),
-    ...data.map(row => 
-      headers.map(header => {
-        const value = row[header];
-        return typeof value === 'string' ? value.replace(/\t/g, ' ') : value;
-      }).join('\t')
-    )
-  ].join('\n');
-
-  const blob = new Blob(['\uFEFF' + csvContent], { 
-    type: 'application/vnd.ms-excel;charset=utf-8;' 
-  });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', `${filename}.xls`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
-
-export const exportToPDF = async (data: any[], filename: string, title: string) => {
-  if (data.length === 0) {
-    alert('Нет данных для экспорта в PDF');
-    return;
-  }
-
-  const htmlContent = generatePrintableHTML(data, title);
-  const printWindow = window.open('', '_blank');
-  
-  if (!printWindow) {
-    alert('Разрешите всплывающие окна для экспорта PDF');
-    return;
-  }
-
-  printWindow.document.write(htmlContent);
-  printWindow.document.close();
-  printWindow.onload = () => {
-    setTimeout(() => {
-      printWindow.print();
-      setTimeout(() => printWindow.close(), 1000);
-    }, 500);
-  };
-};
-
-const generatePrintableHTML = (data: any[], title: string): string => {
-  const headers = Object.keys(data[0]);
-  const formatCurrency = (amount: number) => 
-    new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' }).format(amount);
 
   return `<!DOCTYPE html>
 <html lang="ru">
@@ -105,10 +29,10 @@ const generatePrintableHTML = (data: any[], title: string): string => {
   <p>Создано: ${new Date().toLocaleDateString('ru-RU')}</p>
   <table>
     <thead>
-      <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+      <tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr>
     </thead>
     <tbody>
-      ${data.map(row => `<tr>${headers.map(h => `<td>${row[h]}</td>`).join('')}</tr>`).join('')}
+      ${data.map(row => `<tr>${headers.map(h => `<td>${escapeHtml(row[h])}</td>`).join('')}</tr>`).join('')}
     </tbody>
   </table>
 </body>
@@ -150,4 +74,15 @@ export const prepareBudgetsForExport = (budgets: Budget[]) =>
     'Период': b.period === 'monthly' ? 'Месячный' : 'Годовой',
     'Потрачено': b.spent,
     'Остаток': b.remaining
+  }));
+
+export const prepareRecurringPaymentsForExport = (payments: RecurringPayment[]) =>
+  payments.map(payment => ({
+    'Название': payment.name,
+    'Сумма': payment.amount,
+    'Категория': payment.category,
+    'Периодичность': payment.frequency,
+    'Следующая дата': payment.nextDate,
+    'Активен': payment.isActive ? 'Да' : 'Нет',
+    'Описание': payment.description || '',
   }));

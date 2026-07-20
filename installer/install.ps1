@@ -90,7 +90,7 @@ $pagePanel.Controls.Add($infoGroup)
 
 # Информация о версии
 $versionLabel = New-Object System.Windows.Forms.Label
-$versionLabel.Text = "Версия: 1.0.6  |  Размер: ~180 МБ  |  Windows 7+"
+$versionLabel.Text = "Версия: 1.0.34  |  Размер: ~180 МБ  |  Windows 7+"
 $versionLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $versionLabel.ForeColor = [System.Drawing.Color]::FromArgb(144, 144, 168)
 $versionLabel.Size = New-Object System.Drawing.Size(540, 20)

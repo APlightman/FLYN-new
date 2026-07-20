@@ -2,6 +2,19 @@ import { useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useElectronIntegration } from '../../hooks/useElectronIntegration';
 
+type BudgetAlert =
+  | {
+      type: 'over_budget';
+      category: string;
+      amount: number;
+      percentage: number;
+    }
+  | {
+      type: 'approaching_budget';
+      category: string;
+      percentage: number;
+    };
+
 export function DesktopNotifications() {
   const { state } = useApp();
   const { isElectron, showNotification, updateTrayBadge } = useElectronIntegration();
@@ -18,7 +31,7 @@ export function DesktopNotifications() {
     if (!isElectron) return;
 
     const checkBudgetAlerts = () => {
-      const alerts = [];
+      const alerts: BudgetAlert[] = [];
       
       state.budgets.forEach(budget => {
         const category = state.categories.find(c => c.id === budget.categoryId);
@@ -31,14 +44,14 @@ export function DesktopNotifications() {
         if (percentage >= 100) {
           alerts.push({
             type: 'over_budget',
-            category: category?.name,
+            category: category?.name || 'Без категории',
             amount: spent - budget.amount,
             percentage
           });
         } else if (percentage >= 80) {
           alerts.push({
             type: 'approaching_budget',
-            category: category?.name,
+            category: category?.name || 'Без категории',
             percentage
           });
         }

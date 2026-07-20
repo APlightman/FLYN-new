@@ -8,6 +8,7 @@ interface CategorySelectorProps {
   onChange: (categoryName: string) => void;
   type?: 'income' | 'expense';
   placeholder?: string;
+  required?: boolean;
   fullWidth?: boolean;
   error?: string;
 }
@@ -17,6 +18,7 @@ export function CategorySelector({
   onChange, 
   type, 
   placeholder = 'Выберите категорию',
+  required = false,
   fullWidth = false,
   error
 }: CategorySelectorProps) {
@@ -108,6 +110,7 @@ export function CategorySelector({
       <div className="relative">
         <button
           type="button"
+          aria-required={required}
           onClick={() => setIsOpen(!isOpen)}
           className={`
             w-full rounded-full px-4 py-2 text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 text-left flex items-center justify-between

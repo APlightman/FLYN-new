@@ -3,7 +3,7 @@ chcp 65001 >nul
 title FinanceTracker — Сборка установщика
 
 echo ============================================
-echo   FinanceTracker — Сборка установщика v1.0.6
+echo   FinanceTracker — Сборка установщика v1.0.34
 echo ============================================
 echo.
 
@@ -44,10 +44,10 @@ cd /d "%~dp0"
 if %ERRORLEVEL% equ 0 (
     echo.
     echo [ГОТОВО] Установщик создан:
-    echo   ..\dist-electron\FinanceTracker_Setup_1.0.6.exe
+    echo   ..\dist-electron\FinanceTracker_Setup_1.0.34.exe
     echo.
     echo Размер:
-    for %%f in ("..\dist-electron\FinanceTracker_Setup_1.0.6.exe") do echo   %%~zf байт
+    for %%f in ("..\dist-electron\FinanceTracker_Setup_1.0.34.exe") do echo   %%~zf байт
 ) else (
     echo.
     echo [ОШИБКА] Сборка установщика не удалась (код: %ERRORLEVEL%)

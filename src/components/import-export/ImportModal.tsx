@@ -3,6 +3,7 @@ import { Upload, AlertCircle, CheckCircle, AlertTriangle, X } from 'lucide-react
 import { useApp } from '../../contexts/AppContext';
 import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
+import type { Category, Transaction } from '../../types';
 import { 
   validateFile, 
   readFile, 
@@ -17,7 +18,7 @@ interface ImportModalProps {
 
 export function ImportModal({ onClose }: ImportModalProps) {
   const { addTransaction, addCategory } = useApp();
-  const [dataType, setDataType] = useState('transactions');
+  const [dataType, setDataType] = useState<'transactions' | 'categories'>('transactions');
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -107,17 +108,17 @@ export function ImportModal({ onClose }: ImportModalProps) {
     try {
       switch (dataType) {
         case 'transactions':
-          result.data.forEach(transaction => addTransaction(transaction));
+          (result as ImportResult<Omit<Transaction, 'id'>>).data.forEach(transaction => addTransaction(transaction));
           break;
         case 'categories':
-          result.data.forEach(category => addCategory(category));
+          (result as ImportResult<Omit<Category, 'id'>>).data.forEach(category => addCategory(category));
           break;
       }
       
       alert(`Успешно импортировано ${result.data.length} записей`);
       onClose();
       
-    } catch (error) {
+    } catch {
       alert('Ошибка при сохранении данных');
     }
   };
@@ -136,7 +137,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
         label="Тип данных для импорта"
         value={dataType}
         onChange={(e) => {
-          setDataType(e.target.value);
+          setDataType(e.target.value as 'transactions' | 'categories');
           resetImport();
         }}
         options={dataTypeOptions}
@@ -169,7 +170,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv,.xls,.xlsx"
+            accept=".csv,text/csv"
             onChange={handleFileInputChange}
             className="hidden"
           />

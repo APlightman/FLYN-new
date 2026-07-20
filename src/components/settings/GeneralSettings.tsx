@@ -10,7 +10,7 @@ interface GeneralSettingsProps {
     dateFormat: string;
   };
   darkMode: boolean;
-  onUpdateSettings: (updates: any) => void;
+  onUpdateSettings: (updates: Partial<GeneralSettingsProps['settings']>) => void;
   onToggleDarkMode: () => void;
 }
 

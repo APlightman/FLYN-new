@@ -6,14 +6,23 @@ import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 
 interface BudgetEditFormProps {
-  budget: Budget & { group?: string; percentage?: number };
+  budget: Budget;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
+type BudgetGroup = NonNullable<Budget['group']>;
+
+interface BudgetEditFormData {
+  amount: string;
+  period: Budget['period'];
+  group: BudgetGroup;
+  percentage: string;
+}
+
 export function BudgetEditForm({ budget, onSuccess, onCancel }: BudgetEditFormProps) {
   const { state, updateBudget } = useApp();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BudgetEditFormData>({
     amount: budget.amount.toString(),
     period: budget.period,
     group: budget.group || 'needs',
@@ -118,7 +127,7 @@ export function BudgetEditForm({ budget, onSuccess, onCancel }: BudgetEditFormPr
         <Select
           label="Период"
           value={formData.period}
-          onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+          onChange={(e) => setFormData({ ...formData, period: e.target.value as Budget['period'] })}
           options={periodOptions}
           fullWidth
         />
@@ -128,7 +137,7 @@ export function BudgetEditForm({ budget, onSuccess, onCancel }: BudgetEditFormPr
         <Select
           label="Группа бюджета"
           value={formData.group}
-          onChange={(e) => setFormData({ ...formData, group: e.target.value })}
+          onChange={(e) => setFormData({ ...formData, group: e.target.value as BudgetGroup })}
           options={groupOptions}
           fullWidth
         />

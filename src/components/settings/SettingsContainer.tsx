@@ -10,6 +10,9 @@ import {
 } from "./settingsTypes";
 import { isElectronApp } from "../../hooks/useElectronIntegration";
 
+type SettingsUpdate<K extends keyof SettingsState> =
+  SettingsState[K] extends object ? Partial<SettingsState[K]> : SettingsState[K];
+
 export function SettingsContainer() {
   const { state, toggleDarkMode } = useApp();
   const [showResetModal, setShowResetModal] = useState(false);
@@ -51,11 +54,11 @@ export function SettingsContainer() {
     }
   };
 
-  const updateSettings = (section: keyof SettingsState, updates: any) => {
+  const updateSettings = <K extends keyof SettingsState>(section: K, updates: SettingsUpdate<K>) => {
     setSettings((prev) => ({
       ...prev,
       [section]:
-        typeof prev[section] === "object"
+        typeof prev[section] === "object" && prev[section] !== null && typeof updates === "object" && updates !== null
           ? { ...prev[section], ...updates }
           : updates,
     }));
@@ -118,11 +121,6 @@ export function SettingsContainer() {
     return { ...data, totalItems, storageSize };
   };
 
-  const handleExportData = () => {
-    console.log("Экспорт данных в формате:", settings.export.defaultFormat);
-    setShowExportModal(false);
-  };
-
   const dataStats = getDataStats();
 
   return (
@@ -160,14 +158,9 @@ export function SettingsContainer() {
         showResetModal={showResetModal}
         showExportModal={showExportModal}
         dataStats={dataStats}
-        exportFormat={settings.export.defaultFormat}
         onCloseResetModal={() => setShowResetModal(false)}
         onCloseExportModal={() => setShowExportModal(false)}
         onResetData={handleResetData}
-        onExportFormatChange={(format) =>
-          updateSettings("export", { defaultFormat: format })
-        }
-        onExportData={handleExportData}
       />
     </div>
   );

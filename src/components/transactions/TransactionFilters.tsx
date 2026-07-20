@@ -42,7 +42,7 @@ export function TransactionFilters({
   const setQuickDate = (period: 'today' | 'week' | 'month' | 'year') => {
     const now = new Date();
     let start: Date;
-    let end = new Date();
+    const end = new Date();
 
     switch (period) {
       case 'today':

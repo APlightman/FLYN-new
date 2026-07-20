@@ -13,6 +13,7 @@ import { auth, db, isFirebaseConfigured, COLLECTIONS } from '../lib/firebase';
 import { getFirebaseErrorMessage } from '../lib/firebaseErrors';
 import { getCachedUser, setCachedUser, clearUserCache } from '../lib/userCache';
 import type { FirestoreUser } from '../lib/firebase';
+import type { CachedUser } from '../lib/userCache';
 
 interface AuthState {
   user: User | null;
@@ -82,10 +83,11 @@ export function useFirebaseAuth() {
       const userData: FirestoreUser = {
         id: user.uid,
         email: user.email!,
-        fullName: user.displayName || null,
-        avatarUrl: user.photoURL || null,
+        fullName: user.displayName || undefined,
+        avatarUrl: user.photoURL || undefined,
         createdAt: userSnap.exists() ? userSnap.data().createdAt : new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        version: userSnap.exists() ? (userSnap.data().version ?? 1) : 1,
       };
 
       await setDoc(userRef, userData, { merge: true });
@@ -115,8 +117,8 @@ export function useFirebaseAuth() {
 
       setAuthState(prev => ({ ...prev, loading: false }));
       return { user, error: null };
-    } catch (error: any) {
-      const errorMessage = getFirebaseErrorMessage(error.code);
+    } catch (error: unknown) {
+      const errorMessage = getFirebaseErrorMessage((error as { code?: string }).code ?? '');
       setAuthState(prev => ({ ...prev, error: errorMessage, loading: false }));
       return { user: null, error: { message: errorMessage } };
     }
@@ -137,8 +139,8 @@ export function useFirebaseAuth() {
       
       setAuthState(prev => ({ ...prev, loading: false }));
       return { user, error: null };
-    } catch (error: any) {
-      const errorMessage = getFirebaseErrorMessage(error.code);
+    } catch (error: unknown) {
+      const errorMessage = getFirebaseErrorMessage((error as { code?: string }).code ?? '');
       setAuthState(prev => ({ ...prev, error: errorMessage, loading: false }));
       return { user: null, error: { message: errorMessage } };
     }
@@ -152,7 +154,7 @@ export function useFirebaseAuth() {
     try {
       setAuthState(prev => ({ ...prev, loading: true, error: null }));
 
-      let userData = null;
+      let userData: CachedUser | null = null;
 
       // Сначала проверяем кэш
       const cachedUser = getCachedUser(uid);
@@ -179,13 +181,15 @@ export function useFirebaseAuth() {
             uid: uid,
             email: firestoreData.email,
             fullName: firestoreData.fullName,
-            avatarUrl: firestoreData.avatarUrl
+            avatarUrl: firestoreData.avatarUrl,
+            cachedAt: Date.now(),
           };
 
           // Кэшируем данные для оффлайн использования
           setCachedUser(userData);
-        } catch (firestoreError: any) {
-          console.warn('Firestore error, checking cache:', firestoreError.message);
+        } catch (firestoreError: unknown) {
+          const firestoreErrorMessage = firestoreError instanceof Error ? firestoreError.message : 'неизвестная ошибка';
+          console.warn('Firestore error, checking cache:', firestoreErrorMessage);
           
           // Если ошибка Firestore, но есть кэш - используем его
           const fallbackCache = getCachedUser(uid);
@@ -195,10 +199,10 @@ export function useFirebaseAuth() {
           } else {
             setAuthState(prev => ({ 
               ...prev, 
-              error: `Не удалось загрузить данные пользователя: ${firestoreError.message}`, 
+              error: `Не удалось загрузить данные пользователя: ${firestoreErrorMessage}`, 
               loading: false 
             }));
-            return { user: null, error: { message: `Ошибка загрузки: ${firestoreError.message}` } };
+            return { user: null, error: { message: `Ошибка загрузки: ${firestoreErrorMessage}` } };
           }
         }
       } else {
@@ -246,8 +250,8 @@ export function useFirebaseAuth() {
       console.log('UID login successful:', uid);
       return { user: mockUser, error: null };
 
-    } catch (error: any) {
-      const errorMessage = `Ошибка входа по UID: ${error.message}`;
+    } catch (error: unknown) {
+      const errorMessage = `Ошибка входа по UID: ${(error as { message?: string }).message ?? 'неизвестная ошибка'}`;
       console.error('UID login error:', error);
       
       setAuthState(prev => ({ ...prev, error: errorMessage, loading: false }));
@@ -272,8 +276,8 @@ export function useFirebaseAuth() {
       } else {
         setAuthState(prev => ({ ...prev, user: null, loading: false }));
       }
-    } catch (error: any) {
-      const errorMessage = getFirebaseErrorMessage(error.code);
+    } catch (error: unknown) {
+      const errorMessage = getFirebaseErrorMessage((error as { code?: string }).code ?? '');
       setAuthState(prev => ({ ...prev, error: errorMessage, loading: false }));
     }
   };
@@ -286,8 +290,8 @@ export function useFirebaseAuth() {
     try {
       await sendPasswordResetEmail(auth, email);
       return { error: null };
-    } catch (error: any) {
-      const errorMessage = getFirebaseErrorMessage(error.code);
+    } catch (error: unknown) {
+      const errorMessage = getFirebaseErrorMessage((error as { code?: string }).code ?? '');
       return { error: { message: errorMessage } };
     }
   };

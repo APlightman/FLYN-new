@@ -1,53 +1,62 @@
 import { Transaction, Category } from '../types';
 
-export interface ImportResult {
+export interface ImportResult<T = Omit<Transaction, 'id'> | Omit<Category, 'id'>> {
   success: boolean;
-  data: any[];
+  data: T[];
   errors: string[];
   warnings: string[];
 }
 
 const parseCSV = (csvText: string): string[][] => {
-  const lines = csvText.split('\n');
   const result: string[][] = [];
-  
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    
-    const row: string[] = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let j = 0; j < trimmed.length; j++) {
-      const char = trimmed[j];
-      
-      if (char === '"') {
-        if (inQuotes && trimmed[j + 1] === '"') {
-          current += '"';
-          j++;
-        } else {
-          inQuotes = !inQuotes;
-        }
-      } else if (char === ',' && !inQuotes) {
-        row.push(current.trim());
-        current = '';
+  let row: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let index = 0; index < csvText.length; index++) {
+    const char = csvText[index];
+
+    if (char === '"') {
+      if (inQuotes && csvText[index + 1] === '"') {
+        current += '"';
+        index++;
       } else {
-        current += char;
+        inQuotes = !inQuotes;
       }
+    } else if (char === ',' && !inQuotes) {
+      row.push(current.trim());
+      current = '';
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && csvText[index + 1] === '\n') {
+        index++;
+      }
+      row.push(current.trim());
+      if (row.some(value => value.length > 0)) {
+        result.push(row);
+      }
+      row = [];
+      current = '';
+    } else {
+      current += char;
     }
-    
-    row.push(current.trim());
+  }
+
+  if (inQuotes) {
+    throw new Error('Незакрытая кавычка в CSV-файле');
+  }
+
+  row.push(current.trim());
+  if (row.some(value => value.length > 0)) {
     result.push(row);
   }
-  
+
   return result;
 };
 
-export const importTransactions = (csvText: string): ImportResult => {
+export const importTransactions = (csvText: string): ImportResult<Omit<Transaction, 'id'>> => {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const transactions: Transaction[] = [];
+  const transactions: Omit<Transaction, 'id'>[] = [];
   
   try {
     const rows = parseCSV(csvText);
@@ -55,7 +64,7 @@ export const importTransactions = (csvText: string): ImportResult => {
       return { success: false, data: [], errors: ['Файл пуст'], warnings: [] };
     }
     
-    const headers = rows[0].map(h => h.toLowerCase().trim());
+    const headers = rows[0].map(h => h.replace(/^\uFEFF/, '').toLowerCase().trim());
     const dataRows = rows.slice(1);
     
     const requiredColumns = ['дата', 'тип', 'сумма', 'категория', 'описание'];
@@ -123,7 +132,6 @@ export const importTransactions = (csvText: string): ImportResult => {
         const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
         
         transactions.push({
-          id: crypto.randomUUID(),
           type,
           amount,
           category,
@@ -132,21 +140,21 @@ export const importTransactions = (csvText: string): ImportResult => {
           tags: tags.length > 0 ? tags : undefined
         });
         
-      } catch (error) {
+      } catch {
         errors.push(`Строка ${rowNumber}: ошибка обработки`);
       }
     });
     
     return { success: errors.length === 0, data: transactions, errors, warnings };
     
-  } catch (error) {
-    return { success: false, data: [], errors: [`Ошибка парсинга: ${error}`], warnings: [] };
+  } catch (e) {
+    return { success: false, data: [], errors: [`Ошибка парсинга: ${e}`], warnings: [] };
   }
 };
 
-export const importCategories = (csvText: string): ImportResult => {
+export const importCategories = (csvText: string): ImportResult<Omit<Category, 'id'>> => {
   const errors: string[] = [];
-  const categories: Category[] = [];
+  const categories: Omit<Category, 'id'>[] = [];
   
   try {
     const rows = parseCSV(csvText);
@@ -154,7 +162,7 @@ export const importCategories = (csvText: string): ImportResult => {
       return { success: false, data: [], errors: ['Файл пуст'], warnings: [] };
     }
     
-    const headers = rows[0].map(h => h.toLowerCase().trim());
+    const headers = rows[0].map(h => h.replace(/^\uFEFF/, '').toLowerCase().trim());
     const dataRows = rows.slice(1);
     
     const getColumnIndex = (searchTerms: string[]) => 
@@ -163,6 +171,20 @@ export const importCategories = (csvText: string): ImportResult => {
     const nameIndex = getColumnIndex(['название', 'name']);
     const typeIndex = getColumnIndex(['тип', 'type']);
     const colorIndex = getColumnIndex(['цвет', 'color']);
+
+    const missingColumns = [
+      ['название', 'name'],
+      ['тип', 'type'],
+    ].filter(searchTerms => getColumnIndex(searchTerms) < 0);
+
+    if (missingColumns.length > 0) {
+      return {
+        success: false,
+        data: [],
+        errors: ['Отсутствуют обязательные колонки: Название, Тип'],
+        warnings: [],
+      };
+    }
     
     dataRows.forEach((row, index) => {
       const rowNumber = index + 2;
@@ -189,21 +211,20 @@ export const importCategories = (csvText: string): ImportResult => {
         const color = colorStr && colorStr.startsWith('#') ? colorStr : '#6b7280';
         
         categories.push({
-          id: crypto.randomUUID(),
           name,
           type,
           color
         });
         
-      } catch (error) {
+      } catch {
         errors.push(`Строка ${rowNumber}: ошибка обработки`);
       }
     });
     
     return { success: errors.length === 0, data: categories, errors, warnings: [] };
     
-  } catch (error) {
-    return { success: false, data: [], errors: [`Ошибка: ${error}`], warnings: [] };
+  } catch (e) {
+    return { success: false, data: [], errors: [`Ошибка: ${e}`], warnings: [] };
   }
 };
 
@@ -212,13 +233,13 @@ export const validateFile = (file: File): { valid: boolean; error?: string } => 
     return { valid: false, error: 'Файл слишком большой (максимум 10MB)' };
   }
   
-  const allowedExtensions = ['.csv', '.xls', '.xlsx'];
+  const allowedExtensions = ['.csv'];
   const hasValidExtension = allowedExtensions.some(ext => 
     file.name.toLowerCase().endsWith(ext)
   );
   
   if (!hasValidExtension) {
-    return { valid: false, error: 'Используйте CSV, XLS или XLSX файлы' };
+    return { valid: false, error: 'Используйте CSV файлы' };
   }
   
   return { valid: true };

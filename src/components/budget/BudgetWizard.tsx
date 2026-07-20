@@ -167,10 +167,11 @@ export function BudgetWizard({ onComplete, onClose }: BudgetWizardProps) {
     const percentages = selectedTemplate.id === 'custom' ? customPercentages : selectedTemplate.percentages;
     
     // Группируем категории
-    const groupedCategories = {
-      needs: [] as string[],
-      wants: [] as string[],
-      savings: [] as string[]
+    type BudgetGroup = NonNullable<Budget['group']>;
+    const groupedCategories: Record<BudgetGroup, string[]> = {
+      needs: [],
+      wants: [],
+      savings: []
     };
 
     state.categories.forEach(category => {
@@ -185,7 +186,7 @@ export function BudgetWizard({ onComplete, onClose }: BudgetWizardProps) {
     // Создаём бюджеты для каждой категории
     const budgets: Omit<Budget, 'id'>[] = [];
 
-    Object.entries(groupedCategories).forEach(([group, categoryIds]) => {
+    (Object.entries(groupedCategories) as [BudgetGroup, string[]][]).forEach(([group, categoryIds]) => {
       const groupAmount = amounts[group as keyof typeof amounts];
       const amountPerCategory = categoryIds.length > 0 ? groupAmount / categoryIds.length : 0;
 

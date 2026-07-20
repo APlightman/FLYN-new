@@ -1,6 +1,6 @@
 import fs from "fs";
 import pkg from "electron-updater";
-import { ipcMain, dialog, Notification, app } from "./electronRuntime.js";
+import { ipcMain, dialog, Notification, app, BrowserWindow } from "./electronRuntime.js";
 import { getIconPath } from "./windowManager.js";
 import {
   bootstrapDomainDataFromState,
@@ -37,6 +37,14 @@ const getAutoUpdater = () => {
   }
 };
 
+const getFileWriteErrorMessage = (error) => {
+  if (error?.code === "EBUSY" || error?.code === "EPERM") {
+    return "Файл занят другой программой. Закройте его в Excel, Проводнике или другом приложении и повторите сохранение либо укажите другое имя.";
+  }
+
+  return error instanceof Error ? error.message : String(error);
+};
+
 const setupIPC = (mainWindow, updateTrayBadge) => {
   ipcMain.on("restart-app", () => {
     const autoUpdater = getAutoUpdater();
@@ -44,13 +52,12 @@ const setupIPC = (mainWindow, updateTrayBadge) => {
       autoUpdater.quitAndInstall();
     }
   });
-  ipcMain.handle("show-save-dialog", async (event, options) => {
+  ipcMain.handle("show-save-dialog", async (event, options = {}) => {
     const result = await dialog.showSaveDialog(mainWindow, {
       title: "Сохранить экспорт",
       defaultPath: options.defaultPath || "export.csv",
       filters: options.filters || [
         { name: "CSV файлы", extensions: ["csv"] },
-        { name: "Excel файлы", extensions: ["xlsx", "xls"] },
         { name: "Все файлы", extensions: ["*"] },
       ],
     });
@@ -62,7 +69,6 @@ const setupIPC = (mainWindow, updateTrayBadge) => {
       title: options.title || "Выберите файл для импорта",
       filters: options.filters || [
         { name: "CSV файлы", extensions: ["csv"] },
-        { name: "Excel файлы", extensions: ["xlsx", "xls"] },
         { name: "Все файлы", extensions: ["*"] },
       ],
       properties: options.properties || ["openFile"],
@@ -75,7 +81,38 @@ const setupIPC = (mainWindow, updateTrayBadge) => {
       fs.writeFileSync(filePath, content, "utf8");
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: getFileWriteErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle("export-pdf", async (event, filePath, html) => {
+    let pdfWindow;
+    try {
+      if (typeof filePath !== "string" || !filePath.toLowerCase().endsWith(".pdf")) {
+        return { success: false, error: "Укажите путь к PDF-файлу" };
+      }
+      if (typeof html !== "string" || html.length === 0 || html.length > 10 * 1024 * 1024) {
+        return { success: false, error: "Некорректное содержимое PDF" };
+      }
+
+      pdfWindow = new BrowserWindow({
+        show: false,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          sandbox: true,
+        },
+      });
+      await pdfWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(html)}`);
+      const pdfData = await pdfWindow.webContents.printToPDF({ printBackground: true });
+      fs.writeFileSync(filePath, pdfData);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: getFileWriteErrorMessage(error) };
+    } finally {
+      if (pdfWindow && !pdfWindow.isDestroyed?.()) {
+        pdfWindow.destroy?.();
+      }
     }
   });
 

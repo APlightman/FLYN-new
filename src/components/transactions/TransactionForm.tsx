@@ -40,7 +40,6 @@ export function TransactionForm({ initialData, onSuccess }: TransactionFormProps
     setValues,
     validateAll,
     handleChange,
-    reset
   } = useFormValidation<TransactionFormData>({
     type: 'expense',
     amount: '',

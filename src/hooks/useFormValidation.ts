@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-export interface ValidationRule<T = any> {
+export interface ValidationRule<T = never> {
   required?: boolean;
   minLength?: number;
   maxLength?: number;
@@ -23,7 +23,7 @@ export interface UseFormValidationReturn<T> {
   errors: ValidationErrors;
   isValid: boolean;
   hasErrors: boolean;
-  setValue: (field: keyof T, value: any) => void;
+  setValue: (field: keyof T, value: T[keyof T]) => void;
   setValues: (newValues: Partial<T>) => void;
   setError: (field: keyof T, error: string) => void;
   clearError: (field: keyof T) => void;
@@ -34,7 +34,7 @@ export interface UseFormValidationReturn<T> {
   handleChange: (field: keyof T) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
 }
 
-const validateField = (value: any, rules: ValidationRule): string | null => {
+const validateField = (value: unknown, rules: ValidationRule): string | null => {
   // Required validation
   if (rules.required && (!value || (typeof value === 'string' && !value.trim()))) {
     return 'Это поле обязательно для заполнения';
@@ -75,20 +75,20 @@ const validateField = (value: any, rules: ValidationRule): string | null => {
 
   // Custom validation
   if (rules.custom) {
-    return rules.custom(value);
+    return (rules.custom as (value: unknown) => string | null)(value);
   }
 
   return null;
 };
 
-export function useFormValidation<T extends Record<string, any>>(
+export function useFormValidation<T extends object>(
   initialValues: T,
   validationSchema: ValidationSchema = {}
 ): UseFormValidationReturn<T> {
   const [values, setValuesState] = useState<T>(initialValues);
   const [errors, setErrorsState] = useState<ValidationErrors>({});
 
-  const setValue = useCallback((field: keyof T, value: any) => {
+  const setValue = useCallback((field: keyof T, value: T[keyof T]) => {
     setValuesState(prev => ({ ...prev, [field]: value }));
     
     // Clear error when value changes
@@ -121,25 +121,6 @@ export function useFormValidation<T extends Record<string, any>>(
     setErrorsState({});
   }, []);
 
-  const validate = useCallback((field?: keyof T): boolean => {
-    if (field) {
-      // Validate single field
-      const rules = validationSchema[field as string];
-      if (!rules) return true;
-
-      const error = validateField(values[field], rules);
-      if (error) {
-        setError(field, error);
-        return false;
-      } else {
-        clearError(field);
-        return true;
-      }
-    }
-
-    return validateAll();
-  }, [values, validationSchema, setError, clearError]);
-
   const validateAll = useCallback((): boolean => {
     const newErrors: ValidationErrors = {};
     let isFormValid = true;
@@ -158,6 +139,25 @@ export function useFormValidation<T extends Record<string, any>>(
     return isFormValid;
   }, [values, validationSchema]);
 
+  const validate = useCallback((field?: keyof T): boolean => {
+    if (field) {
+      // Validate single field
+      const rules = validationSchema[field as string];
+      if (!rules) return true;
+
+      const error = validateField(values[field], rules);
+      if (error) {
+        setError(field, error);
+        return false;
+      } else {
+        clearError(field);
+        return true;
+      }
+    }
+
+    return validateAll();
+  }, [values, validationSchema, setError, clearError, validateAll]);
+
   const reset = useCallback((newValues?: T) => {
     setValuesState(newValues || initialValues);
     setErrorsState({});
@@ -166,7 +166,7 @@ export function useFormValidation<T extends Record<string, any>>(
   const handleChange = useCallback((field: keyof T) => {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const target = e.target;
-      let value: any = target.value;
+      let value: string | number | boolean = target.value;
 
       // Handle different input types
       if (target.type === 'checkbox') {
@@ -175,7 +175,7 @@ export function useFormValidation<T extends Record<string, any>>(
         value = target.value === '' ? '' : Number(target.value);
       }
 
-      setValue(field, value);
+      setValue(field, value as T[keyof T]);
     };
   }, [setValue]);
 
@@ -215,8 +215,8 @@ export const ValidationRules = {
   positiveNumber: { 
     required: true, 
     min: 0.01,
-    custom: (value: any) => {
-      const num = typeof value === 'string' ? parseFloat(value) : value;
+    custom: (value: unknown) => {
+      const num = typeof value === 'string' ? parseFloat(value) : Number(value);
       if (isNaN(num) || num <= 0) {
         return 'Значение должно быть положительным числом';
       }
@@ -227,8 +227,8 @@ export const ValidationRules = {
     required: true,
     min: 0.01,
     max: 10000000,
-    custom: (value: any) => {
-      const num = typeof value === 'string' ? parseFloat(value) : value;
+    custom: (value: unknown) => {
+      const num = typeof value === 'string' ? parseFloat(value) : Number(value);
       if (isNaN(num)) {
         return 'Введите корректную сумму';
       }
@@ -244,9 +244,9 @@ export const ValidationRules = {
   percentage: {
     min: 0,
     max: 100,
-    custom: (value: any) => {
+    custom: (value: unknown) => {
       if (value === '' || value === null || value === undefined) return null;
-      const num = typeof value === 'string' ? parseFloat(value) : value;
+      const num = typeof value === 'string' ? parseFloat(value) : Number(value);
       if (isNaN(num)) {
         return 'Введите корректный процент';
       }

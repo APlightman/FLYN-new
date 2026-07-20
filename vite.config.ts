@@ -55,6 +55,11 @@ if (process.env.NODE_ENV === "production") {
 export default defineConfig({
   plugins,
   base: "./",
+  resolve: {
+    alias: {
+      src: path.resolve(__dirname, "src"),
+    },
+  },
   build: {
     outDir: process.env.BUILD_TARGET === "web" ? "build" : "dist",
     assetsDir: "assets",

@@ -1,8 +1,8 @@
 # Установка FinanceTracker Desktop на ПК
 
-## Текущая версия: v1.0.6 (sql.js)
+## Текущая версия: v1.0.42 (better-sqlite3)
 
-Приложение использует **sql.js** (WebAssembly SQLite) — не требует нативных модулей, совместимо с любым ПК.
+Приложение использует **better-sqlite3** — нативный SQLite-модуль для Electron. Данные хранятся локально на ПК, без обязательного подключения к cloud/server.
 
 ## Варианты установки
 
@@ -24,7 +24,7 @@
 
 ### Вариант C: Установщик Windows (NSIS)
 
-1. Скачайте `dist-electron/FinanceTracker Setup 1.0.6.exe`
+1. Скачайте актуальный `FinanceTracker Setup <version>.exe` из `dist-electron/` или релиза
 2. Запустите установщик от имени администратора
 3. Следуйте инструкциям мастера установки
 
@@ -40,15 +40,14 @@
 
 ```
 dist-electron/
-├── FinanceTracker Setup 1.0.6.exe   # Установщик (NSIS)
+├── FinanceTracker Setup <version>.exe # Установщик (NSIS)
 ├── win-unpacked/                     # Portable версия
 │   ├── FinanceTracker.exe
 │   └── resources/
 │       ├── app.asar                  # Код приложения
 │       └── app.asar.unpacked/
 │           └── node_modules/
-│               └── sql.js/dist/
-│                   └── sql-wasm.wasm # WebAssembly SQLite
+│               └── better-sqlite3/   # Нативный SQLite-модуль
 └── win-ia32-unpacked/               # 32-bit portable версия
 
 installer/
@@ -64,19 +63,23 @@ installer/
 
 ## Технические детали
 
-### Почему sql.js вместо better-sqlite3?
+### Почему better-sqlite3?
 
-| Параметр                 | better-sqlite3                     | sql.js                           |
-| ------------------------ | ---------------------------------- | -------------------------------- |
-| Тип                      | Нативный модуль (C++)              | WebAssembly                      |
-| ABI-зависимость          | Да (компилируется под Node.js ABI) | Нет                              |
-| Совместимость с Electron | Требует `@electron/rebuild`        | Работает из коробки              |
-| Размер                   | ~5 МБ                              | ~1.5 МБ (WASM)                   |
-| Производительность       | Высокая                            | Средняя (достаточно для desktop) |
+`better-sqlite3` выбран как основной desktop storage engine, потому что он работает синхронно в Electron main process, хорошо подходит для local-first приложения и пишет данные на диск без отдельного сервера.
 
-### WASM файл
+Текущая сборка использует:
 
-sql.js загружает `sql-wasm.wasm` из `app.asar.unpacked`. Файл автоматически распаковывается при сборке благодаря конфигурации `asarUnpack` в `package.json`.
+- SQLite database через `better-sqlite3`.
+- WAL-режим для устойчивости данных.
+- `app.asar.unpacked` для нативного бинарника `better_sqlite3.node`.
+
+### Проверенный статус сборки
+
+- `npm run build:desktop` — проходит.
+- `npx electron-builder --dir` — собирает `dist-electron/win-unpacked`.
+- `npx electron-builder --win` — создаёт NSIS-установщик `dist-electron/FinanceTracker Setup 1.0.42.exe` и blockmap-файл.
+- NSIS-установщик содержит шаг инициализации локальной SQLite БД; если он не выполнится, приложение безопасно повторит инициализацию при первом запуске.
+- Установленное приложение прошло smoke-проверку первого запуска; SQLite использует WAL и сохраняет тестовую транзакцию после принудительного завершения процесса.
 
 ## Диагностика проблем
 
@@ -97,12 +100,12 @@ cd C:\FinanceTracker
 FinanceTracker.exe --enable-logging --v=1
 ```
 
-### Шаг 3: Проверка WASM файла
+### Шаг 3: Проверка нативного SQLite-модуля
 
-Убедитесь, что файл `sql-wasm.wasm` существует:
+Убедитесь, что файл `better_sqlite3.node` существует:
 
 ```
-dir "C:\FinanceTracker\resources\app.asar.unpacked\node_modules\sql.js\dist\sql-wasm.wasm"
+dir "C:\FinanceTracker\resources\app.asar.unpacked\node_modules\better-sqlite3\build\Release\better_sqlite3.node"
 ```
 
 ## Частые ошибки и решения

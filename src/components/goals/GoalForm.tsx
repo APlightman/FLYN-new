@@ -89,9 +89,9 @@ export function GoalForm({ initialData, onSuccess }: GoalFormProps) {
         monthlyContribution: initialData.monthlyContribution.toString(),
         priority: initialData.priority,
         description: initialData.description || '',
-        inflationRate: (initialData as any).inflationRate?.toString() || '6.5',
-        adjustForInflation: (initialData as any).adjustForInflation ?? true,
-        expectedReturn: (initialData as any).expectedReturn?.toString() || '8',
+        inflationRate: initialData.inflationRate?.toString() || '6.5',
+        adjustForInflation: initialData.adjustForInflation ?? true,
+        expectedReturn: initialData.expectedReturn?.toString() || '8',
       });
     }
   }, [initialData, setValues]);

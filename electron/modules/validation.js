@@ -60,6 +60,19 @@ const sanitizeString = (value, maxLength = MAX_STRING_LENGTH) => {
   return value.trim().slice(0, maxLength);
 };
 
+const preserveValidatedId = (payload, sanitized, errors) => {
+  if (payload.id === undefined || payload.id === null) {
+    return;
+  }
+
+  if (!validateId(payload.id)) {
+    errors.push("Неверный идентификатор");
+    return;
+  }
+
+  sanitized.id = payload.id;
+};
+
 /**
  * Валидация числа: проверка, что это число и оно в допустимом диапазоне
  * @param {*} value
@@ -146,6 +159,8 @@ const validateTransaction = (payload) => {
   const errors = [];
   const sanitized = {};
 
+  preserveValidatedId(payload, sanitized, errors);
+
   // amount (обязательное)
   if (payload.amount === undefined || payload.amount === null) {
     errors.push("Сумма обязательна");
@@ -212,6 +227,8 @@ const validateCategory = (payload) => {
   const errors = [];
   const sanitized = {};
 
+  preserveValidatedId(payload, sanitized, errors);
+
   // name (обязательное)
   if (!payload.name || typeof payload.name !== "string") {
     errors.push("Название категории обязательно");
@@ -228,17 +245,26 @@ const validateCategory = (payload) => {
       ? sanitizeString(payload.color, 50)
       : "#6B7280";
 
-  // icon (опциональное)
-  sanitized.icon =
-    payload.icon && typeof payload.icon === "string"
-      ? sanitizeString(payload.icon, 100)
-      : "";
-
   // type (опциональное)
-  if (payload.type && !["income", "expense", "both"].includes(payload.type)) {
-    errors.push('Тип категории должен быть "income", "expense" или "both"');
+  if (payload.type && !["income", "expense"].includes(payload.type)) {
+    errors.push('Тип категории должен быть "income" или "expense"');
   } else {
     sanitized.type = payload.type || "expense";
+  }
+
+  // parent (опциональное)
+  if (payload.parent && typeof payload.parent === "string") {
+    sanitized.parent = sanitizeString(payload.parent, MAX_NAME_LENGTH);
+  }
+
+  // budget (опциональное)
+  if (payload.budget !== undefined && payload.budget !== null) {
+    const budgetValidation = validateNumber(payload.budget, 0, 999999999);
+    if (!budgetValidation.isValid) {
+      errors.push(`Бюджет категории: ${budgetValidation.error}`);
+    } else {
+      sanitized.budget = budgetValidation.value;
+    }
   }
 
   return { isValid: errors.length === 0, sanitized, errors };
@@ -253,22 +279,24 @@ const validateBudget = (payload) => {
   const errors = [];
   const sanitized = {};
 
-  // category (обязательное)
-  if (!payload.category || typeof payload.category !== "string") {
-    errors.push("Категория обязательна");
+  preserveValidatedId(payload, sanitized, errors);
+
+  // categoryId (обязательное)
+  if (!payload.categoryId || typeof payload.categoryId !== "string") {
+    errors.push("ID категории обязателен");
   } else {
-    sanitized.category = sanitizeString(payload.category, MAX_NAME_LENGTH);
+    sanitized.categoryId = sanitizeString(payload.categoryId, MAX_NAME_LENGTH);
   }
 
-  // limit (обязательное)
-  if (payload.limit === undefined || payload.limit === null) {
-    errors.push("Лимит обязателен");
+  // amount (обязательное)
+  if (payload.amount === undefined || payload.amount === null) {
+    errors.push("Сумма бюджета обязательна");
   } else {
-    const limitValidation = validateNumber(payload.limit, 0, 999999999);
-    if (!limitValidation.isValid) {
-      errors.push(`Лимит: ${limitValidation.error}`);
+    const amountValidation = validateNumber(payload.amount, 0, 999999999);
+    if (!amountValidation.isValid) {
+      errors.push(`Сумма бюджета: ${amountValidation.error}`);
     } else {
-      sanitized.limit = limitValidation.value;
+      sanitized.amount = amountValidation.value;
     }
   }
 
@@ -284,11 +312,41 @@ const validateBudget = (payload) => {
     sanitized.spent = 0;
   }
 
+  // remaining (опциональное)
+  if (payload.remaining !== undefined && payload.remaining !== null) {
+    const remainingValidation = validateNumber(payload.remaining, -999999999, 999999999);
+    if (!remainingValidation.isValid) {
+      errors.push(`Остаток бюджета: ${remainingValidation.error}`);
+    } else {
+      sanitized.remaining = remainingValidation.value;
+    }
+  } else if (sanitized.amount !== undefined && sanitized.spent !== undefined) {
+    sanitized.remaining = sanitized.amount - sanitized.spent;
+  }
+
   // period (опциональное)
-  sanitized.period =
-    payload.period && typeof payload.period === "string"
-      ? sanitizeString(payload.period, 50)
-      : "monthly";
+  if (payload.period && !["monthly", "yearly"].includes(payload.period)) {
+    errors.push('Период бюджета должен быть "monthly" или "yearly"');
+  } else {
+    sanitized.period = payload.period || "monthly";
+  }
+
+  // group (опциональное)
+  if (payload.group && !["needs", "wants", "savings"].includes(payload.group)) {
+    errors.push('Группа бюджета должна быть "needs", "wants" или "savings"');
+  } else if (payload.group) {
+    sanitized.group = payload.group;
+  }
+
+  // percentage (опциональное)
+  if (payload.percentage !== undefined && payload.percentage !== null) {
+    const percentageValidation = validateNumber(payload.percentage, 0, 100);
+    if (!percentageValidation.isValid) {
+      errors.push(`Процент бюджета: ${percentageValidation.error}`);
+    } else {
+      sanitized.percentage = percentageValidation.value;
+    }
+  }
 
   return { isValid: errors.length === 0, sanitized, errors };
 };
@@ -302,6 +360,8 @@ const validateGoal = (payload) => {
   const errors = [];
   const sanitized = {};
 
+  preserveValidatedId(payload, sanitized, errors);
+
   // name (обязательное)
   if (!payload.name || typeof payload.name !== "string") {
     errors.push("Название цели обязательно");
@@ -312,37 +372,93 @@ const validateGoal = (payload) => {
     }
   }
 
-  // target (обязательное)
-  if (payload.target === undefined || payload.target === null) {
+  // targetAmount (обязательное)
+  if (payload.targetAmount === undefined || payload.targetAmount === null) {
     errors.push("Целевая сумма обязательна");
   } else {
-    const targetValidation = validateNumber(payload.target, 0, 999999999);
+    const targetValidation = validateNumber(payload.targetAmount, 0, 999999999);
     if (!targetValidation.isValid) {
       errors.push(`Целевая сумма: ${targetValidation.error}`);
     } else {
-      sanitized.target = targetValidation.value;
+      sanitized.targetAmount = targetValidation.value;
     }
   }
 
-  // current (опциональное)
-  if (payload.current !== undefined && payload.current !== null) {
-    const currentValidation = validateNumber(payload.current, 0, 999999999);
+  // currentAmount (опциональное)
+  if (payload.currentAmount !== undefined && payload.currentAmount !== null) {
+    const currentValidation = validateNumber(payload.currentAmount, 0, 999999999);
     if (!currentValidation.isValid) {
       errors.push(`Текущая сумма: ${currentValidation.error}`);
     } else {
-      sanitized.current = currentValidation.value;
+      sanitized.currentAmount = currentValidation.value;
     }
   } else {
-    sanitized.current = 0;
+    sanitized.currentAmount = 0;
   }
 
-  // deadline (опциональное)
-  if (payload.deadline) {
+  // deadline (обязательное)
+  if (!payload.deadline) {
+    errors.push("Дедлайн обязателен");
+  } else {
     const dateValidation = validateDate(payload.deadline);
     if (!dateValidation.isValid) {
       errors.push(`Дедлайн: ${dateValidation.error}`);
     } else {
       sanitized.deadline = dateValidation.value;
+    }
+  }
+
+  // monthlyContribution (опциональное)
+  if (payload.monthlyContribution !== undefined && payload.monthlyContribution !== null) {
+    const contributionValidation = validateNumber(payload.monthlyContribution, 0, 999999999);
+    if (!contributionValidation.isValid) {
+      errors.push(`Ежемесячный взнос: ${contributionValidation.error}`);
+    } else {
+      sanitized.monthlyContribution = contributionValidation.value;
+    }
+  } else {
+    sanitized.monthlyContribution = 0;
+  }
+
+  // priority (опциональное)
+  if (payload.priority && !["low", "medium", "high"].includes(payload.priority)) {
+    errors.push('Приоритет должен быть "low", "medium" или "high"');
+  } else {
+    sanitized.priority = payload.priority || "medium";
+  }
+
+  sanitized.description = payload.description
+    ? sanitizeString(payload.description, MAX_DESCRIPTION_LENGTH)
+    : "";
+
+  if (payload.inflationRate !== undefined && payload.inflationRate !== null) {
+    const inflationValidation = validateNumber(payload.inflationRate, 0, 100);
+    if (!inflationValidation.isValid) {
+      errors.push(`Инфляция: ${inflationValidation.error}`);
+    } else {
+      sanitized.inflationRate = inflationValidation.value;
+    }
+  }
+
+  if (payload.adjustForInflation !== undefined) {
+    sanitized.adjustForInflation = Boolean(payload.adjustForInflation);
+  }
+
+  if (payload.expectedReturn !== undefined && payload.expectedReturn !== null) {
+    const returnValidation = validateNumber(payload.expectedReturn, 0, 100);
+    if (!returnValidation.isValid) {
+      errors.push(`Ожидаемая доходность: ${returnValidation.error}`);
+    } else {
+      sanitized.expectedReturn = returnValidation.value;
+    }
+  }
+
+  if (payload.inflationAdjustedTarget !== undefined && payload.inflationAdjustedTarget !== null) {
+    const adjustedValidation = validateNumber(payload.inflationAdjustedTarget, 0, 999999999);
+    if (!adjustedValidation.isValid) {
+      errors.push(`Цель с учётом инфляции: ${adjustedValidation.error}`);
+    } else {
+      sanitized.inflationAdjustedTarget = adjustedValidation.value;
     }
   }
 
@@ -357,6 +473,8 @@ const validateGoal = (payload) => {
 const validateRecurringPayment = (payload) => {
   const errors = [];
   const sanitized = {};
+
+  preserveValidatedId(payload, sanitized, errors);
 
   // name (обязательное)
   if (!payload.name || typeof payload.name !== "string") {
@@ -387,21 +505,13 @@ const validateRecurringPayment = (payload) => {
     sanitized.category = sanitizeString(payload.category, MAX_NAME_LENGTH);
   }
 
-  // type (обязательное)
-  if (payload.type !== "income" && payload.type !== "expense") {
-    errors.push('Тип должен быть "income" или "expense"');
-  } else {
-    sanitized.type = payload.type;
-  }
-
   // frequency (обязательное)
   const validFrequencies = [
     "daily",
     "weekly",
-    "biweekly",
     "monthly",
-    "quarterly",
     "yearly",
+    "custom",
   ];
   if (!payload.frequency || !validFrequencies.includes(payload.frequency)) {
     errors.push(`Частота должна быть одной из: ${validFrequencies.join(", ")}`);
@@ -409,14 +519,24 @@ const validateRecurringPayment = (payload) => {
     sanitized.frequency = payload.frequency;
   }
 
-  // nextDate (опциональное)
-  if (payload.nextDate) {
+  // nextDate (обязательное)
+  if (!payload.nextDate) {
+    errors.push("Дата следующего платежа обязательна");
+  } else {
     const dateValidation = validateDate(payload.nextDate);
     if (!dateValidation.isValid) {
       errors.push(`Дата следующего платежа: ${dateValidation.error}`);
     } else {
       sanitized.nextDate = dateValidation.value;
     }
+  }
+
+  sanitized.isActive = payload.isActive === undefined ? true : Boolean(payload.isActive);
+
+  if (payload.frequency === "custom" && !payload.cronExpression) {
+    errors.push("Cron-выражение обязательно для настраиваемой частоты");
+  } else if (payload.cronExpression) {
+    sanitized.cronExpression = sanitizeString(payload.cronExpression, 100);
   }
 
   // description (опциональное)
@@ -532,16 +652,20 @@ const getDefaultPayload = (entityType) => {
     case "category":
       return { name: "default" };
     case "budget":
-      return { category: "default", limit: 0 };
+      return { categoryId: "default", amount: 0 };
     case "goal":
-      return { name: "default", target: 0 };
+      return {
+        name: "default",
+        targetAmount: 0,
+        deadline: new Date().toISOString(),
+      };
     case "recurringPayment":
       return {
         name: "default",
         amount: 0,
         category: "default",
-        type: "expense",
         frequency: "monthly",
+        nextDate: new Date().toISOString(),
       };
     default:
       return {};

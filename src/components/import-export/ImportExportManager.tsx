@@ -109,7 +109,7 @@ export function ImportExportManager() {
                 Импорт данных
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                Загрузите данные из файлов CSV/Excel
+                Загрузите данные из CSV-файла
               </p>
             </div>
           </div>
@@ -121,7 +121,6 @@ export function ImportExportManager() {
               </h4>
               <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                 <li>• CSV файлы (.csv)</li>
-                <li>• Excel файлы (.xls, .xlsx)</li>
                 <li>• Максимальный размер: 10MB</li>
               </ul>
             </div>
@@ -149,11 +148,11 @@ export function ImportExportManager() {
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
           Шаблоны для импорта
         </h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-          Скачайте шаблоны CSV файлов для правильного импорта данных:
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+            Скачайте шаблоны CSV-файлов для правильного импорта транзакций и категорий:
         </p>
         
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Button 
             variant="secondary" 
             onClick={() => downloadTemplate('transactions')}
@@ -172,14 +171,6 @@ export function ImportExportManager() {
             Шаблон категорий
           </Button>
           
-          <Button 
-            variant="secondary" 
-            onClick={() => downloadTemplate('goals')}
-            className="justify-start"
-          >
-            <FileSpreadsheet size={16} className="mr-2" />
-            Шаблон целей
-          </Button>
         </div>
       </Card>
 
@@ -202,7 +193,7 @@ export function ImportExportManager() {
   );
 }
 
-const downloadTemplate = (type: 'transactions' | 'categories' | 'goals') => {
+const downloadTemplate = (type: 'transactions' | 'categories') => {
   let csvContent = '';
   let filename = '';
 
@@ -214,10 +205,6 @@ const downloadTemplate = (type: 'transactions' | 'categories' | 'goals') => {
     case 'categories':
       csvContent = 'Название,Тип,Цвет,Бюджет\nПродукты,Расход,#ef4444,15000\nЗарплата,Доход,#22c55e,';
       filename = 'template_categories';
-      break;
-    case 'goals':
-      csvContent = 'Название,Целевая сумма,Текущая сумма,Дедлайн,Ежемесячный взнос,Приоритет,Описание\nОтпуск,100000,25000,2024-12-31,10000,Высокий,Поездка в Европу';
-      filename = 'template_goals';
       break;
   }
 

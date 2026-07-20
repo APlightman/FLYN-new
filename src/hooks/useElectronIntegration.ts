@@ -1,26 +1,47 @@
 import { useEffect, useCallback, useState } from "react";
+import type {
+  AppState,
+  Budget,
+  Category,
+  FinancialGoal,
+  RecurringPayment,
+  Transaction,
+} from "../types";
 
 interface ElectronAPI {
-  showSaveDialog: (options: any) => Promise<any>;
-  showOpenDialog: (options: any) => Promise<any>;
+  showSaveDialog: (options: Record<string, unknown>) => Promise<{ canceled: boolean; filePath?: string }>;
+  showOpenDialog: (options: Record<string, unknown>) => Promise<{ canceled: boolean; filePaths: string[] }>;
   saveFile: (
     filePath: string,
     content: string,
   ) => Promise<{ success: boolean; error?: string }>;
+  exportPdf: (
+    filePath: string,
+    html: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   readFile: (
     filePath: string,
   ) => Promise<{ success: boolean; content?: string; error?: string }>;
-  showNotification: (options: any) => Promise<boolean>;
+  showNotification: (options: Record<string, unknown>) => Promise<boolean>;
   updateTrayBadge: (count: number) => Promise<void>;
-  getSystemInfo: () => Promise<any>;
-  getStorageStatus: () => Promise<any>;
-  loadAppState: () => Promise<any>;
-  saveAppState: (state: any) => Promise<any>;
-  bootstrapDomainData: (state: any) => Promise<any>;
-  listDomainData: () => Promise<any>;
-  createEntity: (entityType: string, payload: any) => Promise<any>;
-  updateEntity: (entityType: string, id: string, updates: any) => Promise<any>;
-  deleteEntity: (entityType: string, id: string) => Promise<any>;
+  getSystemInfo: () => Promise<SystemInfo>;
+  getStorageStatus: () => Promise<StorageInfo>;
+  loadAppState: () => Promise<{
+    success?: boolean;
+    state?: Partial<AppState>;
+    error?: string;
+    status?: unknown;
+  }>;
+  saveAppState: (state: unknown) => Promise<{
+    success: boolean;
+    error?: string;
+    status?: { storage?: string } & Record<string, unknown>;
+  }>;
+  bootstrapDomainData: (state: unknown) => Promise<{ success: boolean; error?: string }>;
+  listDomainData: () => Promise<DomainData>;
+  createEntity: (entityType: string, payload: unknown) => Promise<{ success: boolean; id?: string; item?: unknown; error?: string }>;
+  updateEntity: (entityType: string, id: string, updates: unknown) => Promise<{ success: boolean; item?: unknown; error?: string }>;
+  deleteEntity: (entityType: string, id: string) => Promise<{ success: boolean; error?: string }>;
   checkExternalDatabase: (
     directoryPath?: string,
   ) => Promise<{
@@ -48,9 +69,10 @@ interface ElectronAPI {
   onNavigateTo: (callback: (route: string) => void) => void;
   onShowImport: (callback: () => void) => void;
   onDeepLink: (callback: (url: string) => void) => void;
-  onUpdateAvailable: (callback: (info: any) => void) => void;
-  onUpdateDownloaded: (callback: (info: any) => void) => void;
-  onDownloadProgress: (callback: (progress: any) => void) => void;
+  onUpdateAvailable: (callback: (info: UpdateInfo) => void) => void;
+  onUpdateDownloaded: (callback: (info: UpdateInfo) => void) => void;
+  onDownloadProgress: (callback: (progress: DownloadProgress) => void) => void;
+  restartApp: () => void;
   removeAllListeners: (channel: string) => void;
   getCloseBehavior: () => Promise<"exit" | "minimize-to-tray">;
   setCloseBehavior: (behavior: "exit" | "minimize-to-tray") => Promise<void>;
@@ -63,6 +85,44 @@ interface ElectronAPI {
   };
 }
 
+interface SystemInfo {
+  platform: string;
+  arch: string;
+  version: string;
+}
+
+interface StorageInfo {
+  storage?: "sqlite" | "renderer-localStorage" | string;
+  available?: boolean;
+  path?: string;
+  error?: string | null;
+  dbPath?: string;
+  dbSize?: number;
+  tableCount?: number;
+}
+
+interface DomainData {
+  transactions?: Transaction[];
+  categories?: Category[];
+  budgets?: Budget[];
+  goals?: FinancialGoal[];
+  recurringPayments?: RecurringPayment[];
+  appState?: unknown;
+  success?: boolean;
+  error?: string;
+}
+
+interface UpdateInfo {
+  version?: string;
+  releaseDate?: string;
+}
+
+interface DownloadProgress {
+  percent?: number;
+  transferred?: number;
+  total?: number;
+}
+
 declare global {
   interface Window {
     electronAPI?: ElectronAPI;
@@ -71,13 +131,13 @@ declare global {
 
 export function useElectronIntegration() {
   const [isElectron, setIsElectron] = useState(false);
-  const [systemInfo, setSystemInfo] = useState<any>(null);
-  const [storageInfo, setStorageInfo] = useState<any>(null);
+  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
+  const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
   const [updateInfo, setUpdateInfo] = useState<{
     available: boolean;
     downloaded: boolean;
     progress?: number;
-    info?: any;
+    info?: UpdateInfo;
   }>({
     available: false,
     downloaded: false,
@@ -143,6 +203,12 @@ export function useElectronIntegration() {
     if (!window.electronAPI)
       return { success: false, error: "Electron API недоступен" };
     return await window.electronAPI.saveFile(filePath, content);
+  }, []);
+
+  const exportPdf = useCallback(async (filePath: string, html: string) => {
+    if (!window.electronAPI)
+      return { success: false, error: "Electron API недоступен" };
+    return await window.electronAPI.exportPdf(filePath, html);
   }, []);
 
   const readFile = useCallback(async (filePath: string) => {
@@ -213,6 +279,7 @@ export function useElectronIntegration() {
     showSaveDialog,
     showOpenDialog,
     saveFile,
+    exportPdf,
     readFile,
     showNotification,
     updateTrayBadge,

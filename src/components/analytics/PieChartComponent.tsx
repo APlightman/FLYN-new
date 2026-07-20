@@ -75,8 +75,9 @@ export function PieChartComponent({ data }: PieChartProps) {
               d={createArcPath(100, 100, 80, slice.startAngle, slice.endAngle)}
               fill={slice.color}
               className="hover:opacity-80 transition-opacity cursor-pointer"
-              title={`${slice.name}: ${formatCurrency(slice.amount)} (${slice.percentage.toFixed(1)}%)`}
-            />
+            >
+              <title>{`${slice.name}: ${formatCurrency(slice.amount)} (${slice.percentage.toFixed(1)}%)`}</title>
+            </path>
           ))}
         </svg>
       </div>

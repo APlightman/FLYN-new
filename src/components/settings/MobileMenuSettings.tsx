@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, EyeOff, GripVertical } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface MobileMenuItem {
   id: string;

@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   showOpenDialog: (options) => ipcRenderer.invoke("show-open-dialog", options),
   saveFile: (filePath, content) =>
     ipcRenderer.invoke("save-file", filePath, content),
+  exportPdf: (filePath, html) => ipcRenderer.invoke("export-pdf", filePath, html),
   readFile: (filePath) => ipcRenderer.invoke("read-file", filePath),
 
   // Уведомления

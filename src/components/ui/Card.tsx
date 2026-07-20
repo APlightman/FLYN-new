@@ -1,13 +1,13 @@
 import React from 'react';
 
-interface CardProps {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   padding?: 'sm' | 'md' | 'lg';
   variant?: 'default' | 'elevated' | 'outlined' | 'glass';
 }
 
-export function Card({ children, className = '', padding = 'md', variant = 'default' }: CardProps) {
+export function Card({ children, className = '', padding = 'md', variant = 'default', ...props }: CardProps) {
   const paddingClasses = {
     sm: 'p-3 sm:p-4',
     md: 'p-4 sm:p-6',
@@ -22,7 +22,7 @@ export function Card({ children, className = '', padding = 'md', variant = 'defa
   };
 
   return (
-    <div className={`
+    <div {...props} className={`
       rounded-xl sm:rounded-2xl transition-all duration-300 hover:shadow-md hover:shadow-slate-200/60 dark:hover:shadow-slate-900/60
       ${variantClasses[variant]} ${paddingClasses[padding]} ${className}
     `}>

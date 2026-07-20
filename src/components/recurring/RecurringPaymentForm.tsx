@@ -7,6 +7,11 @@ import { Select } from '../ui/Select';
 import { DatePicker } from '../ui/DatePicker';
 import { CategorySelector } from '../categories/CategorySelector';
 
+type RecurringFrequency = RecurringPayment['frequency'];
+
+const isRecurringFrequency = (value: string): value is RecurringFrequency =>
+  ['daily', 'weekly', 'monthly', 'yearly', 'custom'].includes(value);
+
 interface RecurringPaymentFormProps {
   initialData?: RecurringPayment;
   onSuccess: () => void;
@@ -121,9 +126,13 @@ export function RecurringPaymentForm({ initialData, onSuccess }: RecurringPaymen
   };
 
   const handleFrequencyChange = (frequency: string) => {
+    if (!isRecurringFrequency(frequency)) {
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
-      frequency: frequency as any,
+      frequency,
       nextDate: frequency !== 'custom' ? calculateNextDate(frequency, prev.nextDate) : prev.nextDate
     }));
     

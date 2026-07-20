@@ -5,16 +5,6 @@ export const MONTHS = [
 
 export const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
-const getStartOfWeek = (date: Date): Date => {
-  const dayOfWeek = date.getDay();
-  const diff = date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-  return new Date(date.getFullYear(), date.getMonth(), diff);
-};
-
-const getEndOfWeek = (startOfWeek: Date): Date => {
-  return new Date(startOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000);
-};
-
 export const isToday = (date: Date): boolean => {
   const today = new Date();
   return date.toDateString() === today.toDateString();

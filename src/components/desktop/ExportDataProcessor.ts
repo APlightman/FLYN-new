@@ -3,10 +3,12 @@ import {
   prepareTransactionsForExport,
   prepareCategoriesForExport,
   prepareGoalsForExport,
-  prepareBudgetsForExport
+  prepareBudgetsForExport,
+  prepareRecurringPaymentsForExport,
 } from '../../utils/exportUtils';
 
-type ExportableData = Record<string, unknown>[] | Record<string, unknown>;
+type ExportableData = object[] | object;
+export type ExportFormat = 'csv' | 'json' | 'tsv' | 'pdf';
 
 export class ExportDataProcessor {
   constructor(private state: AppState) {}
@@ -16,26 +18,37 @@ export class ExportDataProcessor {
       case 'transactions':
         return {
           data: prepareTransactionsForExport(this.state.transactions),
+          rawData: this.state.transactions,
           filename: 'transactions',
           title: 'Транзакции'
         };
       case 'categories':
         return {
           data: prepareCategoriesForExport(this.state.categories),
+          rawData: this.state.categories,
           filename: 'categories',
           title: 'Категории'
         };
       case 'goals':
         return {
           data: prepareGoalsForExport(this.state.goals),
+          rawData: this.state.goals,
           filename: 'goals',
           title: 'Финансовые цели'
         };
       case 'budgets':
         return {
           data: prepareBudgetsForExport(this.state.budgets),
+          rawData: this.state.budgets,
           filename: 'budgets',
           title: 'Бюджеты'
+        };
+      case 'recurringPayments':
+        return {
+          data: prepareRecurringPaymentsForExport(this.state.recurringPayments),
+          rawData: this.state.recurringPayments,
+          filename: 'recurring_payments',
+          title: 'Регулярные платежи'
         };
       case 'all':
         return {
@@ -44,6 +57,16 @@ export class ExportDataProcessor {
             categories: this.state.categories,
             goals: this.state.goals,
             budgets: this.state.budgets,
+            recurringPayments: this.state.recurringPayments,
+            exportDate: new Date().toISOString(),
+            version: '1.0.0'
+          },
+          rawData: {
+            transactions: this.state.transactions,
+            categories: this.state.categories,
+            goals: this.state.goals,
+            budgets: this.state.budgets,
+            recurringPayments: this.state.recurringPayments,
             exportDate: new Date().toISOString(),
             version: '1.0.0'
           },
@@ -51,17 +74,17 @@ export class ExportDataProcessor {
           title: 'Полная резервная копия'
         };
       default:
-        return { data: [], filename: 'export', title: 'Экспорт' };
+        return { data: [], rawData: [], filename: 'export', title: 'Экспорт' };
     }
   }
 
-  formatContent(data: ExportableData, format: string) {
+  formatContent(data: ExportableData, format: Exclude<ExportFormat, 'pdf'>) {
     switch (format) {
       case 'csv':
         return this.formatAsCSV(data);
       case 'json':
         return JSON.stringify(data, null, 2);
-      case 'excel':
+      case 'tsv':
         return this.formatAsTSV(data);
       default:
         return JSON.stringify(data, null, 2);
@@ -75,11 +98,18 @@ export class ExportDataProcessor {
         headers.join(','),
         ...data.map(row => 
           headers.map(header => {
-            const value = (row as Record<string, any>)[header];
-            if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-              return `"${value.replace(/"/g, '""')}"`;
+            const value = (row as Record<string, unknown>)[header];
+            const stringValue = typeof value === 'string'
+              ? value
+              : value === undefined || value === null
+                ? ''
+                : typeof value === 'object'
+                  ? JSON.stringify(value)
+                  : String(value);
+            if (/[",\n\r]/.test(stringValue)) {
+              return `"${stringValue.replace(/"/g, '""')}"`;
             }
-            return value;
+            return stringValue;
           }).join(',')
         )
       ].join('\n');
@@ -95,8 +125,15 @@ export class ExportDataProcessor {
         headers.join('\t'),
         ...data.map(row => 
           headers.map(header => {
-            const value = (row as Record<string, any>)[header];
-            return typeof value === 'string' ? value.replace(/\t/g, ' ') : value;
+            const value = (row as Record<string, unknown>)[header];
+            const stringValue = typeof value === 'string'
+              ? value
+              : value === undefined || value === null
+                ? ''
+                : typeof value === 'object'
+                  ? JSON.stringify(value)
+                  : String(value);
+            return stringValue.replace(/[\t\n\r]/g, ' ');
           }).join('\t')
         )
       ].join('\n');
@@ -105,16 +142,17 @@ export class ExportDataProcessor {
     return '';
   }
 
-  getFileExtension(format: string) {
+  getFileExtension(format: ExportFormat) {
     switch (format) {
       case 'csv': return 'csv';
       case 'json': return 'json';
-      case 'excel': return 'tsv';
+      case 'tsv': return 'tsv';
+      case 'pdf': return 'pdf';
       default: return 'txt';
     }
   }
 
-  getFileFilters(format: string) {
+  getFileFilters(format: ExportFormat) {
     switch (format) {
       case 'csv':
         return [
@@ -126,10 +164,15 @@ export class ExportDataProcessor {
           { name: 'JSON файлы', extensions: ['json'] },
           { name: 'Все файлы', extensions: ['*'] }
         ];
-      case 'excel':
+      case 'tsv':
         return [
           { name: 'TSV файлы', extensions: ['tsv'] },
           { name: 'Текстовые файлы', extensions: ['txt'] },
+          { name: 'Все файлы', extensions: ['*'] }
+        ];
+      case 'pdf':
+        return [
+          { name: 'PDF файлы', extensions: ['pdf'] },
           { name: 'Все файлы', extensions: ['*'] }
         ];
       default:
@@ -142,5 +185,9 @@ export class ExportDataProcessor {
     if (Array.isArray(data)) return data.length;
     if (typeof data === 'object' && data !== null) return Object.keys(data).length;
     return 0;
+  }
+
+  getSupportedFormats(dataType: string): ExportFormat[] {
+    return dataType === 'all' ? ['json'] : ['csv', 'json', 'tsv', 'pdf'];
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calculator, Home, Car, CreditCard, PiggyBank } from 'lucide-react';
+import { Calculator, Home, Car, CreditCard, PiggyBank, LucideIcon } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { SavingsCalculator } from './SavingsCalculator';
 import { MortgageCalculator } from './MortgageCalculator';
@@ -11,7 +11,7 @@ type CalculatorType = 'savings' | 'mortgage' | 'car' | 'consumer';
 interface CalculatorTab {
   id: CalculatorType;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   description: string;
   color: string;
 }

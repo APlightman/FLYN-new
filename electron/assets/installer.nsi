@@ -2,7 +2,7 @@
 ; Modern UI 2 — профессиональный интерфейс
 
 !define PRODUCT_NAME "FinanceTracker"
-!define PRODUCT_VERSION "1.0.33"
+!define PRODUCT_VERSION "1.0.40"
 !define PRODUCT_PUBLISHER "FinanceTracker Team"
 !define PRODUCT_WEB_SITE "https://github.com/APlightman/FLYN-new"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\FinanceTracker.exe"
@@ -115,6 +115,18 @@ Section "FinanceTracker (обязательно)" SEC_MAIN
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegDWORD ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "NoModify" 1
   WriteRegDWORD ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "NoRepair" 1
+  
+  ; ===== Инициализация базы данных =====
+  ; Запускаем приложение с флагом --init-db, чтобы создать SQLite-файл БД
+  ; и применить все миграции. Приложение завершится сразу после создания БД.
+  DetailPrint "Инициализация базы данных..."
+  ExecWait '"$INSTDIR\FinanceTracker.exe" --init-db' $0
+  ${If} $0 == 0
+    DetailPrint "База данных успешно создана"
+  ${Else}
+    DetailPrint "ВНИМАНИЕ: Не удалось создать базу данных (код: $0)"
+    DetailPrint "База данных будет создана при первом запуске приложения"
+  ${EndIf}
 SectionEnd
 
 ; Ярлык на рабочем столе
@@ -186,6 +198,9 @@ Section "Uninstall"
   
   ; Удаление пользовательских данных (опционально)
   MessageBox MB_YESNO "Удалить пользовательские данные (базу данных, настройки)?$\r$\n$\r$\nРекомендуется оставить, если вы планируете переустановить приложение." IDNO skip_userdata
+    ; Удаляем всю папку с пользовательскими данными (БД, настройки, кэш)
     RMDir /r "$APPDATA\${PRODUCT_NAME}"
+    ; Также удаляем папку с данными в LocalAppData (для некоторых версий Windows)
+    RMDir /r "$LOCALAPPDATA\${PRODUCT_NAME}"
   skip_userdata:
 SectionEnd

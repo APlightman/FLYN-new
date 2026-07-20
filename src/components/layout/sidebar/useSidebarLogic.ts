@@ -1,26 +1,42 @@
 import { useState, useRef, useEffect } from 'react';
+import React from 'react';
+import {
+  BarChart3,
+  Calculator,
+  Calendar,
+  Download,
+  Filter,
+  HelpCircle,
+  Home,
+  PlusCircle,
+  Repeat,
+  Settings,
+  Tags,
+  Target,
+  type LucideIcon,
+} from 'lucide-react';
 
 interface MenuItem {
   id: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
 }
 
 const defaultMenuItems: MenuItem[] = [
-  { id: 'dashboard', label: 'Главная', icon: 'Home', color: 'text-blue-600 dark:text-blue-400' },
-  { id: 'transactions', label: 'Транзакции', icon: 'PlusCircle', color: 'text-green-600 dark:text-green-400' },
-  { id: 'filters', label: 'Фильтры', icon: 'Filter', color: 'text-purple-600 dark:text-purple-400' },
-  { id: 'budget', label: 'Бюджет', icon: 'Target', color: 'text-red-600 dark:text-red-400' },
-  { id: 'goals', label: 'Цели', icon: 'Target', color: 'text-orange-600 dark:text-orange-400' },
-  { id: 'recurring', label: 'Регулярные', icon: 'Repeat', color: 'text-indigo-600 dark:text-indigo-400' },
-  { id: 'analytics', label: 'Аналитика', icon: 'BarChart3', color: 'text-emerald-600 dark:text-emerald-400' },
-  { id: 'calendar', label: 'Календарь', icon: 'Calendar', color: 'text-pink-600 dark:text-pink-400' },
-  { id: 'categories', label: 'Категории', icon: 'Tags', color: 'text-cyan-600 dark:text-cyan-400' },
-  { id: 'calculator', label: 'Калькулятор', icon: 'Calculator', color: 'text-amber-600 dark:text-amber-400' },
-  { id: 'import-export', label: 'Импорт/Экспорт', icon: 'Download', color: 'text-slate-600 dark:text-slate-400' },
-  { id: 'faq', label: 'ЧаВо', icon: 'HelpCircle', color: 'text-violet-600 dark:text-violet-400' },
-  { id: 'settings', label: 'Настройки', icon: 'Settings', color: 'text-slate-600 dark:text-slate-400' },
+  { id: 'dashboard', label: 'Главная', icon: Home, color: 'text-blue-600 dark:text-blue-400' },
+  { id: 'transactions', label: 'Транзакции', icon: PlusCircle, color: 'text-green-600 dark:text-green-400' },
+  { id: 'filters', label: 'Фильтры', icon: Filter, color: 'text-purple-600 dark:text-purple-400' },
+  { id: 'budget', label: 'Бюджет', icon: Target, color: 'text-red-600 dark:text-red-400' },
+  { id: 'goals', label: 'Цели', icon: Target, color: 'text-orange-600 dark:text-orange-400' },
+  { id: 'recurring', label: 'Регулярные', icon: Repeat, color: 'text-indigo-600 dark:text-indigo-400' },
+  { id: 'analytics', label: 'Аналитика', icon: BarChart3, color: 'text-emerald-600 dark:text-emerald-400' },
+  { id: 'calendar', label: 'Календарь', icon: Calendar, color: 'text-pink-600 dark:text-pink-400' },
+  { id: 'categories', label: 'Категории', icon: Tags, color: 'text-cyan-600 dark:text-cyan-400' },
+  { id: 'calculator', label: 'Калькулятор', icon: Calculator, color: 'text-amber-600 dark:text-amber-400' },
+  { id: 'import-export', label: 'Импорт/Экспорт', icon: Download, color: 'text-slate-600 dark:text-slate-400' },
+  { id: 'faq', label: 'ЧаВо', icon: HelpCircle, color: 'text-violet-600 dark:text-violet-400' },
+  { id: 'settings', label: 'Настройки', icon: Settings, color: 'text-slate-600 dark:text-slate-400' },
 ];
 
 const MENU_ORDER_KEY = 'sidebar-menu-order';
@@ -138,7 +154,7 @@ export function useSidebarLogic() {
     setDragOverItem(itemId);
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragLeave = () => {
     dragCounter.current--;
     if (dragCounter.current === 0) {
       setDragOverItem(null);

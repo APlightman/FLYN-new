@@ -7,7 +7,7 @@ interface NotificationSettingsProps {
     recurringPayments: boolean;
     weeklyReports: boolean;
   };
-  onUpdateNotifications: (updates: any) => void;
+  onUpdateNotifications: (updates: Partial<NotificationSettingsProps['notifications']>) => void;
 }
 
 export function NotificationSettings({ notifications, onUpdateNotifications }: NotificationSettingsProps) {

@@ -42,7 +42,7 @@ export function DatePicker({
   const [showMonthSelect, setShowMonthSelect] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLButtonElement>(null);
 
   // Закрытие календаря при клике вне его
   useEffect(() => {
